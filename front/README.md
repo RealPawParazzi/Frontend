@@ -1,70 +1,65 @@
-# Getting Started with Create React App
+# 🐾 Pet LifeBook - 반려동물 라이프북
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+**반려동물과 함께한 소중한 순간을 기록하고, AI를 활용하여 자동으로 스토리를 생성하는 감성적인 라이프북 서비스입니다.** 📝🎥
 
-## Available Scripts
+[//]: # (## 🛠 기술 스택)
 
-In the project directory, you can run:
+[//]: # (- **Frontend**: React, TypeScript, Vite)
 
-### `npm start`
+[//]: # (- **State Management**: Zustand / Redux)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+[//]: # (- **Styling**: Tailwind CSS, Styled Components)
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+[//]: # (- **API Handling**: Axios, React Query)
 
-### `npm test`
+[//]: # (- **Media Processing**: FFMPEG, Canvas)
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+[//]: # (- **Maps & Location**: Leaflet.js / Google Maps API)
 
-### `npm run build`
+[//]: # (- **Deployment**: Vercel / Firebase Hosting)
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## 📌 주요 기능
+### 1️⃣ 반려동물 스토리북 📖
+- AI가 자동으로 반려동물의 하루를 기록
+- 사용자가 직접 텍스트 및 이미지 수정 가능
+- Markdown 기반의 스토리 저장
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### 2️⃣ 추억 영상 및 움짤 제작 🎞
+- 업로드된 사진과 영상을 AI로 자동 편집
+- 감성적인 필터 및 배경 음악 적용 가능
+- GIF / MP4로 저장 및 SNS 공유
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### 3️⃣ 지도 기반 활동 기록 📍
+- 반려동물의 산책 경로 기록 및 시각화
+- 자주 방문한 장소를 핀으로 저장
+- 히트맵을 통한 활동량 분석
 
-### `npm run eject`
+### 4️⃣ 사용자 맞춤 프로필 🐶
+- 반려동물 프로필 생성 및 관리
+- 활동 데이터 및 건강 상태 대시보드 제공
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+[//]: # (## 📂 프로젝트 구조)
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+[//]: # (```plaintext)
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+[//]: # (📦 pet-lifebook)
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+[//]: # ( ┣ 📂 src)
 
-## Learn More
+[//]: # ( ┃ ┣ 📂 components    # UI 컴포넌트)
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+[//]: # ( ┃ ┣ 📂 pages         # 주요 페이지 &#40;홈, 업로드, 스토리북, 영상 제작&#41;)
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+[//]: # ( ┃ ┣ 📂 hooks         # 커스텀 훅)
 
-### Code Splitting
+[//]: # ( ┃ ┣ 📂 store         # Zustand / Redux 상태관리)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+[//]: # ( ┃ ┣ 📂 assets        # 이미지, 아이콘, 폰트 등)
 
-### Analyzing the Bundle Size
+[//]: # ( ┃ ┗ 📜 App.tsx       # 메인 엔트리 포인트)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+[//]: # ( ┣ 📜 package.json)
 
-### Making a Progressive Web App
+[//]: # ( ┣ 📜 README.md)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+[//]: # ( ┗ 📜 tsconfig.json)
