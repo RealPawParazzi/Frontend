@@ -26,7 +26,7 @@ const BottomTabNavigator = () => {
                     },
                     tabBarActiveTintColor: '#000',
                     tabBarInactiveTintColor: 'gray',
-                    tabBarStyle: { height: 60, paddingBottom: 10 },
+                    tabBarStyle: { height: 70, paddingBottom: 10 },
                 })}
             >
                 <Tab.Screen name="Home" component={homeScreen} options={{ title: '홈' }} />
