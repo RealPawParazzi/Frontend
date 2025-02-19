@@ -46,7 +46,7 @@ interface StoryBook {
 
 
 /** ✅ Zustand 전역 상태 생성 */
-const useStore = create(() => ({
+const useStore = create<{ userData: UserData }>(() => ({
     /** ✅ 사용자 데이터 */
     userData: {
         id: 'user123',
