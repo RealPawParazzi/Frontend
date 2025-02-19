@@ -14,6 +14,7 @@ interface StoryBook {
  */
 const StoryBooksList = ({ storyBooks }: { storyBooks: StoryBook[] }) => {
     return (
+        <View>
         <FlatList
             data={storyBooks}
             keyExtractor={(item) => item.id}
@@ -27,7 +28,9 @@ const StoryBooksList = ({ storyBooks }: { storyBooks: StoryBook[] }) => {
                     </View>
                 </View>
             )}
+            nestedScrollEnabled={true}
         />
+            </View>
     );
 };
 
