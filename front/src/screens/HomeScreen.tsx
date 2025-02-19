@@ -1,22 +1,41 @@
 import React from 'react';
 import { View, ScrollView, Text, StyleSheet } from 'react-native';
 import Header from '../components/Header';
-import StoryReels from '../components/StoryReels';
 import MemoryVideo from '../components/MemoryVideo';
+import FollowRecommendations from '../components/FollowRecommendations';
+import StoryReels from '../components/StoryReels';
+import StoryBooksList from '../components/StoryBooksList';
+import useStore from '../context/useStore';
 
+/**
+ * 📌 HomeScreen (홈 화면)
+ * - Zustand에서 가져온 데이터 사용
+ * - "오늘의 추억 영상", "스토리 릴", "팔로우 추천", "StoryBooks for Today" 섹션 포함
+ */
 const HomeScreen = () => {
+    const { memoryVideos, followRecommendations, storyBooks, storyReels } = useStore(); // ✅ Zustand 데이터 가져오기
+
     return (
         <View style={styles.container}>
             <Header />
             <ScrollView showsVerticalScrollIndicator={false}>
+                {/* 🎞️ 오늘의 추억 영상 */}
                 <Text style={styles.sectionTitle}>오늘의 추억 영상 →</Text>
-                <MemoryVideo />
+                {memoryVideos.map((video) => (
+                    <MemoryVideo key={video.id} video={video} />
+                ))}
 
+                {/* 📸 스토리 릴 */}
+                <Text style={styles.sectionTitle}>스토리 →</Text>
+                <StoryReels stories={storyReels} />
+
+                {/* 👥 팔로우 추천 */}
                 <Text style={styles.sectionTitle}>팔로우 추천 →</Text>
-                <StoryReels />
+                <FollowRecommendations recommendations={followRecommendations} />
 
+                {/* 📖 StoryBooks for Today */}
                 <Text style={styles.sectionTitle}>StoryBooks for Today →</Text>
-                {/* StoryBooksList 추가 예정 */}
+                <StoryBooksList storyBooks={storyBooks} />
             </ScrollView>
         </View>
     );
