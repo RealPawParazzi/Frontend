@@ -87,6 +87,15 @@ const useStore = create(() => ({
         { id: '2', image: require('../assets/images/cat-3.jpg'), video: require('../assets/videos/memory1.mp4') },
         { id: '3', image: require('../assets/images/pets-1.jpg') },
     ],
+
+    activityLog: {
+        '2024-06-10': [
+            { id: '1', title: '초코와 공원 산책', image: require('../assets/images/post-1.jpeg') },
+        ],
+        '2024-06-26': [
+            { id: '2', title: '오늘은 스벅 방문기 ~', image: require('../assets/images/post-2.jpg') },
+        ],
+    },
 }));
 
 export default useStore;

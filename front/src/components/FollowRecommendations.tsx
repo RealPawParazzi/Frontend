@@ -14,6 +14,7 @@ interface FollowRecommendation {
  */
 const FollowRecommendations = ({ recommendations }: { recommendations: FollowRecommendation[] }) => {
     return (
+        <View style={styles.container}>
         <FlatList
             data={recommendations}
             keyExtractor={(item) => item.id}
@@ -31,7 +32,9 @@ const FollowRecommendations = ({ recommendations }: { recommendations: FollowRec
                 </View>
             )}
             showsVerticalScrollIndicator={false}
+            nestedScrollEnabled={true} // ✅ 내부 스크롤 활성화
         />
+        </View>
     );
 };
 
