@@ -32,8 +32,15 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+
+	<!-- ✅ Google Maps API 키 설정 -->
+    <key>GMSApiKey</key>
+    <string>AIzaSyApVErd58NgOcssp68i8IQP4F5FjxjHzX0</string>
+
+    <!-- ✅ 위치 권한 요청 (사용자 위치 표시 가능) -->
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>앱이 실행되는 동안 위치 서비스를 사용하여 반려동물의 산책 경로를 표시합니다.</string>
+
 	<key>UIAppFonts</key>
     <array>
         <string>MaterialIcons.ttf</string>
