@@ -18,12 +18,20 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
     const [password, setPassword] = useState('');
     const [nickName, setNickName] = useState('');
     const [name, setName] = useState('');
+    const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null); // 프로필 이미지 상태 추가
     const [loading, setLoading] = useState(false); // 로딩 상태
+
+    // ✅ 기본 프로필 이미지 설정 함수
+    const getProfileImage = () => {
+        return profileImageUrl && profileImageUrl.trim() !== ""
+            ? { uri: profileImageUrl }
+            : require('../assets/images/profile-1.png'); //  기본 프로필 이미지 설정
+    };
 
     // ✅ 앱 실행 시 자동 로그인 검사
     useEffect(() => {
         const checkAuthStatus = async () => {
-            setLoading(true); // $$$$$$$$$ 자동 로그인 중 표시
+            setLoading(true); // 자동 로그인 중 표시
             const token = await AsyncStorage.getItem('userToken');
             if (token && await validateToken()) {
                 navigation.replace('Home'); // 🔵 유효한 토큰이면 홈 화면으로 이동
@@ -50,7 +58,7 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
                     password,
                     nickName,
                     name,
-                    profileImageUrl: 'https://example.com/default-profile.jpg', // $$$$$$$ 기본 프로필 이미지 (require → URL 문자열)
+                    profileImageUrl: profileImageUrl || '', // 기본 프로필 이미지 사용 시 빈 문자열 전달
                 });
                 Alert.alert('회원가입 성공!', '이제 로그인하세요.');
                 setIsSignup(false); // 로그인 화면으로 전환
@@ -69,8 +77,8 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
-            {/* 🟢 기본 프로필 이미지 표시 */}
-            <Image source={{ uri: 'https://example.com/default-profile.jpg' }} style={styles.logo} />
+            {/* 🟢 프로필 이미지 표시 */}
+            <Image source={getProfileImage()} style={styles.logo} />
 
             <Text style={styles.title}>{isSignup ? '회원가입' : '로그인'}</Text>
 
@@ -93,6 +101,12 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
                 <>
                     <TextInput placeholder="닉네임" style={styles.input} value={nickName} onChangeText={setNickName} />
                     <TextInput placeholder="이름" style={styles.input} value={name} onChangeText={setName} />
+                    <TextInput
+                        placeholder="프로필 이미지 URL (선택)"
+                        style={styles.input}
+                        value={profileImageUrl || ''}
+                        onChangeText={setProfileImageUrl}
+                    />
                 </>
             )}
 

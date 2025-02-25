@@ -68,7 +68,7 @@ export const loginUser = async (data: { email: string; password: string }) => {
 export const validateToken = async (): Promise<boolean> => {
     try {
         const token = await AsyncStorage.getItem('userToken');
-        if (!token) return false;
+        if (!token) {return false;}
 
         const response = await fetch(`${API_BASE_URL}/validate`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -87,13 +87,13 @@ export const validateToken = async (): Promise<boolean> => {
  */
 export const fetchCurrentUser = async () => {
     const token = await AsyncStorage.getItem('userToken');
-    if (!token) throw new Error('토큰이 없습니다.');
+    if (!token) {throw new Error('토큰이 없습니다.');}
 
     const response = await fetch(`${API_BASE_URL}/me`, {
         headers: { Authorization: `Bearer ${token}` },
     });
 
-    if (!response.ok) throw new Error('사용자 정보를 가져오지 못했습니다.');
+    if (!response.ok) {throw new Error('사용자 정보를 가져오지 못했습니다.');}
     return await response.json();
 };
 
@@ -111,7 +111,7 @@ export const updateUser = async (updateData: {
         console.log('📤 사용자 정보 수정 요청:', updateData);
 
         const token = await AsyncStorage.getItem('userToken');
-        if (!token) throw new Error('토큰이 없습니다.');
+        if (!token) {throw new Error('토큰이 없습니다.');}
 
         const response = await fetch(`${API_BASE_URL}/me`, {
             method: 'PATCH', // 수정 요청은 PATCH
@@ -143,7 +143,7 @@ export const deleteUser = async () => {
         console.log('📤 회원 탈퇴 요청');
 
         const token = await AsyncStorage.getItem('userToken');
-        if (!token) throw new Error('토큰이 없습니다.');
+        if (!token) {throw new Error('토큰이 없습니다.');}
 
         const response = await fetch(`${API_BASE_URL}/delete`, {
             method: 'DELETE', // 탈퇴 요청은 DELETE
