@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, FlatList, Image, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Calendar } from 'react-native-calendars';
-import useStore from '../context/useStore';
-import Header from "../components/Header";
+import userStore from '../context/userStore';
+import Header from '../components/Header';
 
 const CalendarScreen = () => {
-    const { userData } = useStore(); // ✅ Zustand에서 사용자 데이터 가져오기
+    const { userData } = userStore(); // ✅ Zustand에서 사용자 데이터 가져오기
     const [selectedDate, setSelectedDate] = useState('');
     const [searchText, setSearchText] = useState('');
 

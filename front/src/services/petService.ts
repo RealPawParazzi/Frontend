@@ -11,7 +11,7 @@ const API_BASE_URL = 'http://localhost:8080/pets';
  */
 export const registerPet = async (
     userId: number,
-    data: { name: string; breed: string; age: number; profileImageUrl?: string } // $$$$$$$ 프로필 이미지 추가
+    data: { name: string; breed: string; age: number; profileImageUrl?: string } // 프로필 이미지 추가
 ) => {
     const token = await AsyncStorage.getItem('userToken'); // 토큰 추가
     const response = await fetch(`${API_BASE_URL}/${userId}/register`, {

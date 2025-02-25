@@ -5,7 +5,7 @@ import MemoryVideo from '../components/MemoryVideo';
 import FollowRecommendations from '../components/FollowRecommendations';
 import StoryReels from '../components/StoryReels';
 import StoryBooksList from '../components/StoryBooksList';
-import useStore from '../context/useStore';
+import userStore from '../context/userStore';
 
 /**
  * 📌 HomeScreen (홈 화면)
@@ -13,7 +13,7 @@ import useStore from '../context/useStore';
  * - "오늘의 추억 영상", "스토리 릴", "팔로우 추천", "StoryBooks for Today" 섹션 포함
  */
 const HomeScreen = () => {
-    const { memoryVideos, followRecommendations, storyBooks, storyReels } = useStore(); // ✅ Zustand 데이터 가져오기
+    const { memoryVideos, followRecommendations, storyBooks, storyReels } = userStore(); // ✅ Zustand 데이터 가져오기
 
     return (
         <View style={styles.container}>
