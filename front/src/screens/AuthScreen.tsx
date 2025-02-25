@@ -13,20 +13,22 @@ interface Props {
 }
 
 const AuthScreen: React.FC<Props> = ({ navigation }) => {
-    const [isSignup, setIsSignup] = useState(false);
+    const [isSignup, setIsSignup] = useState(false); // 회원가입 or 로그인 모드
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [nickName, setNickName] = useState('');
     const [name, setName] = useState('');
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(false); // 로딩 상태
 
     // ✅ 앱 실행 시 자동 로그인 검사
     useEffect(() => {
         const checkAuthStatus = async () => {
+            setLoading(true); // $$$$$$$$$ 자동 로그인 중 표시
             const token = await AsyncStorage.getItem('userToken');
-            if (token && await validateToken(token)) {
-                navigation.replace('Home'); // 🔵 유효한 토큰이면 바로 홈 화면으로 이동
+            if (token && await validateToken()) {
+                navigation.replace('Home'); // 🔵 유효한 토큰이면 홈 화면으로 이동
             }
+            setLoading(false);
         };
         checkAuthStatus();
     }, [navigation]);
@@ -48,7 +50,7 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
                     password,
                     nickName,
                     name,
-                    profileImageUrl: require('../assets/images/profile-1.png'), // 기본 프로필 이미지
+                    profileImageUrl: 'https://example.com/default-profile.jpg', // $$$$$$$ 기본 프로필 이미지 (require → URL 문자열)
                 });
                 Alert.alert('회원가입 성공!', '이제 로그인하세요.');
                 setIsSignup(false); // 로그인 화면으로 전환
@@ -67,11 +69,25 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
-            <Image source={require('../assets/images/profile-1.png')} style={styles.logo} />
+            {/* 🟢 기본 프로필 이미지 표시 */}
+            <Image source={{ uri: 'https://example.com/default-profile.jpg' }} style={styles.logo} />
+
             <Text style={styles.title}>{isSignup ? '회원가입' : '로그인'}</Text>
 
-            <TextInput placeholder="이메일" style={styles.input} value={email} onChangeText={setEmail} />
-            <TextInput placeholder="비밀번호" style={styles.input} secureTextEntry value={password} onChangeText={setPassword} />
+            <TextInput
+                placeholder="이메일"
+                style={styles.input}
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+            />
+            <TextInput
+                placeholder="비밀번호"
+                style={styles.input}
+                secureTextEntry
+                value={password}
+                onChangeText={setPassword}
+            />
 
             {isSignup && (
                 <>
@@ -94,9 +110,9 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
 // ✅ 스타일 정의
 const styles = StyleSheet.create({
     container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF3E0' },
-    logo: { width: 150, height: 150, marginBottom: 20 },
+    logo: { width: 150, height: 150, marginBottom: 20, borderRadius: 75 }, // $$$$$$$$$ 동그란 프로필 이미지
     title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
-    input: { width: '80%', padding: 10, borderWidth: 1, borderRadius: 10, marginBottom: 10 },
+    input: { width: '80%', padding: 10, borderWidth: 1, borderRadius: 10, marginBottom: 10, backgroundColor: 'white' },
     button: { backgroundColor: 'orange', padding: 12, borderRadius: 10, marginTop: 10, width: '80%', alignItems: 'center' },
     buttonText: { color: 'white', fontSize: 16 },
     switchText: { marginTop: 10, color: 'blue' },
