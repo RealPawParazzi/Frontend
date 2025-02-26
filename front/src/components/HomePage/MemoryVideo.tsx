@@ -20,7 +20,7 @@ const MemoryVideo = ({ video }: MemoryVideoProps) => {
         <View style={styles.container}>
             {!playing ? (
                 <>
-                    <Image source={require('../assets/images/post-1.jpeg')} style={styles.image} />
+                    <Image source={require('../../assets/images/post-1.jpeg')} style={styles.image} />
                     <View style={styles.textContainer}>
                         <Text style={styles.title}>초코네</Text>
                         <Text style={styles.subtitle}>오늘은 멍멍이 스벅 다녀옴 ~!!!</Text>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps'; // ✅ Google Maps 적용
 import DateTimePicker from '@react-native-community/datetimepicker';
-import useStore from '../context/useStore';
+import userStore from '../context/userStore';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Header from '../components/Header';
 
@@ -26,7 +26,7 @@ const petWalkRoutes: Record<string, { latitude: number; longitude: number }[]> =
 };
 
 const MapScreen = () => {
-    const { userData } = useStore();
+    const { userData } = userStore();
     const [selectedPet, setSelectedPet] = useState(userData.petList[0]);
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);

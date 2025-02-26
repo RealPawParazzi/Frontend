@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import useStore from '../context/useStore'; // ✅ Zustand 전역 상태 가져오기
+import userStore from '../context/userStore'; // ✅ Zustand 전역 상태 가져오기
 
 /**
  * 📌 Header 컴포넌트
@@ -11,8 +11,8 @@ import useStore from '../context/useStore'; // ✅ Zustand 전역 상태 가져�
  */
 const Header = () => {
     // ✅ Zustand에서 사용자 정보 가져오기
-    const { userData } = useStore();
-    const profileImageUrl = userData.profileImage; // 프로필 이미지 URL
+    const { userData } = userStore();
+    const profileImageUrl: string | null = userData?.profileImage; // 🟢 프로필 이미지 URL (null 가능)
 
     return (
         <View style={styles.container}>
@@ -28,7 +28,10 @@ const Header = () => {
 
                 {/* 🖼️ 프로필 이미지가 있으면 이미지 표시, 없으면 기본 아이콘 표시 */}
                 {profileImageUrl ? (
-                    <Image source={profileImageUrl} style={styles.profileImage} />
+                    <Image
+                        source={profileImageUrl as any} // `uri`로 감싸서 오류 해결
+                        style={styles.profileImage}
+                    />
                 ) : (
                     <Icon name="person" size={30} color="gray" />
                 )}
