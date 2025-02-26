@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import {Text, TouchableOpacity, StyleSheet, FlatList, View} from 'react-native';
 import SegmentedControl from '@react-native-segmented-control/segmented-control';
-import UserInfo from '../components/UserInfo';
-import PostList from '../components/PostList';
+
+import UserInfo from '../components/MyPage/UserInfo';
+import PostList from '../components/MyPage/PostList';
 import Header from '../components/Header';
-import useStore from '../context/useStore'; // ✅ Zustand 스토어 불러오기
+import useStore from '../context/userStore'; // ✅ Zustand 스토어 불러오기
 
 
 /**

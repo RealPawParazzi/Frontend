@@ -29,7 +29,7 @@ const Header = () => {
                 {/* 🖼️ 프로필 이미지가 있으면 이미지 표시, 없으면 기본 아이콘 표시 */}
                 {profileImageUrl ? (
                     <Image
-                        source={{ uri: profileImageUrl }} // `uri`로 감싸서 오류 해결
+                        source={profileImageUrl as any} // `uri`로 감싸서 오류 해결
                         style={styles.profileImage}
                     />
                 ) : (

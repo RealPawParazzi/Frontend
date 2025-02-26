@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, ScrollView, Text, StyleSheet } from 'react-native';
 import Header from '../components/Header';
-import MemoryVideo from '../components/MemoryVideo';
-import FollowRecommendations from '../components/FollowRecommendations';
-import StoryReels from '../components/StoryReels';
-import StoryBooksList from '../components/StoryBooksList';
+import MemoryVideo from '../components/HomePage/MemoryVideo';
+import FollowRecommendations from '../components/HomePage/FollowRecommendations';
+import StoryReels from '../components/HomePage/StoryReels';
+import StoryBooksList from '../components/HomePage/StoryBooksList';
 import userStore from '../context/userStore';
 
 /**

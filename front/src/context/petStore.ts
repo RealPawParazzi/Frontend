@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { getPetList, registerPet, updatePet, deletePet } from '../services/petService';
 
 /** ✅ 반려동물 데이터 타입 */
-interface Pet {
+export interface Pet {
     petId: number;
     name: string;
     type: string; // ✅ 기존 type을 유지 (API에서 breed로 변환)
