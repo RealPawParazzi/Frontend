@@ -129,4 +129,13 @@ const boardStore = create<{
     },
 }));
 
+/** ✅ 게시물 데이터 불러오기 */
+export const loadBoardData = async (memberId: number) => {
+    try {
+        await boardStore.getState().fetchUserBoards(memberId);
+    } catch (error) {
+        console.error('📝❌ loadBoardData 실패:', error);
+    }
+};
+
 export default boardStore;

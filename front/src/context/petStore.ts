@@ -31,7 +31,7 @@ const defaultPets: Pet[] = [
 ];
 
 /** ✅ Zustand 전역 상태 */
-const usePetStore = create<PetStore>((set) => ({
+const petStore = create<PetStore>((set) => ({
     pets: defaultPets, // 🟢 기본값 설정
 
     /** ✅ 반려동물 목록 불러오기 */
@@ -88,6 +88,17 @@ const usePetStore = create<PetStore>((set) => ({
             console.error('🐶❌ 반려동물 삭제 실패:', error);
         }
     },
+
 }));
 
-export default usePetStore;
+/** ✅ 반려동물 전체 데이터 불러오기 */
+export const loadPetData = async (userId: number) => {
+    try {
+        await petStore.getState().fetchPets(userId);
+    } catch (error) {
+        console.error('🐾❌ loadPetData 실패:', error);
+    }
+};
+
+export default petStore;
+
