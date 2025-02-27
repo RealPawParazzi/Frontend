@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import {Text, TouchableOpacity, StyleSheet, FlatList, View} from 'react-native';
+import { Text, TouchableOpacity, StyleSheet, FlatList, View, Alert } from 'react-native';
 import SegmentedControl from '@react-native-segmented-control/segmented-control';
 
 import UserInfo from '../components/MyPage/UserInfo';
 import PostList from '../components/MyPage/PostList';
 import Header from '../components/Header';
 import useStore from '../context/userStore'; // ✅ Zustand 스토어 불러오기
-
+import { logoutUser } from '../services/authService'; // ✅ 로그아웃 서비스 추가
+import { useNavigation } from '@react-navigation/native'; // ✅ 네비게이션 추가
 
 /**
  * 📌 MyPageScreen (마이페이지 화면)
@@ -18,7 +19,18 @@ const MyPageScreen = () => {
     // 🟢 현재 선택된 탭 ("펫" = 0, "집사" = 1)
     const [selectedTab, setSelectedTab] = useState(0);
     const { userData } = useStore(); // ✅ Zustand에서 데이터 가져오기
+    const navigation = useNavigation(); // ✅ 네비게이션 객체 가져오기
 
+    // ✅ 로그아웃 함수
+    const handleLogout = async () => {
+        try {
+            await logoutUser(); // ✅ 인증 정보 삭제
+            Alert.alert('✅ 로그아웃 성공', '다시 로그인 해주세요.');
+            navigation.navigate('Auth' as never); // ✅ 로그인 화면으로 이동 (타입 문제 방지)
+        } catch (error: any) {
+            Alert.alert('⚠️ 로그아웃 실패', error.message || '로그아웃 중 오류가 발생했습니다.');
+        }
+    };
 
     return (
         <FlatList
@@ -33,7 +45,7 @@ const MyPageScreen = () => {
                         style={styles.segmentControl}
                     />
                     {/* ✅ 선택된 탭에 따라 UI 변경 */}
-                    <UserInfo selectedTab={selectedTab} userData={userData} />
+                    <UserInfo selectedTab={selectedTab}/>
                 </>
             )}
             data={userData.recentPosts} // ✅ 상태에서 가져온 게시물 리스트
@@ -44,7 +56,7 @@ const MyPageScreen = () => {
             ListFooterComponent={(
                 <View style={styles.footer}>
                     {/* 🔵 로그아웃 버튼 */}
-                    <TouchableOpacity style={styles.logoutButton}>
+                    <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
                         <Text style={styles.logoutText}>로그아웃</Text>
                     </TouchableOpacity>
                 </View>
