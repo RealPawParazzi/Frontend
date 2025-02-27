@@ -23,7 +23,7 @@ interface PetStore {
 const defaultPets: Pet[] = [
     {
         petId: 999,
-        name: '기본 반려동물',
+        name: '스토어 더미데이터 반려동물',
         type: '강아지',
         birthDate: '2020-01-01',
         petImg: require('../assets/images/pets-3.gif'),
