@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
-import {Text, TouchableOpacity, StyleSheet, FlatList, View} from 'react-native';
+import React, { useEffect , useState} from 'react';
+import { Text, TouchableOpacity, StyleSheet, FlatList, View, Alert } from 'react-native';
 import SegmentedControl from '@react-native-segmented-control/segmented-control';
 
 import UserInfo from '../components/MyPage/UserInfo';
 import PostList from '../components/MyPage/PostList';
 import Header from '../components/Header';
-import useStore from '../context/userStore'; // ✅ Zustand 스토어 불러오기
-
-
+import { logoutUser } from '../services/authService'; // ✅ 로그아웃 서비스 추가
+import { useNavigation } from '@react-navigation/native';
 /**
  * 📌 MyPageScreen (마이페이지 화면)
  * - "펫" / "집사" 탭을 선택할 수 있는 Segmented Control 포함
@@ -15,10 +14,22 @@ import useStore from '../context/userStore'; // ✅ Zustand 스토어 불러오�
  * - 유저 프로필 및 반려동물 게시물 리스트 표시
  */
 const MyPageScreen = () => {
+
+
     // 🟢 현재 선택된 탭 ("펫" = 0, "집사" = 1)
     const [selectedTab, setSelectedTab] = useState(0);
-    const { userData } = useStore(); // ✅ Zustand에서 데이터 가져오기
+    const navigation = useNavigation(); // ✅ 네비게이션 객체 가져오기
 
+    // ✅ 로그아웃 함수
+    const handleLogout = async () => {
+        try {
+            await logoutUser(); // ✅ 인증 정보 삭제
+            Alert.alert('✅ 로그아웃 성공', '다시 로그인 해주세요.');
+            navigation.navigate('Auth' as never); // ✅ 로그인 화면으로 이동 (타입 문제 방지)
+        } catch (error: any) {
+            Alert.alert('⚠️ 로그아웃 실패', error.message || '로그아웃 중 오류가 발생했습니다.');
+        }
+    };
 
     return (
         <FlatList
@@ -33,21 +44,23 @@ const MyPageScreen = () => {
                         style={styles.segmentControl}
                     />
                     {/* ✅ 선택된 탭에 따라 UI 변경 */}
-                    <UserInfo selectedTab={selectedTab} userData={userData} />
+                    <UserInfo selectedTab={selectedTab} />
                 </>
             )}
-            data={userData.recentPosts} // ✅ 상태에서 가져온 게시물 리스트
-            renderItem={({ item }) => (
-                <PostList post={item} /> // ✅ 게시물 단위 렌더링
-            )}
-            keyExtractor={(item) => item.id}
+            data={[]} // ✅ 빈 배열 전달 (게시글 데이터는 `PostList` 내부에서 관리)
+            renderItem={null} // ✅ 게시글 목록은 `PostList`에서 직접 관리
             ListFooterComponent={(
-                <View style={styles.footer}>
-                    {/* 🔵 로그아웃 버튼 */}
-                    <TouchableOpacity style={styles.logoutButton}>
-                        <Text style={styles.logoutText}>로그아웃</Text>
-                    </TouchableOpacity>
-                </View>
+                <>
+                    {/* ✅ 게시글 목록 (`PostList`에서 상태 관리) */}
+                    <PostList />
+
+                    <View style={styles.footer}>
+                        {/* 🔵 로그아웃 버튼 */}
+                        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+                            <Text style={styles.logoutText}>로그아웃</Text>
+                        </TouchableOpacity>
+                    </View>
+                </>
             )}
         />
     );

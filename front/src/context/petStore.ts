@@ -23,7 +23,7 @@ interface PetStore {
 const defaultPets: Pet[] = [
     {
         petId: 999,
-        name: '기본 반려동물',
+        name: '스토어 더미데이터 반려동물',
         type: '강아지',
         birthDate: '2020-01-01',
         petImg: require('../assets/images/pets-3.gif'),
@@ -35,10 +35,19 @@ const petStore = create<PetStore>((set) => ({
     pets: defaultPets, // 🟢 기본값 설정
 
     /** ✅ 반려동물 목록 불러오기 */
-    fetchPets: async (userId) => {
+    fetchPets: async () => {
         try {
-            const petList = await getPetList(userId);
-            set({ pets: petList.length ? petList : defaultPets }); // 🟢 데이터 없을 경우 기본값 유지
+            const petList = await getPetList();
+
+            if (petList.length > 0) {
+                console.log('🐶✅ 가져온 반려동물 목록:', petList); // ✅ 성공한 데이터 확인
+                set({ pets: petList }); // ✅ 정상적인 데이터가 있을 경우 업데이트
+            } else {
+                console.warn('⚠️ 반려동물이 없어서 기본 데이터 설정됨.');
+                set({ pets: defaultPets }); // ✅ 게시글이 없을 경우 기본 데이터 설정
+            }
+
+            set({ pets: petList.length ? petList : defaultPets }); // ✅ 데이터 없으면 기본값 유지
         } catch (error) {
             console.error('🐶❌ 반려동물 목록 불러오기 실패:', error);
             set({ pets: defaultPets }); // 🟢 오류 발생 시 기본 데이터 유지
@@ -48,11 +57,11 @@ const petStore = create<PetStore>((set) => ({
     /** ✅ 반려동물 추가 */
     addPet: async (userId, petData) => {
         try {
-            const newPet = await registerPet(userId, {
+            const newPet = await registerPet({
                 name: petData.name,
-                breed: petData.type, // ✅ API 요구 사항: type → breed 변환
-                age: new Date().getFullYear() - new Date(petData.birthDate).getFullYear(), // ✅ birthDate → age 변환
-                profileImageUrl: petData.petImg, // ✅ 프로필 이미지 반영
+                type: petData.type, // ✅ API 요구 사항: type → breed 변환
+                birthDate: petData.birthDate, // ✅ birthDate → age 변환
+                petImg: petData.petImg, // ✅ 프로필 이미지 반영
             });
 
             set((state) => ({ pets: [...state.pets, newPet] }));

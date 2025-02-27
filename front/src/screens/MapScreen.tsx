@@ -48,7 +48,7 @@ const MapScreen = () => {
                         display="default"
                         onChange={(event, date) => {
                             setShowDatePicker(false);
-                            if (date) setSelectedDate(date);
+                            if (date) {setSelectedDate(date);}
                         }}
                     />
                 )}
