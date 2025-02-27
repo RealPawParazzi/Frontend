@@ -25,7 +25,7 @@ const defaultBoard: Board = {
     id: 0,
     title: '게시글이 없습니다.',
     visibility: 'PUBLIC',
-    titleImage: 'https://example.com/default-thumbnail.jpg', // 기본 이미지
+    titleImage: require('../assets/images/post-2.jpg'), // 기본 이미지
     titleContent: '현재 작성된 게시글이 없습니다.',
     writeDatetime: new Date().toISOString(),
     favoriteCount: 0,
@@ -34,7 +34,7 @@ const defaultBoard: Board = {
     author: {
         id: 0,
         nickname: '익명',
-        profileImageUrl: 'https://example.com/default-profile.jpg',
+        profileImageUrl: require('../assets/images/post-2.jpg'),
     },
     contents: [{ type: 'text', value: '등록된 내용이 없습니다.' }],
 };
@@ -120,8 +120,18 @@ const boardStore = create<{
     /** 🔵 특정 회원의 게시글 목록 조회 */
     fetchUserBoards: async (memberId) => {
         try {
+            if (!memberId) {
+                throw new Error(`❌ 유효하지 않은 memberId: ${memberId}`); // ✅ memberId가 올바른지 확인
+            }
+
             const data = await getBoardsByMember(memberId);
-            set({ boardList: data.length ? data : [defaultBoard] }); // ✅ 값이 비어있으면 기본 데이터 반환
+            if (data.length > 0) {
+                set({ boardList: data }); // ✅ 정상적인 데이터가 있을 경우 업데이트
+            } else {
+                console.warn('⚠️ 게시글이 없어서 기본 데이터 설정됨.');
+                set({ boardList: [defaultBoard] }); // ✅ 게시글이 없을 경우 기본 데이터 설정
+            }
+
         } catch (error) {
             console.error('❌ 특정 회원의 게시글 목록 불러오기 실패:', error);
             set({ boardList: [defaultBoard] }); // ❌ 오류 발생 시 기본 데이터 반환
