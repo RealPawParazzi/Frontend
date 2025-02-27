@@ -35,8 +35,6 @@ const UserInfo = ({ selectedTab }: UserInfoProps) => {
     const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
 
     useEffect(() => {
-        console.log('🐶 petStore 데이터:', pets); // ✅ petImg 값 확인용 로그
-
         if (pets.length > 0) {
             // 🟢 첫 번째 반려동물 자동 선택 (store에서 가져옴)
             setSelectedPet({
