@@ -1,26 +1,65 @@
-import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import boardStore from '../../context/boardStore';
+import userStore from '../../context/userStore';
 
+/** ✅ 게시글 데이터 타입 */
 interface Post {
-    id: string;
+    id: number;
     title: string;
-    image: any;
+    titleImage: string;
+    writeDatetime: string;
 }
 
-const PostList = ({ post }: { post: Post }) => {
+/** ✅ PostList 컴포넌트 */
+const PostList = () => {
+    const { boardList, fetchUserBoards } = boardStore(); // 🟢 Zustand에서 게시글 목록 가져오기
+    const { userData } = userStore(); // 🟢 현재 로그인한 유저 데이터 가져오기
+
+    /** ✅ 컴포넌트 마운트 시 게시글 불러오기 */
+    useEffect(() => {
+        console.log('🟢 현재 로그인한 유저 데이터:', userData);
+
+        if (userData.id) {
+            fetchUserBoards(Number(userData.id)); // 🔵 현재 로그인한 유저의 게시글 목록 조회
+        }
+    }, [fetchUserBoards, userData, userData.id]);
+
     return (
-        <View style={styles.post}>
-            <Image source={post.image} style={styles.image} />
-            <Text style={styles.title}>{post.title}</Text>
+        <View style={styles.container}>
+            <Text style={styles.header}>📌 내 게시글 목록</Text>
+
+            {boardList.length > 0 ? (
+                <FlatList
+                    data={boardList}
+                    renderItem={({ item }) => (
+                        <TouchableOpacity style={styles.postContainer}>
+                            <Image source={{ uri: item.titleImage }} style={styles.image} />
+                            <View style={styles.textContainer}>
+                                <Text style={styles.title}>{item.title}</Text>
+                                <Text style={styles.date}>{item.writeDatetime.split('T')[0]}</Text>
+                            </View>
+                        </TouchableOpacity>
+                    )}
+                    keyExtractor={(item) => String(item.id)}
+                />
+            ) : (
+                <Text style={styles.noPosts}>📭 게시글이 없습니다.</Text>
+            )}
         </View>
     );
 };
 
+/** ✅ 스타일 정의 */
 const styles = StyleSheet.create({
-    post: { flexDirection: 'row', padding: 10, alignItems: 'center' },
-    image: { width: 50, height: 50, borderRadius: 10, marginRight: 10 },
+    container: { padding: 10 },
+    header: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
+    postContainer: { flexDirection: 'row', alignItems: 'center', padding: 10, borderBottomWidth: 1, borderBottomColor: '#ddd' },
+    image: { width: 60, height: 60, borderRadius: 8, marginRight: 10 },
+    textContainer: { flex: 1 },
     title: { fontSize: 16, fontWeight: 'bold' },
+    date: { fontSize: 14, color: 'gray' },
+    noPosts: { textAlign: 'center', fontSize: 16, color: 'gray', marginTop: 20 },
 });
-
 
 export default PostList;
