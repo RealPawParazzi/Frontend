@@ -23,7 +23,7 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
 
     // ✅ 기본 프로필 이미지 설정 함수
     const getProfileImage = () => {
-        return profileImageUrl && profileImageUrl.trim() !== ""
+        return profileImageUrl && profileImageUrl.trim() !== ''
             ? { uri: profileImageUrl }
             : require('../assets/images/profile-1.png'); //  기본 프로필 이미지 설정
     };
