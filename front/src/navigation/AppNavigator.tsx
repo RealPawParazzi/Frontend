@@ -4,6 +4,7 @@ import SplashScreen from '../screens/SplashScreen';
 import AuthScreen from '../screens/AuthScreen';
 import BottomTabNavigator from './BottomTabNavigator'; // 홈 화면
 import StorybookScreen from '../screens/StorybookScreen';
+import StorybookDetailScreen from '../screens/StorybookDetailScreen';
 import VideoEditorScreen from '../screens/VideoEditorScreen';
 import ImageEditorScreen from '../screens/ImageEditorScreen';
 import { loadUserData }  from '../context/userStore';
@@ -14,6 +15,7 @@ export type RootStackParamList = {
     Auth: undefined;
     Home: undefined;
     StorybookScreen: undefined;
+    StorybookDetailScreen: { boardId: number }; // ✅ 상세 페이지에서 boardId를 받음
     VideoEditorScreen: undefined;
     ImageEditorScreen: undefined;
 };
@@ -49,6 +51,7 @@ const AppNavigator = () => {
             <Stack.Screen name="Auth" component={AuthScreen} />
             <Stack.Screen name="Home" component={BottomTabNavigator} />
             <Stack.Screen name="StorybookScreen" component={StorybookScreen} />
+            <Stack.Screen name="StorybookDetailScreen" component={StorybookDetailScreen} />
             <Stack.Screen name="VideoEditorScreen" component={VideoEditorScreen} />
             <Stack.Screen name="ImageEditorScreen" component={ImageEditorScreen} />
         </Stack.Navigator>
