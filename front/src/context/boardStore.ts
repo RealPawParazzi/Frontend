@@ -41,12 +41,12 @@ const defaultBoard: Board = {
 
 /** 📌 Zustand Store 정의 */
 const boardStore = create<{
-    boardList: Board[];
-    selectedBoard: Board;
+    boardList: any[];
+    selectedBoard: any | null;
     fetchBoardList: () => Promise<void>;
     fetchBoardDetail: (boardId: number) => Promise<void>;
-    createNewBoard: (data: Omit<Board, 'id' | 'writeDatetime' | 'favoriteCount' | 'commentCount' | 'viewCount'>) => Promise<void>;
-    updateExistingBoard: (boardId: number, data: Partial<Board>) => Promise<void>;
+    createNewBoard: (data: any) => Promise<void>;
+    updateExistingBoard: (boardId: number, data: any) => Promise<void>;
     deleteExistingBoard: (boardId: number) => Promise<void>;
     fetchUserBoards: (memberId: number) => Promise<void>;
 }>((set) => ({
@@ -60,10 +60,9 @@ const boardStore = create<{
     fetchBoardList: async () => {
         try {
             const data = await getBoardList();
-            set({ boardList: data.length ? data : [defaultBoard] }); // ✅ 값이 비어있으면 기본 데이터 반환
+            set({ boardList: data });
         } catch (error) {
-            console.error('❌ 게시글 목록 불러오기 실패:', error);
-            set({ boardList: [defaultBoard] }); // ❌ 오류 발생 시 기본 데이터 반환
+            console.error('❌ fetchBoardList 오류:', error);
         }
     },
 
@@ -73,21 +72,17 @@ const boardStore = create<{
             const data = await getBoardDetail(boardId);
             set({ selectedBoard: data });
         } catch (error) {
-            console.error('❌ 게시글 상세 불러오기 실패:', error);
-            set({ selectedBoard: defaultBoard }); // ❌ 오류 발생 시 기본 데이터 반환
+            console.error('❌ fetchBoardDetail 오류:', error);
         }
     },
 
     /** 🔵 새로운 게시글 생성 */
     createNewBoard: async (data) => {
         try {
-            const newBoard = await createBoard({
-                ...data,  // 기존 데이터 유지
-                content: data.contents?.[0]?.value || '내용 없음', // ✅ 첫 번째 `text` 내용을 `content`로 사용 (없으면 "내용 없음")
-            });
+            const newBoard = await createBoard(data);
             set((state) => ({ boardList: [newBoard, ...state.boardList] }));
         } catch (error) {
-            console.error('❌ 게시글 생성 실패:', error);
+            console.error('❌ createNewBoard 오류:', error);
         }
     },
 
@@ -100,7 +95,7 @@ const boardStore = create<{
                 selectedBoard: updatedBoard,
             }));
         } catch (error) {
-            console.error('❌ 게시글 수정 실패:', error);
+            console.error('❌ updateExistingBoard 오류:', error);
         }
     },
 
@@ -110,10 +105,9 @@ const boardStore = create<{
             await deleteBoard(boardId);
             set((state) => ({
                 boardList: state.boardList.filter((board) => board.id !== boardId),
-                selectedBoard: defaultBoard,
             }));
         } catch (error) {
-            console.error('❌ 게시글 삭제 실패:', error);
+            console.error('❌ deleteExistingBoard 오류:', error);
         }
     },
 

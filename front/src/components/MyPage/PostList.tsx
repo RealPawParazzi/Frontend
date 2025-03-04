@@ -1,5 +1,8 @@
 import React, { useEffect } from 'react';
 import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../../navigation/AppNavigator'; // ✅ 스택 네비게이션 타입 가져오기
 import boardStore from '../../context/boardStore';
 import userStore from '../../context/userStore';
 
@@ -11,8 +14,13 @@ interface Post {
     writeDatetime: string;
 }
 
+/** ✅ 네비게이션 타입 정의 */
+type NavigationProp = StackNavigationProp<RootStackParamList, 'StorybookDetailScreen'>;
+
+
 /** ✅ PostList 컴포넌트 */
 const PostList = () => {
+    const navigation = useNavigation<NavigationProp>(); // 🔵 네비게이션 훅 추가
     const { boardList, fetchUserBoards } = boardStore(); // 🟢 Zustand에서 게시글 목록 가져오기
     const { userData } = userStore(); // 🟢 현재 로그인한 유저 데이터 가져오기
 
@@ -33,7 +41,10 @@ const PostList = () => {
                 <FlatList
                     data={boardList}
                     renderItem={({ item }) => (
-                        <TouchableOpacity style={styles.postContainer}>
+                        <TouchableOpacity
+                            style={styles.postContainer}
+                            onPress={() => navigation.navigate('StorybookDetailScreen', { boardId: item.id })} // 🔵 클릭 시 상세 페이지 이동
+                        >
                             <Image source={{ uri: item.titleImage }} style={styles.image} />
                             <View style={styles.textContainer}>
                                 <Text style={styles.title}>{item.title}</Text>

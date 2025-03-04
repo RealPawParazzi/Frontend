@@ -1,73 +1,240 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+    View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView,
+    Image, Alert, SafeAreaView, ActivityIndicator, Switch,
+} from 'react-native';
+import { launchImageLibrary } from 'react-native-image-picker';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import boardStore from '../context/boardStore';
 
 /**
- * 📖 StorybookScreen (스토리북 게시물 작성)
- * - 네이버 블로그 스타일의 게시물 작성 화면
- * - 제목 입력, 본문 작성, 텍스트 스타일 적용, 이미지 업로드 기능 제공
+ * 📝 네이버 블로그 스타일 게시물 작성 화면
  */
-const StorybookScreen = () => {
-    const [title, setTitle] = useState(''); // 제목 추가
+const StorybookScreen = ({ navigation }: any) => {
+    const [title, setTitle] = useState('');
     const [story, setStory] = useState('');
-    const [bold, setBold] = useState(false);
-    const [italic, setItalic] = useState(false);
-    const [underline, setUnderline] = useState(false);
+    const [selectedImages, setSelectedImages] = useState<string[]>([]);
+    const [isPublic, setIsPublic] = useState(true); // ✅ 게시물 공개 여부 (기본값: 공개)
+    const [loading, setLoading] = useState(false);
+    const createNewBoard = boardStore((state) => state.createNewBoard); // Zustand에서 게시글 생성 함수 가져오기
+
+    // ✅ 현재 날짜 가져오기
+    const getCurrentDate = () => {
+        const today = new Date();
+        return today.toLocaleDateString('ko-KR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+        });
+    };
+
+    // ✅ 갤러리에서 이미지 선택
+    const pickImage = async () => {
+        await launchImageLibrary({ mediaType: 'photo' }, (response) => {
+            if (response.didCancel) {
+                console.log('사용자가 이미지 선택 취소');
+            } else if (response.errorMessage) {
+                console.log('이미지 선택 오류:', response.errorMessage);
+            } else if (response.assets && response.assets.length > 0) {
+                const imageUri = response.assets[0].uri;
+                if (imageUri) {
+                    setSelectedImages((prev) => [...prev, imageUri]); // ✅ undefined 방지
+                }
+            }
+        });
+    };
+
+    // ✅ 게시글 저장하기
+    const handleSavePost = async () => {
+        if (!title.trim() || !story.trim()) {
+            Alert.alert('⚠️ 입력 오류', '제목과 내용을 입력해주세요.');
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const contents = [{ type: 'text', value: story }];
+            selectedImages.forEach((img) => contents.push({ type: 'image', value: img }));
+
+            await createNewBoard({
+                title,
+                visibility: isPublic ? 'PUBLIC' : 'FOLLOWERS', // ✅ 공개 범위 설정
+                contents, // 자동으로 titleImage, titleContent가 설정됨
+            });
+
+
+            Alert.alert('✅ 등록 완료', '게시글이 성공적으로 등록되었습니다.', [
+                { text: '확인', onPress: () => navigation.goBack() },
+            ]);
+        } catch (error) {
+            Alert.alert('❌ 등록 실패', '게시글 저장 중 오류가 발생했습니다.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
-        <ScrollView style={styles.container}>
-            <Text style={styles.header}>📖 반려동물 스토리북</Text>
+        <SafeAreaView style={styles.safeContainer}>
+            {/* 상단 네비게이션 바 */}
+            <View style={styles.navBar}>
+                {/* 🔙 뒤로 가기 버튼 */}
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                    <MaterialIcons name="arrow-back-ios" size={24} color="#333" />
+                </TouchableOpacity>
 
-            {/* ✅ 제목 입력란 */}
+                {/* 📅 현재 날짜 */}
+                <Text style={styles.navTitle}>{getCurrentDate()}</Text>
+
+                {/* ✅ 등록 버튼 */}
+                <TouchableOpacity onPress={handleSavePost} disabled={loading}>
+                    {loading ? <ActivityIndicator size="small" color="#FF6F00" /> : <Text style={styles.saveButton}>등록</Text>}
+                </TouchableOpacity>
+            </View>
+
+            {/* 공개 범위 토글 버튼 */}
+            <View style={styles.visibilityContainer}>
+                <Text style={styles.visibilityText}>{isPublic ? '공개' : '팔로워 전용'}</Text>
+                <Switch
+                    value={isPublic}
+                    onValueChange={setIsPublic} // ✅ 공개 여부 토글
+                    trackColor={{ false: '#767577', true: 'rgba(255,111,0,0.32)' }}
+                    thumbColor={isPublic ? '#FF6F00' : '#f4f3f4'}
+                    style={{ transform: [{ scale: 0.8 }] }} // ✅ 토글 크기 조절
+                />
+            </View>
+
+            {/* 제목 입력 필드 */}
             <TextInput
                 style={styles.titleInput}
-                placeholder="제목을 입력하세요"
+                placeholder="제목"
+                placeholderTextColor="#aaa"
                 value={title}
                 onChangeText={setTitle}
             />
 
-            {/* ✅ 텍스트 스타일 버튼 */}
-            <View style={styles.toolbar}>
-                <TouchableOpacity onPress={() => setBold(!bold)}>
-                    <Text style={[styles.toolbarText, bold && styles.activeText]}>B</Text>
+            {/* 본문 입력 필드 */}
+            <ScrollView style={styles.storyContainer}>
+                <TextInput
+                    style={styles.storyInput}
+                    placeholder="본문에 #을 이용해 태그를 입력해보세요! (최대 30개)"
+                    placeholderTextColor="#bbb"
+                    multiline
+                    value={story}
+                    onChangeText={setStory}
+                />
+                {/* 선택한 이미지 미리보기 */}
+                {selectedImages.map((image, index) => (
+                    <Image key={index} source={{ uri: image }} style={styles.imagePreview} />
+                ))}
+            </ScrollView>
+
+            {/* 하단 네비게이션 바 */}
+            <View style={styles.bottomBar}>
+                <TouchableOpacity style={styles.bottomIcon} onPress={() => Alert.alert('이모티콘 기능 추가 예정')}>
+                    <Text style={styles.iconText}>😊</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => setItalic(!italic)}>
-                    <Text style={[styles.toolbarText, italic && styles.activeText]}>I</Text>
+                <TouchableOpacity style={styles.bottomIcon} onPress={pickImage}>
+                    <Text style={styles.iconText}>🖼️</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => setUnderline(!underline)}>
-                    <Text style={[styles.toolbarText, underline && styles.activeText]}>U</Text>
+                <TouchableOpacity style={styles.bottomIcon} onPress={() => Alert.alert('AI 이미지 생성 기능 추가 예정')}>
+                    <Text style={styles.iconText}>✨</Text>
                 </TouchableOpacity>
             </View>
-
-            {/* ✅ 본문 작성란 */}
-            <TextInput
-                style={[styles.input, bold && { fontWeight: 'bold' }, italic && { fontStyle: 'italic' }, underline && { textDecorationLine: 'underline' }]}
-                placeholder="반려동물의 하루를 기록하세요!"
-                multiline
-                value={story}
-                onChangeText={setStory}
-            />
-
-            {/* ✅ 이미지 추가 버튼 */}
-            <TouchableOpacity style={styles.imageButton}>
-                <Text style={styles.imageButtonText}>🖼️ 이미지 추가</Text>
-            </TouchableOpacity>
-
-            {/* ✅ 저장 버튼 */}
-            <Button title="저장하기" onPress={() => alert('스토리 저장 완료!')} />
-        </ScrollView>
+        </SafeAreaView>
     );
 };
 
+// ✅ 스타일 정의
 const styles = StyleSheet.create({
-    container: { padding: 20 },
-    header: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
-    titleInput: { borderBottomWidth: 1, borderColor: '#ccc', marginBottom: 10, fontSize: 16 },
-    toolbar: { flexDirection: 'row', marginBottom: 10 },
-    toolbarText: { marginRight: 10, fontSize: 16 },
-    activeText: { color: 'blue' },
-    input: { borderWidth: 1, borderColor: '#ccc', padding: 10, marginBottom: 10 },
-    imageButton: { backgroundColor: '#FFD700', padding: 10, borderRadius: 5, alignItems: 'center', marginBottom: 10 },
-    imageButtonText: { fontSize: 16, fontWeight: 'bold' },
+    safeContainer: { flex: 1, backgroundColor: '#FFF' },
+
+    /* 🔺 상단 네비게이션 바 스타일 */
+    navBar: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 15,
+        paddingVertical: 12,
+        backgroundColor: '#FFF',
+        borderBottomWidth: 1,
+        borderColor: '#EEE',
+    },
+    backButton: {
+        padding: 8,
+    },
+    navTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        flex: 1,
+    },
+    saveButton: {
+        fontSize: 16,
+        color: '#FF6F00',
+        fontWeight: 'bold',
+    },
+
+    /* 🔺 공개 범위 설정 */
+    visibilityContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+    },
+    visibilityText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+
+    /* 🔺 제목 입력 필드 */
+    titleInput: {
+        fontSize: 30,
+        fontWeight: 'bold',
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+        borderColor: '#EEE',
+        marginBottom: 8,
+    },
+
+    /* 🔺 본문 입력 필드 */
+    storyContainer: {
+        flex: 1,
+        paddingHorizontal: 20,
+        paddingTop: 10,
+        paddingBottom: 30,
+    },
+    storyInput: {
+        fontSize: 16,
+        color: '#333',
+        minHeight: 300,
+    },
+
+    /* 🔺 선택된 이미지 스타일 */
+    imagePreview: {
+        width: '100%',
+        height: 200,
+        marginTop: 15,
+        borderRadius: 10,
+    },
+
+    /* 🔺 하단 네비게이션 바 */
+    bottomBar: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        paddingVertical: 5,
+        backgroundColor: '#FFF',
+        borderTopWidth: 1,
+        borderColor: '#EEE',
+    },
+    bottomIcon: {
+        padding: 15,
+    },
+    iconText: {
+        fontSize: 24,
+    },
 });
 
 export default StorybookScreen;
