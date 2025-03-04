@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import {
     View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, Alert,
-    SafeAreaView, ActivityIndicator,
+    SafeAreaView, ActivityIndicator, ActionSheetIOS, Platform
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import boardStore from '../context/boardStore';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
-
 /**
  * 📄 스토리북 상세 조회 화면
  */
 
+// 📌 네비게이션 타입 지정
 type StorybookDetailScreenRouteProp = RouteProp<RootStackParamList, 'StorybookDetailScreen'>;
-
 
 const StorybookDetailScreen = ({ route, navigation }: { route: StorybookDetailScreenRouteProp, navigation: any }) => {
     const { boardId } = route.params;
+
     const fetchBoardDetail = boardStore((state) => state.fetchBoardDetail);
     const deleteExistingBoard = boardStore((state) => state.deleteExistingBoard);
     const selectedBoard = boardStore((state) => state.selectedBoard);
@@ -60,6 +60,47 @@ const StorybookDetailScreen = ({ route, navigation }: { route: StorybookDetailSc
         ]);
     };
 
+    // ✅ 햄버거 메뉴 클릭 시 실행되는 Action Sheet
+    const openActionSheet = () => {
+        if (!navigation) {
+            Alert.alert('❌ 오류', '네비게이션을 사용할 수 없습니다.');
+            return;
+        }
+
+        if (!boardId) {
+            Alert.alert('❌ 오류', '게시글 ID를 불러오는 중 문제가 발생했습니다.');
+            return;
+        }
+
+        if (Platform.OS === 'ios') {
+            ActionSheetIOS.showActionSheetWithOptions(
+                {
+                    options: ['수정하기 ✏️', '삭제하기 ❌', '취소'],
+                    destructiveButtonIndex: 1,
+                    cancelButtonIndex: 2,
+                },
+                (buttonIndex) => {
+                    if (buttonIndex === 0) {
+                        console.log('🔄 이동 중: EditStorybookScreen, boardId:', boardId);
+                        navigation.navigate('EditStorybookScreen', { boardId });
+                    } else if (buttonIndex === 1) {
+                        handleDeletePost();
+                    }
+                }
+            );
+        } else {
+            // 📌 Android에서는 Alert 사용
+            Alert.alert('게시글 관리', '수정 또는 삭제할 수 있습니다.', [
+                { text: '수정하기', onPress: () => {
+                        console.log('🔄 이동 중: EditStorybookScreen, boardId:', boardId);
+                        navigation.navigate('EditStorybookScreen', { boardId });
+                    }},
+                { text: '삭제하기', onPress: handleDeletePost, style: 'destructive' },
+                { text: '취소', style: 'cancel' },
+            ]);
+        }
+    };
+
     if (loading) {
         return (
             <View style={styles.loader}>
@@ -67,7 +108,6 @@ const StorybookDetailScreen = ({ route, navigation }: { route: StorybookDetailSc
             </View>
         );
     }
-
     return (
         <SafeAreaView style={styles.safeContainer}>
             {/* 상단 네비게이션 바 */}
@@ -80,11 +120,12 @@ const StorybookDetailScreen = ({ route, navigation }: { route: StorybookDetailSc
                     {new Date(selectedBoard.writeDatetime).toLocaleDateString('ko-KR')}
                 </Text>
 
-                {/* 햄버거 메뉴 */}
-                <TouchableOpacity onPress={() => Alert.alert('메뉴', '게시글 수정/삭제 기능')}>
-                    <MaterialIcons name="more-vert" size={20} color="#333" />
+                {/* 햄버거 메뉴 (수정/삭제) */}
+                <TouchableOpacity onPress={openActionSheet}>
+                    <MaterialIcons name="more-vert" size={24} color="#333" />
                 </TouchableOpacity>
             </View>
+
 
             <ScrollView style={styles.contentContainer}>
                 {/* 작성자 정보 */}

@@ -5,6 +5,7 @@ import AuthScreen from '../screens/AuthScreen';
 import BottomTabNavigator from './BottomTabNavigator'; // 홈 화면
 import StorybookScreen from '../screens/StorybookScreen';
 import StorybookDetailScreen from '../screens/StorybookDetailScreen';
+import EditStorybookScreen from '../screens/EditStorybookScreen'; // ✨ 수정 페이지 추가
 import VideoEditorScreen from '../screens/VideoEditorScreen';
 import ImageEditorScreen from '../screens/ImageEditorScreen';
 import { loadUserData }  from '../context/userStore';
@@ -16,6 +17,7 @@ export type RootStackParamList = {
     Home: undefined;
     StorybookScreen: undefined;
     StorybookDetailScreen: { boardId: number }; // ✅ 상세 페이지에서 boardId를 받음
+    EditStorybookScreen: { boardId: number }; // 🆕 게시글 수정 페이지 추가
     VideoEditorScreen: undefined;
     ImageEditorScreen: undefined;
 };
@@ -41,7 +43,7 @@ const AppNavigator = () => {
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                 <ActivityIndicator size="large" color="blue" />
             </View>
-        ); // ✅ 데이터 로딩 중에는 로딩 UI 표시
+        );
     }
 
 
@@ -54,6 +56,7 @@ const AppNavigator = () => {
             <Stack.Screen name="StorybookDetailScreen" component={StorybookDetailScreen} />
             <Stack.Screen name="VideoEditorScreen" component={VideoEditorScreen} />
             <Stack.Screen name="ImageEditorScreen" component={ImageEditorScreen} />
+            <Stack.Screen name="EditStorybookScreen" component={EditStorybookScreen} />
         </Stack.Navigator>
     );
 };
