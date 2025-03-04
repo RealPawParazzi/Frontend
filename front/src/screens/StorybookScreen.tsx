@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image, Alert, SafeAreaView } from 'react-native';
+import {
+    View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView,
+    Image, Alert, SafeAreaView, ActivityIndicator, Switch,
+} from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons'; // ✅ MaterialIcons 사용
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import boardStore from '../context/boardStore';
 
 /**
  * 📝 네이버 블로그 스타일 게시물 작성 화면
@@ -9,7 +13,10 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons'; // ✅ Mate
 const StorybookScreen = ({ navigation }: any) => {
     const [title, setTitle] = useState('');
     const [story, setStory] = useState('');
-    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [selectedImages, setSelectedImages] = useState<string[]>([]);
+    const [isPublic, setIsPublic] = useState(true); // ✅ 게시물 공개 여부 (기본값: 공개)
+    const [loading, setLoading] = useState(false);
+    const createNewBoard = boardStore((state) => state.createNewBoard); // Zustand에서 게시글 생성 함수 가져오기
 
     // ✅ 현재 날짜 가져오기
     const getCurrentDate = () => {
@@ -23,15 +30,48 @@ const StorybookScreen = ({ navigation }: any) => {
 
     // ✅ 갤러리에서 이미지 선택
     const pickImage = async () => {
-        launchImageLibrary({ mediaType: 'photo' }, (response) => {
+        await launchImageLibrary({ mediaType: 'photo' }, (response) => {
             if (response.didCancel) {
                 console.log('사용자가 이미지 선택 취소');
             } else if (response.errorMessage) {
                 console.log('이미지 선택 오류:', response.errorMessage);
             } else if (response.assets && response.assets.length > 0) {
-                setSelectedImage(response.assets[0].uri || null); // 이미지 상태 저장
+                const imageUri = response.assets[0].uri;
+                if (imageUri) {
+                    setSelectedImages((prev) => [...prev, imageUri]); // ✅ undefined 방지
+                }
             }
         });
+    };
+
+    // ✅ 게시글 저장하기
+    const handleSavePost = async () => {
+        if (!title.trim() || !story.trim()) {
+            Alert.alert('⚠️ 입력 오류', '제목과 내용을 입력해주세요.');
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const contents = [{ type: 'text', value: story }];
+            selectedImages.forEach((img) => contents.push({ type: 'image', value: img }));
+
+            await createNewBoard({
+                title,
+                visibility: isPublic ? 'PUBLIC' : 'FOLLOWERS', // ✅ 공개 범위 설정
+                contents, // 자동으로 titleImage, titleContent가 설정됨
+            });
+
+
+            Alert.alert('✅ 등록 완료', '게시글이 성공적으로 등록되었습니다.', [
+                { text: '확인', onPress: () => navigation.goBack() },
+            ]);
+        } catch (error) {
+            Alert.alert('❌ 등록 실패', '게시글 저장 중 오류가 발생했습니다.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -47,9 +87,21 @@ const StorybookScreen = ({ navigation }: any) => {
                 <Text style={styles.navTitle}>{getCurrentDate()}</Text>
 
                 {/* ✅ 등록 버튼 */}
-                <TouchableOpacity onPress={() => Alert.alert('게시물이 저장되었습니다.')}>
-                    <Text style={styles.saveButton}>등록</Text>
+                <TouchableOpacity onPress={handleSavePost} disabled={loading}>
+                    {loading ? <ActivityIndicator size="small" color="#FF6F00" /> : <Text style={styles.saveButton}>등록</Text>}
                 </TouchableOpacity>
+            </View>
+
+            {/* 공개 범위 토글 버튼 */}
+            <View style={styles.visibilityContainer}>
+                <Text style={styles.visibilityText}>{isPublic ? '공개' : '팔로워 전용'}</Text>
+                <Switch
+                    value={isPublic}
+                    onValueChange={setIsPublic} // ✅ 공개 여부 토글
+                    trackColor={{ false: '#767577', true: 'rgba(255,111,0,0.32)' }}
+                    thumbColor={isPublic ? '#FF6F00' : '#f4f3f4'}
+                    style={{ transform: [{ scale: 0.8 }] }} // ✅ 토글 크기 조절
+                />
             </View>
 
             {/* 제목 입력 필드 */}
@@ -71,8 +123,10 @@ const StorybookScreen = ({ navigation }: any) => {
                     value={story}
                     onChangeText={setStory}
                 />
-                {/* 선택한 이미지 표시 */}
-                {selectedImage && <Image source={{ uri: selectedImage }} style={styles.imagePreview} />}
+                {/* 선택한 이미지 미리보기 */}
+                {selectedImages.map((image, index) => (
+                    <Image key={index} source={{ uri: image }} style={styles.imagePreview} />
+                ))}
             </ScrollView>
 
             {/* 하단 네비게이션 바 */}
@@ -107,13 +161,13 @@ const styles = StyleSheet.create({
         borderColor: '#EEE',
     },
     backButton: {
-        padding: 8, // 터치하기 쉽게 패딩 추가
+        padding: 8,
     },
     navTitle: {
         fontSize: 18,
         fontWeight: 'bold',
         textAlign: 'center',
-        flex: 1, // 중앙 정렬을 위해 flex 추가
+        flex: 1,
     },
     saveButton: {
         fontSize: 16,
@@ -121,12 +175,25 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
 
+    /* 🔺 공개 범위 설정 */
+    visibilityContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+    },
+    visibilityText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+
     /* 🔺 제목 입력 필드 */
     titleInput: {
-        fontSize: 25, // 제목 폰트 크기 증가
+        fontSize: 30,
         fontWeight: 'bold',
-        paddingHorizontal: 25, // 좌우 여백 추가
-        paddingVertical: 16, // 높이 증가
+        paddingHorizontal: 20,
+        paddingVertical: 16,
         borderBottomWidth: 1,
         borderColor: '#EEE',
         marginBottom: 8,
@@ -135,14 +202,14 @@ const styles = StyleSheet.create({
     /* 🔺 본문 입력 필드 */
     storyContainer: {
         flex: 1,
-        paddingHorizontal: 25, // 좌우 여백 증가
+        paddingHorizontal: 20,
         paddingTop: 10,
-        paddingBottom: 30, // 하단 네비게이션과 간격 추가
+        paddingBottom: 30,
     },
     storyInput: {
         fontSize: 16,
         color: '#333',
-        minHeight: 300, // 기본 높이 추가
+        minHeight: 300,
     },
 
     /* 🔺 선택된 이미지 스타일 */
@@ -157,16 +224,16 @@ const styles = StyleSheet.create({
     bottomBar: {
         flexDirection: 'row',
         justifyContent: 'space-around',
-        paddingVertical: 5, // 크기 조정
+        paddingVertical: 5,
         backgroundColor: '#FFF',
         borderTopWidth: 1,
         borderColor: '#EEE',
     },
     bottomIcon: {
-        padding: 15, // 터치 영역 키우기
+        padding: 15,
     },
     iconText: {
-        fontSize: 24, // 아이콘 크기 증가
+        fontSize: 24,
     },
 });
 
