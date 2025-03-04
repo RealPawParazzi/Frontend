@@ -49,7 +49,11 @@ export const getBoardDetail = async (boardId: number) => {
     try {
         const response = await fetch(`${API_BASE_URL}/${boardId}`);
         if (!response.ok) throw new Error('게시글 상세 조회 실패');
-        return await response.json();
+
+        const boardData = await response.json();
+        // console.log('📌 서버에서 받은 원본 데이터:', boardData); // 🔴 데이터 확인
+
+        return boardData;
     } catch (error) {
         console.error('❌ getBoardDetail 오류:', error);
         throw error;
