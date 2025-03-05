@@ -9,6 +9,8 @@ import EditStorybookScreen from '../screens/EditStorybookScreen'; // ✨ 수정 
 import VideoEditorScreen from '../screens/VideoEditorScreen';
 import ImageEditorScreen from '../screens/ImageEditorScreen';
 import PetRegistrationScreen from '../screens/PetRegistrationScreen';
+import PetInfoScreen from '../screens/PetInfoScreen';
+import PetEditScreen from '../screens/PetEditScreen';
 import { loadUserData }  from '../context/userStore';
 import { ActivityIndicator, View } from 'react-native';
 
@@ -22,6 +24,8 @@ export type RootStackParamList = {
     VideoEditorScreen: undefined;
     ImageEditorScreen: undefined;
     PetRegistrationScreen: undefined;
+    PetInfoScreen: undefined;
+    PetEditScreen: { pet: object };
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -60,6 +64,8 @@ const AppNavigator = () => {
             <Stack.Screen name="ImageEditorScreen" component={ImageEditorScreen} />
             <Stack.Screen name="EditStorybookScreen" component={EditStorybookScreen} />
             <Stack.Screen name="PetRegistrationScreen" component={PetRegistrationScreen} />
+            <Stack.Screen name="PetInfoScreen" component={PetInfoScreen} />
+            <Stack.Screen name="PetEditScreen" component={PetEditScreen} />
         </Stack.Navigator>
     );
 };

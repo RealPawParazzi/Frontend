@@ -108,8 +108,8 @@ const UserInfo = ({ selectedTab }: UserInfoProps) => {
                         {/* ✅ 반려동물 수 반영 */}
                         <Text style={styles.sectionTitle}>반려동물 {petList.length} 마리</Text>
 
-                        {/* 📜 반려동물 리스트 (가로 스크롤) */}
-                        {petList.length > 0 && (
+                        {/* 🔹 반려동물 리스트 + ➡️ 버튼을 한 줄로 정렬 */}
+                        <View style={styles.petRow}>
                             <FlatList
                                 horizontal
                                 data={petList}
@@ -129,7 +129,15 @@ const UserInfo = ({ selectedTab }: UserInfoProps) => {
                                     </TouchableOpacity>
                                 )}
                             />
-                        )}
+
+                            {/* ➡️ 아이콘 (반려동물 정보 화면 이동) */}
+                            <TouchableOpacity
+                                style={styles.viewMoreButton}
+                                onPress={() => navigation.navigate('PetInfoScreen')}
+                            >
+                                <MaterialIcons name="arrow-forward-ios" size={24} color="#888" />
+                            </TouchableOpacity>
+                        </View>
 
                         {/* ➕ 반려동물 추가 버튼 */}
                         <TouchableOpacity
@@ -152,6 +160,14 @@ const styles = StyleSheet.create({
     container: {
         paddingHorizontal: 15,
         paddingVertical: 10,
+    },
+
+    /** ✅ 반려동물 목록을 ➡️ 버튼과 한 줄에 배치 */
+    petRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between', // 가로 정렬 유지
+        width: '100%',
     },
 
     /** ✅ 반려동물 목록 제목 */
@@ -202,6 +218,8 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginTop: 6, // 📌 텍스트와 이미지 간격 추가
     },
+
+    viewMoreButton: { marginLeft: 10, padding: 10 },
 
     /** ➕ 추가 버튼 스타일 */
     addPetButton: {
