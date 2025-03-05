@@ -8,6 +8,7 @@ import StorybookDetailScreen from '../screens/StorybookDetailScreen';
 import EditStorybookScreen from '../screens/EditStorybookScreen'; // ✨ 수정 페이지 추가
 import VideoEditorScreen from '../screens/VideoEditorScreen';
 import ImageEditorScreen from '../screens/ImageEditorScreen';
+import PetRegistrationScreen from '../screens/PetRegistrationScreen';
 import { loadUserData }  from '../context/userStore';
 import { ActivityIndicator, View } from 'react-native';
 
@@ -20,6 +21,7 @@ export type RootStackParamList = {
     EditStorybookScreen: { boardId: number }; // 🆕 게시글 수정 페이지 추가
     VideoEditorScreen: undefined;
     ImageEditorScreen: undefined;
+    PetRegistrationScreen: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -57,6 +59,7 @@ const AppNavigator = () => {
             <Stack.Screen name="VideoEditorScreen" component={VideoEditorScreen} />
             <Stack.Screen name="ImageEditorScreen" component={ImageEditorScreen} />
             <Stack.Screen name="EditStorybookScreen" component={EditStorybookScreen} />
+            <Stack.Screen name="PetRegistrationScreen" component={PetRegistrationScreen} />
         </Stack.Navigator>
     );
 };
