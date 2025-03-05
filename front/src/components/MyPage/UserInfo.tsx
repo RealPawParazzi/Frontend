@@ -29,85 +29,107 @@ const DEFAULT_PET_IMAGE = require('../../assets/images/pets-1.jpg'); // 기본 �
  */
 
 const UserInfo = ({ selectedTab }: UserInfoProps) => {
-    const navigation = useNavigation(); // $$$$$$ 네비게이션 객체 추가
+    const navigation = useNavigation(); // 네비게이션 객체 추가
     const { userData } = userStore(); // ✅ 유저 데이터 Zustand에서 가져오기
     const { pets } = petStore(); // ✅ 반려동물 데이터 가져오기
-    const [petList, setPetList] = useState<Pet[]>([]);
-    const { boardList } = boardStore(); // ✅ 게시물 데이터 가져오기
-
-    // ✅ 현재 선택된 펫 (펫 데이터 로드되면 첫 번째 펫 자동 선택)
-    const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
+    const { boardList, fetchUserBoards } = boardStore(); // ✅ 게시물 데이터 가져오기
+    const [petList, setPetList] = useState<Pet[]>([]); // ✅ 반려동물 리스트 상태
+    const [selectedPetId, setSelectedPetId] = useState<string | null>(null); // ✅ 선택된 펫 ID 상태
+    const [latestPostTime, setLatestPostTime] = useState<string>('없음'); // ✅ 최신 게시물 시간 상태
 
     useEffect(() => {
         if (pets.length > 0) {
-            // 🟢 첫 번째 반려동물 자동 선택 (store에서 가져옴)
-            setSelectedPet({
-                id: pets[0].petId.toString(),
-                name: pets[0].name,
-                species: pets[0].type,
-                image: pets[0].petImg,
-            });
-        } else {
-            // ❌ 반려동물 정보가 없을 경우 기본값 설정
-            setSelectedPet({
-                id: '0',
-                name: '기본 반려동물',
-                species: '강아지',
-                image: DEFAULT_PET_IMAGE,
-            });
+            // ✅ 반려동물 데이터 업데이트
+            const updatedPets = pets.map((pet) => ({
+                id: pet.petId.toString(),
+                name: pet.name,
+                species: pet.type,
+                image: pet.petImg || DEFAULT_PET_IMAGE, // 기본 이미지 처리
+            }));
+            setPetList(updatedPets);
+            setSelectedPetId(updatedPets[0].id); // ✅ 첫 번째 반려동물을 기본 선택
         }
     }, [pets]); // ✅ pets 데이터 변경 시 실행
 
-    // ✏️ 펫 수정 메뉴 (모달)
-    const [menuVisible, setMenuVisible] = useState(false);
+    useEffect(() => {
+        console.log('🔄 게시글 업데이트 요청');
+        fetchUserBoards(Number(userData.id)); // ✅ 게시글 최신화
+    }, [fetchUserBoards, userData.id]);
 
-    // ✅ 선택된 펫의 게시물 필터링 (제목에 펫 이름 포함된 게시물만 가져옴)
-    const petPosts = selectedPet
-        ? boardList
-            .filter((post) => post.title.includes(selectedPet.name)) // 선택된 펫과 관련된 게시물 필터링
-            .sort((a, b) => new Date(b.writeDatetime).getTime() - new Date(a.writeDatetime).getTime()) // 날짜순 정렬
-        : [];
+    useEffect(() => {
+        console.log('📌 현재 boardList:', boardList); // ✅ 게시글 리스트 로그 확인
+
+        const userPosts = boardList
+            .filter((post) => post.author.id === userData.id) // ✅ 현재 로그인한 유저의 게시글 필터링
+            .sort((a, b) => new Date(b.writeDatetime).getTime() - new Date(a.writeDatetime).getTime()); // ✅ 최신순 정렬
+
+        if (userPosts.length > 0) {
+            setLatestPostTime(getRelativeTime(userPosts[0].writeDatetime)); // ✅ 최신 게시글 시간 업데이트
+        } else {
+            setLatestPostTime('없음');
+        }
+    }, [boardList, userData.id]); // ✅ boardList 변경 시 실행
+
+    /**
+     * 🕒 게시글 시간 변환 함수
+     * - 현재 시간과 비교하여 "3분 전", "2일 전" 등으로 변환
+     */
+    const getRelativeTime = (dateString: string) => {
+        const postDate = new Date(dateString);
+        const now = new Date();
+        const diffMs = now.getTime() - postDate.getTime();
+
+        const diffMinutes = Math.floor(diffMs / (1000 * 60));
+        const diffHours = Math.floor(diffMinutes / 60);
+        const diffDays = Math.floor(diffHours / 24);
+
+        if (diffMinutes < 1) { return '방금 전'; }
+        if (diffMinutes < 60) { return `${diffMinutes}분 전`; }
+        if (diffHours < 24) { return `${diffHours}시간 전`; }
+        return `${diffDays}일 전`;
+    };
 
     return (
         <View style={styles.container}>
             {/* ✅ 집사 탭 선택 시 */}
             {selectedTab === 1 ? (
                 <View style={styles.petInfo}>
-                    <Text>🏡 집사님 반려동물 정보를 확인하세요!</Text>
+                    <Text>🏡 {userData.name} 집사님의 반려동물 일상을 공유하세요 !</Text>
 
                     {/* 📅 최근 게시물 & 🚶 오늘의 산책 거리 */}
                     <View style={styles.statsContainer}>
-                        <Text style={styles.statText}>
-                            📅 최근 게시물: {petPosts.length > 0 ? petPosts[0]?.writeDatetime.split('T')[0] : '없음'}
-                        </Text>
+                        <Text style={styles.statText}>📅 최근 게시물: {latestPostTime}</Text>
                         <Text style={styles.statText}>🚶 오늘의 산책: 5km</Text>
                     </View>
                 </View>
             ) : (
                 <>
                     <View style={styles.container}>
-                        {/* 🏡 반려동물 타이틀 */}
-                        <Text style={styles.sectionTitle}>반려동물 {petList.length}</Text>
+                        {/* ✅ 반려동물 수 반영 */}
+                        <Text style={styles.sectionTitle}>반려동물 {petList.length} 마리</Text>
 
                         {/* 📜 반려동물 리스트 (가로 스크롤) */}
-                        <FlatList
-                            horizontal
-                            data={petList}
-                            keyExtractor={(item) => item.id}
-                            showsHorizontalScrollIndicator={false}
-                            contentContainerStyle={styles.petListContainer}
-                            renderItem={({ item }) => (
-                                <View style={styles.petCard}>
-                                    <Image source={item.image} style={styles.petImage} />
-                                    <Text style={styles.petName}>{item.name}</Text>
-
-                                    {/* ✏️ 펫 수정 버튼 */}
-                                    <TouchableOpacity style={styles.editIcon}>
-                                        <MaterialIcons name="edit" size={20} color="white" />
+                        {petList.length > 0 && (
+                            <FlatList
+                                horizontal
+                                data={petList}
+                                keyExtractor={(item) => item.id}
+                                showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={styles.petListContainer}
+                                renderItem={({ item }) => (
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.petCard,
+                                            selectedPetId === item.id && styles.selectedPetCard, // ✅ 선택된 펫 강조
+                                        ]}
+                                        onPress={() => setSelectedPetId(item.id)} // ✅ 펫 선택 시 ID 변경
+                                    >
+                                        <Image source={item.image} style={styles.petImage} />
+                                        <Text style={styles.petName}>{item.name}</Text>
                                     </TouchableOpacity>
-                                </View>
-                            )}
-                        />
+                                )}
+                            />
+                        )}
 
                         {/* ➕ 반려동물 추가 버튼 */}
                         <TouchableOpacity
@@ -152,9 +174,20 @@ const styles = StyleSheet.create({
     petCard: {
         alignItems: 'center',
         justifyContent: 'center',
-        width: 85, // 📌 기존보다 조금 넓게 조정
-        position: 'relative',
-        marginHorizontal: 5, // 📌 카드 간격 균일하게 조정
+        width: 85,
+        padding: 10,
+        borderRadius: 50,
+        backgroundColor: 'white',
+        marginHorizontal: 5,
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        elevation: 2, // ✅ 안드로이드 그림자 효과
+    },
+
+    selectedPetCard: {
+        borderWidth: 2,
+        borderColor: '#FF6F00', // ✅ 선택된 반려동물 강조 색상
     },
 
     petImage: {
@@ -168,16 +201,6 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: 'bold',
         marginTop: 6, // 📌 텍스트와 이미지 간격 추가
-    },
-
-    /** ✏️ 수정 버튼 */
-    editIcon: {
-        position: 'absolute',
-        top: 5,
-        right: 5,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        padding: 6, // 📌 버튼 패딩 조정
-        borderRadius: 15,
     },
 
     /** ➕ 추가 버튼 스타일 */
@@ -203,16 +226,6 @@ const styles = StyleSheet.create({
     petInfo: {
         alignItems: 'center',
         marginVertical: 20, // 📌 여백 조금 증가
-    },
-
-    petNameInfo: {
-        fontSize: 20,
-        fontWeight: 'bold',
-    },
-
-    ownerName: {
-        fontSize: 16,
-        color: 'gray',
     },
 
     /** 📅 최근 게시물 & 🚶 산책 정보 */
