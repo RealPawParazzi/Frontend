@@ -36,7 +36,7 @@ const CommentInput = ({ boardId }: CommentInputProps) => {
                     onChangeText={setCommentText}
                 />
                 <TouchableOpacity onPress={handleSendComment} style={styles.sendButton}>
-                    <MaterialIcons name="send" size={24} color={commentText ? "#FF6F00" : "gray"} />
+                    <MaterialIcons name="send" size={24} color={commentText ? '#FF6F00' : 'gray'} />
                 </TouchableOpacity>
             </View>
         </KeyboardAvoidingView>
@@ -54,6 +54,8 @@ const styles = StyleSheet.create({
         borderColor: '#EEE',
     },
     inputWrapper: {
+        marginLeft: 25,
+        marginRight: 10,
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 15,

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, Alert,
-    SafeAreaView, ActivityIndicator, ActionSheetIOS, Platform
+    SafeAreaView, ActivityIndicator, ActionSheetIOS, Platform, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard,
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import boardStore from '../context/boardStore';
@@ -32,8 +32,8 @@ const StorybookDetailScreen = ({ route, navigation }: { route: StorybookDetailSc
     const boardLikes = likeStore((state) => state.boardLikes);
 
     // ✅ 현재 게시글의 좋아요 상태 (전역 상태 활용)
-    const [isLiked, setIsLiked] = useState(boardLikedStatus[boardId] || false);
-    const [likeCount, setLikeCount] = useState(boardLikes[boardId]?.length || 0);
+    const isLiked = boardLikedStatus[boardId] || false;
+    const likeCount = boardLikes[boardId]?.length || 0;
 
 
     const [loading, setLoading] = useState(true);
@@ -43,7 +43,7 @@ const StorybookDetailScreen = ({ route, navigation }: { route: StorybookDetailSc
         const loadPost = async () => {
             try {
                 await fetchBoardDetail(boardId);
-                await fetchBoardLikes(boardId); // ✅ 좋아요 상태 불러오기
+                await fetchBoardLikes(boardId);
             } catch (error) {
                 Alert.alert('❌ 오류', '게시글을 불러오는 중 문제가 발생했습니다.');
                 navigation.goBack();
@@ -51,7 +51,6 @@ const StorybookDetailScreen = ({ route, navigation }: { route: StorybookDetailSc
                 setLoading(false);
             }
         };
-
         loadPost();
     }, [boardId, fetchBoardDetail, fetchBoardLikes, navigation]);
 
@@ -120,20 +119,14 @@ const StorybookDetailScreen = ({ route, navigation }: { route: StorybookDetailSc
      * ✅ 게시글 좋아요 토글 함수
      */
     const handleToggleLike = async () => {
-        const newLikedState = !isLiked;
-        setIsLiked(newLikedState); // 🔥 UI를 즉시 업데이트
-        setLikeCount((prev) => (newLikedState ? prev + 1 : prev - 1)); // 🔥 좋아요 숫자 즉시 업데이트
-
         try {
             await toggleBoardLike(boardId);
-            await fetchBoardLikes(boardId); // ✅ 최신 상태 반영 (서버 동기화)
+            await fetchBoardLikes(boardId);
         } catch (error) {
-            // ❌ 오류 발생 시 이전 상태로 롤백
-            setIsLiked(!newLikedState);
-            setLikeCount((prev) => (!newLikedState ? prev + 1 : prev - 1));
             Alert.alert('❌ 오류', '좋아요 처리 중 문제가 발생했습니다.');
         }
     };
+
 
 
     if (loading) {
@@ -143,78 +136,91 @@ const StorybookDetailScreen = ({ route, navigation }: { route: StorybookDetailSc
             </View>
         );
     }
+
     return (
         <SafeAreaView style={styles.safeContainer}>
-            {/* 상단 네비게이션 바 */}
-            <View style={styles.navBar}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <MaterialIcons name="arrow-back-ios" size={24} color="#333" />
-                </TouchableOpacity>
+            {/* 키보드가 올라오면 자동으로 입력 바 위치 조정 */}
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={{ flex: 1 }}
+            >
+                {/* 키보드 바깥을 클릭하면 키보드 닫힘 */}
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                    <View style={{ flex: 1 }}>
+                        {/* 상단 네비게이션 바 */}
+                        <View style={styles.navBar}>
+                            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                                <MaterialIcons name="arrow-back-ios" size={24} color="#333" />
+                            </TouchableOpacity>
 
-                <Text style={styles.navTitle}>
-                    {new Date(selectedBoard.writeDatetime).toLocaleDateString('ko-KR')}
-                </Text>
+                            <Text style={styles.navTitle}>
+                                {new Date(selectedBoard.writeDatetime).toLocaleDateString('ko-KR')}
+                            </Text>
 
-                {/* 햄버거 메뉴 (수정/삭제) */}
-                <TouchableOpacity onPress={openActionSheet}>
-                    <MaterialIcons name="more-vert" size={24} color="#333" />
-                </TouchableOpacity>
-            </View>
+                            {/* 햄버거 메뉴 (수정/삭제) */}
+                            <TouchableOpacity onPress={openActionSheet}>
+                                <MaterialIcons name="more-vert" size={24} color="#333" />
+                            </TouchableOpacity>
+                        </View>
 
+                        {/* 본문 스크롤뷰 */}
+                        <ScrollView style={styles.contentContainer}>
+                            {/* 작성자 정보 */}
+                            <View style={styles.authorContainer}>
+                                <Image source={{ uri: selectedBoard.author.profileImageUrl }} style={styles.authorImage} />
+                                <View>
+                                    <Text style={styles.authorName}>{selectedBoard.author.nickname}</Text>
+                                    <Text style={styles.postDate}>{selectedBoard.writeDatetime}</Text>
+                                </View>
+                            </View>
 
-            <ScrollView style={styles.contentContainer}>
-                {/* 작성자 정보 */}
-                <View style={styles.authorContainer}>
-                    <Image source={{ uri: selectedBoard.author.profileImageUrl }} style={styles.authorImage} />
-                    <View>
-                        <Text style={styles.authorName}>{selectedBoard.author.nickname}</Text>
-                        <Text style={styles.postDate}>{selectedBoard.writeDatetime}</Text>
+                            {/* 제목 */}
+                            <Text style={styles.title}>{selectedBoard.title}</Text>
+
+                            {/* 게시글 컨텐츠 */}
+                            {selectedBoard.contents.map((content: { type: string; value: string }, index: number) =>
+                                content.type === 'text' ? (
+                                    <Text key={index} style={styles.postText}>{content.value}</Text>
+                                ) : (
+                                    <Image
+                                        key={index}
+                                        source={{ uri: content.value.startsWith('file://') ? content.value : `file://${content.value}` }}
+                                        style={styles.postImage}
+                                    />
+                                )
+                            )}
+
+                            {/* ✅ 좋아요 & 댓글 수 표시 */}
+                            <View style={styles.bottomBar}>
+                                <TouchableOpacity onPress={handleToggleLike} style={styles.bottomIcon}>
+                                    <MaterialIcons
+                                        name={isLiked ? 'favorite' : 'favorite-border'}
+                                        size={24}
+                                        color={isLiked ? 'red' : 'black'}
+                                    />
+                                    <Text style={styles.bottomText}>{likeCount}</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={styles.bottomIcon}>
+                                    <MaterialIcons name="chat-bubble-outline" size={24} color="black" />
+                                    <Text style={styles.bottomText}>{selectedBoard.commentCount}</Text>
+                                </TouchableOpacity>
+                            </View>
+
+                            {/* 댓글 목록 */}
+                            <CommentList boardId={boardId} />
+                        </ScrollView>
                     </View>
+                </TouchableWithoutFeedback>
+
+                {/* 🔥 댓글 입력 바 - 하단에 고정 */}
+                <View style={styles.commentInputContainer}>
+                    <CommentInput boardId={boardId} />
                 </View>
-
-                {/* 제목 */}
-                <Text style={styles.title}>{selectedBoard.title}</Text>
-
-                {/* 게시글 컨텐츠 */}
-                {selectedBoard.contents.map((content: { type: string; value: string }, index: number) =>
-                    content.type === 'text' ? (
-                        <Text key={index} style={styles.postText}>{content.value}</Text>
-                    ) : (
-                        <Image
-                            key={index}
-                            source={{ uri: content.value.startsWith('file://') ? content.value : `file://${content.value}` }}
-                            style={styles.postImage}
-                        />
-                    )
-                )}
-
-                {/* ✅ 좋아요 & 댓글 수 표시 */}
-                    <View style={styles.bottomBar}>
-                        <TouchableOpacity onPress={handleToggleLike} style={styles.bottomIcon}>
-                            <MaterialIcons
-                                name={isLiked ? 'favorite' : 'favorite-border'}
-                                size={24}
-                                color={isLiked ? 'red' : 'black'}
-                            />
-                            <Text style={styles.bottomText}>{likeCount}</Text>
-                        </TouchableOpacity>
-                <TouchableOpacity style={styles.bottomIcon}>
-                    <MaterialIcons name="chat-bubble-outline" size={24} color="black" />
-                    <Text style={styles.bottomText}>{selectedBoard.commentCount}</Text>
-                </TouchableOpacity>
-            </View>
-
-
-                {/* 댓글 목록 */}
-                <CommentList boardId={boardId} />
-            </ScrollView>
-
-            {/* 댓글 입력 바 */}
-            <CommentInput boardId={boardId} />
-
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 };
+
 
 // ✅ 스타일 정의
 const styles = StyleSheet.create({
@@ -269,6 +275,19 @@ const styles = StyleSheet.create({
 
     /* 🔺 로딩 화면 */
     loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+
+    /* 🔥 댓글 입력 바를 하단에 고정 */
+    commentInputContainer: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: '#FFF',
+        paddingVertical: 10,
+        borderTopWidth: 1,
+        borderColor: '#EEE',
+    },
+
 });
 
 export default StorybookDetailScreen;
