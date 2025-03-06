@@ -1,4 +1,4 @@
-import React, { useEffect , useState} from 'react';
+import React, { useState } from 'react';
 import { Text, TouchableOpacity, StyleSheet, FlatList, View, Alert } from 'react-native';
 import SegmentedControl from '@react-native-segmented-control/segmented-control';
 

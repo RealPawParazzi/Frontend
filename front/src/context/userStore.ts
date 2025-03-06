@@ -154,11 +154,12 @@ const userStore = create<{
  */
 export const loadUserData = async () => {
     try {
+
         const userInfo = await fetchUserData();
 
         // ✅ 펫 데이터 및 게시물 데이터 불러오기
-        await loadPetData(Number(userInfo.id)); // 펫 리스트 불러오기, 숫자로 변환
-        await loadBoardData(Number(userInfo.id)); // 게시물 리스트 불러오기, 숫자로 변환
+        await loadPetData(); // ✅ userId 제거 후 호출
+        await loadBoardData(Number(userInfo.id)); // 게시물 리스트는 기존대로 userId 필요
 
         // ✅ 최신 펫 데이터와 게시물 데이터 변환
         const { updatedPetList, updatedRecentPosts } = transformData();
