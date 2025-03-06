@@ -2,7 +2,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /** 📌 API 기본 URL */
-const BASE_URL = 'http://localhost:8080/api/v1/likes';
+const BASE_URL = 'http://localhost:8080/api/v1';
 
 /** ✅ 토큰 가져오기 */
 const getAuthHeaders = async () => {
@@ -11,6 +11,7 @@ const getAuthHeaders = async () => {
     return { Authorization: `Bearer ${token}` };
 };
 
+/** 🟠 1. 게시글 좋아요 관련 API */
 /**
  * ✅ 게시글 좋아요 토글
  * @param boardId 게시글 ID
@@ -20,7 +21,7 @@ export const toggleBoardLike = async (boardId: number) => {
     try {
         console.log(`📤 [게시글 좋아요 토글] -> ${boardId}`);
         const headers = await getAuthHeaders();
-        const response = await axios.post(`${BASE_URL}/${boardId}`, {}, { headers });
+        const response = await axios.post(`${BASE_URL}/likes/${boardId}`, {}, { headers });
         console.log('✅ [게시글 좋아요 변경 성공]', response.data);
         return response.data;
     } catch (error) {
@@ -36,7 +37,7 @@ export const toggleBoardLike = async (boardId: number) => {
 export const getBoardLikes = async (boardId: number) => {
     try {
         console.log(`📥 [게시글 좋아요 목록 요청] -> ${boardId}`);
-        const response = await axios.get(`${BASE_URL}/${boardId}`);
+        const response = await axios.get(`${BASE_URL}/likes/${boardId}`);
         console.log('✅ [게시글 좋아요 목록 가져오기 성공]', response.data);
         return response.data;
     } catch (error) {
@@ -45,6 +46,7 @@ export const getBoardLikes = async (boardId: number) => {
     }
 };
 
+/** 🟢 2. 댓글 좋아요 관련 API */
 /**
  * ✅ 댓글 좋아요 토글
  * @param commentId 댓글 ID
@@ -70,7 +72,7 @@ export const toggleCommentLike = async (commentId: number) => {
 export const getCommentLikes = async (commentId: number) => {
     try {
         console.log(`📥 [댓글 좋아요 목록 요청] -> ${commentId}`);
-        const response = await axios.get(`${BASE_URL}/comments/${commentId}/like`);
+        const response = await axios.get(`${BASE_URL}/comments/${commentId}/likes`);
         console.log('✅ [댓글 좋아요 목록 가져오기 성공]', response.data);
         return response.data;
     } catch (error) {
@@ -79,6 +81,7 @@ export const getCommentLikes = async (commentId: number) => {
     }
 };
 
+/** 🔵 3. 대댓글 좋아요 관련 API */
 /**
  * ✅ 대댓글 좋아요 토글
  * @param replyId 대댓글 ID
