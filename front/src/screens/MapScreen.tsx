@@ -4,7 +4,6 @@ import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps'; 
 import DateTimePicker from '@react-native-community/datetimepicker';
 import userStore from '../context/userStore';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import Header from '../components/Header';
 
 /** ✅ 반려동물별 산책 경로 데이터 */
 const petWalkRoutes: Record<string, { latitude: number; longitude: number }[]> = {
@@ -33,7 +32,6 @@ const MapScreen = () => {
 
     return (
         <View style={styles.container}>
-            <Header />
 
             {/* 📅 날짜 선택 */}
             <View style={styles.datePickerContainer}>

@@ -4,7 +4,6 @@ import SegmentedControl from '@react-native-segmented-control/segmented-control'
 
 import UserInfo from '../components/MyPage/UserInfo';
 import PostList from '../components/MyPage/PostList';
-import Header from '../components/Header';
 import { logoutUser } from '../services/authService'; // ✅ 로그아웃 서비스 추가
 import { useNavigation } from '@react-navigation/native';
 /**
@@ -35,7 +34,6 @@ const MyPageScreen = () => {
         <FlatList
             ListHeaderComponent={(
                 <>
-                    <Header />
                     {/* 🟢 Segmented Control (펫 / 집사 선택) */}
                     <SegmentedControl
                         values={['펫', '집사']}

@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, ScrollView, Text, StyleSheet } from 'react-native';
-import Header from '../components/Header';
 import MemoryVideo from '../components/HomePage/MemoryVideo';
 import FollowRecommendations from '../components/HomePage/FollowRecommendations';
 import StoryReels from '../components/HomePage/StoryReels';
@@ -17,7 +16,6 @@ const HomeScreen = () => {
 
     return (
         <View style={styles.container}>
-            <Header />
             <ScrollView showsVerticalScrollIndicator={false}>
                 {/* 🎞️ 오늘의 추억 영상 */}
                 <Text style={styles.sectionTitle}>오늘의 추억 영상 →</Text>

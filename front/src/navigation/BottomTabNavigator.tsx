@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, StyleSheet } from 'react-native';
+import {View, Text, TouchableOpacity, Modal, StyleSheet, SafeAreaView} from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import CalendarScreen from '../screens/CalendarScreen';
@@ -9,6 +9,8 @@ import StorybookScreen from '../screens/StorybookScreen';
 import VideoEditorScreen from '../screens/VideoEditorScreen';
 import ImageEditorScreen from '../screens/ImageEditorScreen';
 import HomeScreen from '../screens/HomeScreen';
+import Header from "../components/Header";
+
 
 const Tab = createBottomTabNavigator();
 
@@ -16,8 +18,9 @@ const BottomTabNavigator = ({ navigation }: any) => {
     const [modalVisible, setModalVisible] = useState(false);
 
     return (
-        <>
-            <Tab.Navigator
+        <SafeAreaView style={styles.safeContainer}>
+            <Header />
+        <Tab.Navigator
                 screenOptions={({ route }) => ({
                     tabBarIcon: ({ color, size }) => {
                         let iconName;
@@ -28,9 +31,10 @@ const BottomTabNavigator = ({ navigation }: any) => {
                         else if (route.name === 'MyPage') {iconName = 'person';}
                         return <Icon name={iconName as any} size={size} color={color} />;
                     },
+                    headerShown: false, // ✅ 상단 네비게이션 바 숨기기
                     tabBarActiveTintColor: '#000',
                     tabBarInactiveTintColor: 'gray',
-                    tabBarStyle: { height: 80, paddingBottom: 15 }, // ✅ 탭 바 높이를 조정해서 통일
+                    tabBarStyle: { height: 40, paddingBottom: 15 }, // ✅ 탭 바 높이를 조정해서 통일
                 })}
             >
                 <Tab.Screen name="Home" component={HomeScreen} options={{ title: '홈' }} />
@@ -56,7 +60,7 @@ const BottomTabNavigator = ({ navigation }: any) => {
                     }}
                 />
 
-                <Tab.Screen name="Map" component={MapScreen} options={{ title: '지도' }} />
+                <Tab.Screen name="Map" component={MapScreen} options={{ title: '산책' }} />
                 <Tab.Screen name="MyPage" component={MyPageScreen} options={{ title: '마이페이지' }} />
             </Tab.Navigator>
 
@@ -102,12 +106,16 @@ const BottomTabNavigator = ({ navigation }: any) => {
                     </View>
                 </View>
             </Modal>
-        </>
+        </SafeAreaView>
     );
 };
 
 // ✅ 스타일 정의
 const styles = StyleSheet.create({
+    safeContainer: {
+        flex: 1,
+        backgroundColor: 'white',
+    },
     tabBarButton: {
         justifyContent: 'center',
         alignItems: 'center',
@@ -122,7 +130,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#ffcf33', // ✅ 아이콘 배경 색상 (조금 더 튀도록 변경)
         justifyContent: 'center',
         alignItems: 'center',
-        bottom: 10, // ✅ 버튼이 너무 위로 올라가는 문제 해결
+        marginBottom: -20, // ✅ 버튼이 너무 위로 올라가는 문제 해결
     },
     modalContainer: {
         flex: 1,
