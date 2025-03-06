@@ -1,0 +1,103 @@
+import { create } from 'zustand';
+import {
+    createReply, updateReply, deleteReply, getRepliesByComment,
+} from '../services/replyService';
+
+/** 📌 대댓글 타입 */
+interface Reply {
+    replyId: number;
+    content: string;
+    likeCount: number;
+    createdAt: string;
+    updatedAt: string;
+    replyMember: {
+        memberId: number;
+        nickname: string;
+        profileImageUrl: string | null;
+    };
+}
+
+/** 📌 Zustand 대댓글 Store */
+interface ReplyStore {
+    replies: { [key: number]: Reply[] }; // 댓글 ID별 대댓글 리스트 저장
+    fetchRepliesByComment: (commentId: number) => Promise<void>;
+    addReply: (commentId: number, content: string) => Promise<void>;
+    editReply: (replyId: number, content: string) => Promise<void>;
+    removeReply: (replyId: number) => Promise<void>;
+}
+
+/** ✅ Zustand 대댓글 상태 */
+const replyStore = create<ReplyStore>((set) => ({
+    replies: {},
+
+    /**
+     * ✅ 특정 댓글의 대댓글 목록 가져오기
+     */
+    fetchRepliesByComment: async (commentId) => {
+        try {
+            const response = await getRepliesByComment(commentId);
+            set((state) => ({
+                replies: { ...state.replies, [commentId]: response.replies },
+            }));
+        } catch (error) {
+            console.error('❌ [대댓글 목록 가져오기 실패]:', error);
+        }
+    },
+
+    /**
+     * ✅ 대댓글 추가
+     */
+    addReply: async (commentId, content) => {
+        try {
+            const newReply = await createReply(commentId, content);
+            set((state) => ({
+                replies: {
+                    ...state.replies,
+                    [commentId]: [...(state.replies[commentId] || []), newReply],
+                },
+            }));
+        } catch (error) {
+            console.error('❌ [대댓글 추가 실패]:', error);
+        }
+    },
+
+    /**
+     * ✅ 대댓글 수정
+     */
+    editReply: async (replyId, content) => {
+        try {
+            const updatedReply = await updateReply(replyId, content);
+            set((state) => {
+                const updatedReplies = { ...state.replies };
+                Object.keys(updatedReplies).forEach((commentId) => {
+                    updatedReplies[Number(commentId)] = updatedReplies[Number(commentId)].map((r) =>
+                        r.replyId === replyId ? updatedReply : r
+                    );
+                });
+                return { replies: updatedReplies };
+            });
+        } catch (error) {
+            console.error('❌ [대댓글 수정 실패]:', error);
+        }
+    },
+
+    /**
+     * ✅ 대댓글 삭제
+     */
+    removeReply: async (replyId) => {
+        try {
+            await deleteReply(replyId);
+            set((state) => {
+                const updatedReplies = { ...state.replies };
+                Object.keys(updatedReplies).forEach((commentId) => {
+                    updatedReplies[Number(commentId)] = updatedReplies[Number(commentId)].filter((r) => r.replyId !== replyId);
+                });
+                return { replies: updatedReplies };
+            });
+        } catch (error) {
+            console.error('❌ [대댓글 삭제 실패]:', error);
+        }
+    },
+}));
+
+export default replyStore;

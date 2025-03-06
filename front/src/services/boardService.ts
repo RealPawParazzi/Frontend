@@ -12,7 +12,7 @@ const API_BASE_URL = 'http://localhost:8080/api/v1/boards';
 export const createBoard = async (data: { title: string; contents: { type: 'text' | 'image'; value: string }[] }) => {
     try {
         const token = await AsyncStorage.getItem('userToken'); // 🔑 토큰 가져오기
-        if (!token) throw new Error('로그인이 필요합니다.');
+        if (!token) { throw new Error('로그인이 필요합니다.'); }
 
         // 🔹 titleImage 및 titleContent 자동 설정
         const titleImage = data.contents.find((c) => c.type === 'image')?.value || null;
@@ -85,7 +85,7 @@ export const getBoardList = async () => {
 export const getBoardsByMember = async (memberId: number) => {
     const response = await fetch(`${API_BASE_URL}/member/${memberId}`);
 
-    if (!response.ok) {throw new Error('회원의 게시글 목록 조회 실패');}
+    if (!response.ok) { throw new Error('회원의 게시글 목록 조회 실패'); }
     return await response.json();
 };
 
