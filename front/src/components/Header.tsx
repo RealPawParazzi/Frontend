@@ -10,32 +10,26 @@ import userStore from '../context/userStore'; // ✅ Zustand 전역 상태 가�
  * - 프로필 이미지가 없을 경우 기본 아이콘(person) 표시
  */
 const Header = () => {
-    // ✅ Zustand에서 사용자 정보 가져오기
-    const { userData } = userStore();
-    const profileImageUrl: string | null = userData?.profileImage; // 🟢 프로필 이미지 URL (null 가능)
+    // ✅ Zustand에서 현재 선택한 반려동물 정보 가져오기
+    const { userData } = userStore(); // 🟢 선택된 반려동물 상태
 
     return (
         <View style={styles.container}>
-            {/* 🏠 앱 타이틀 (왼쪽 정렬) */}
-            <Text style={styles.title}>PawParazzi</Text>
+            {/* 🖼️ 반려동물 프로필 (왼쪽) */}
+            <TouchableOpacity style={styles.petContainer}>
+                <Image
+                    // 우선 간이로 리스트에서 첫번째 펫으로 셀렉티드 함
+                    source={userData.petList[0]?.image ? { uri: userData.petList[0]?.image } : require('../assets/images/pets-1.jpg')}
+                    style={styles.petImage}
+                />
+                <Text style={styles.petName}>{userData.petList[0]?.name || '반려동물 선택'}</Text>
+                <Icon name="keyboard-arrow-down" size={20} color="black" />
+            </TouchableOpacity>
 
-            {/* 🟢 오른쪽 영역: 알림 아이콘 + 프로필 이미지 */}
-            <View style={styles.rightIcons}>
-                {/* 🔔 알림 아이콘 */}
-                <TouchableOpacity style={styles.icon}>
-                    <Icon name="notifications" size={24} color="black" />
-                </TouchableOpacity>
-
-                {/* 🖼️ 프로필 이미지가 있으면 이미지 표시, 없으면 기본 아이콘 표시 */}
-                {profileImageUrl ? (
-                    <Image
-                        source={profileImageUrl as any} // `uri`로 감싸서 오류 해결
-                        style={styles.profileImage}
-                    />
-                ) : (
-                    <Icon name="person" size={30} color="gray" />
-                )}
-            </View>
+            {/* 🔔 알림 아이콘 (오른쪽) */}
+            <TouchableOpacity style={styles.notificationIcon}>
+                <Icon name="notifications" size={28} color="black" />
+            </TouchableOpacity>
         </View>
     );
 };
@@ -48,23 +42,26 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 15,
+        paddingHorizontal: 15,
+        paddingVertical: 10,
     },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-    },
-    rightIcons: {
+    petContainer: {
         flexDirection: 'row',
         alignItems: 'center',
     },
-    icon: {
-        marginRight: 10,
-    },
-    profileImage: {
-        width: 30,
-        height: 30,
+    petImage: {
+        width: 35,
+        height: 35,
         borderRadius: 50,
+        marginRight: 8,
+    },
+    petName: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginRight: 4,
+    },
+    notificationIcon: {
+        padding: 5,
     },
 });
 
