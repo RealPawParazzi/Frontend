@@ -5,6 +5,9 @@ import {
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import boardStore from '../context/boardStore';
+import likeStore from '../context/likeStore'; // ✅ 좋아요 상태 전역 관리
+import CommentList from '../components/Comments/CommentList'; // ✅ 댓글 목록 컴포넌트
+import CommentInput from '../components/Comments/CommentInput'; // ✅ 댓글 입력 바 컴포넌트
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
 /**
@@ -17,18 +20,30 @@ type StorybookDetailScreenRouteProp = RouteProp<RootStackParamList, 'StorybookDe
 const StorybookDetailScreen = ({ route, navigation }: { route: StorybookDetailScreenRouteProp, navigation: any }) => {
     const { boardId } = route.params;
 
+    // ✅ Zustand에서 게시글 데이터 불러오기
     const fetchBoardDetail = boardStore((state) => state.fetchBoardDetail);
     const deleteExistingBoard = boardStore((state) => state.deleteExistingBoard);
     const selectedBoard = boardStore((state) => state.selectedBoard);
 
+    // ✅ Zustand에서 좋아요 상태 불러오기
+    const toggleBoardLike = likeStore((state) => state.toggleBoardLike);
+    const fetchBoardLikes = likeStore((state) => state.fetchBoardLikes);
+    const boardLikedStatus = likeStore((state) => state.boardLikedStatus);
+    const boardLikes = likeStore((state) => state.boardLikes);
+
+    // ✅ 현재 게시글의 좋아요 상태 (전역 상태 활용)
+    const [isLiked, setIsLiked] = useState(boardLikedStatus[boardId] || false);
+    const [likeCount, setLikeCount] = useState(boardLikes[boardId]?.length || 0);
+
+
     const [loading, setLoading] = useState(true);
-    const [liked, setLiked] = useState(false); // ❤️ 좋아요 토글 상태
 
     // ✅ 게시글 상세 데이터 불러오기
     useEffect(() => {
         const loadPost = async () => {
             try {
                 await fetchBoardDetail(boardId);
+                await fetchBoardLikes(boardId); // ✅ 좋아요 상태 불러오기
             } catch (error) {
                 Alert.alert('❌ 오류', '게시글을 불러오는 중 문제가 발생했습니다.');
                 navigation.goBack();
@@ -38,7 +53,7 @@ const StorybookDetailScreen = ({ route, navigation }: { route: StorybookDetailSc
         };
 
         loadPost();
-    }, [boardId, fetchBoardDetail, navigation]);
+    }, [boardId, fetchBoardDetail, fetchBoardLikes, navigation]);
 
     // ✅ 게시글 삭제 함수
     const handleDeletePost = async () => {
@@ -101,6 +116,26 @@ const StorybookDetailScreen = ({ route, navigation }: { route: StorybookDetailSc
         }
     };
 
+    /**
+     * ✅ 게시글 좋아요 토글 함수
+     */
+    const handleToggleLike = async () => {
+        const newLikedState = !isLiked;
+        setIsLiked(newLikedState); // 🔥 UI를 즉시 업데이트
+        setLikeCount((prev) => (newLikedState ? prev + 1 : prev - 1)); // 🔥 좋아요 숫자 즉시 업데이트
+
+        try {
+            await toggleBoardLike(boardId);
+            await fetchBoardLikes(boardId); // ✅ 최신 상태 반영 (서버 동기화)
+        } catch (error) {
+            // ❌ 오류 발생 시 이전 상태로 롤백
+            setIsLiked(!newLikedState);
+            setLikeCount((prev) => (!newLikedState ? prev + 1 : prev - 1));
+            Alert.alert('❌ 오류', '좋아요 처리 중 문제가 발생했습니다.');
+        }
+    };
+
+
     if (loading) {
         return (
             <View style={styles.loader}>
@@ -140,6 +175,7 @@ const StorybookDetailScreen = ({ route, navigation }: { route: StorybookDetailSc
                 {/* 제목 */}
                 <Text style={styles.title}>{selectedBoard.title}</Text>
 
+                {/* 게시글 컨텐츠 */}
                 {selectedBoard.contents.map((content: { type: string; value: string }, index: number) =>
                     content.type === 'text' ? (
                         <Text key={index} style={styles.postText}>{content.value}</Text>
@@ -151,22 +187,31 @@ const StorybookDetailScreen = ({ route, navigation }: { route: StorybookDetailSc
                         />
                     )
                 )}
-            </ScrollView>
 
-            {/* 하단 네비게이션 바 */}
-            <View style={styles.bottomBar}>
-                {/* 좋아요 버튼 */}
-                <TouchableOpacity onPress={() => setLiked(!liked)} style={styles.bottomIcon}>
-                    <MaterialIcons name={liked ? 'favorite' : 'favorite-border'} size={24} color={liked ? 'red' : 'black'} />
-                    <Text style={styles.bottomText}>{liked ? selectedBoard.favoriteCount + 1 : selectedBoard.favoriteCount}</Text>
-                </TouchableOpacity>
-
-                {/* 댓글 버튼 */}
-                <TouchableOpacity style={styles.bottomIcon} onPress={() => Alert.alert('댓글 기능 추가 예정')}>
+                {/* ✅ 좋아요 & 댓글 수 표시 */}
+                    <View style={styles.bottomBar}>
+                        <TouchableOpacity onPress={handleToggleLike} style={styles.bottomIcon}>
+                            <MaterialIcons
+                                name={isLiked ? 'favorite' : 'favorite-border'}
+                                size={24}
+                                color={isLiked ? 'red' : 'black'}
+                            />
+                            <Text style={styles.bottomText}>{likeCount}</Text>
+                        </TouchableOpacity>
+                <TouchableOpacity style={styles.bottomIcon}>
                     <MaterialIcons name="chat-bubble-outline" size={24} color="black" />
                     <Text style={styles.bottomText}>{selectedBoard.commentCount}</Text>
                 </TouchableOpacity>
             </View>
+
+
+                {/* 댓글 목록 */}
+                <CommentList boardId={boardId} />
+            </ScrollView>
+
+            {/* 댓글 입력 바 */}
+            <CommentInput boardId={boardId} />
+
         </SafeAreaView>
     );
 };

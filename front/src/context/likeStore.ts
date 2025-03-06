@@ -6,7 +6,7 @@ import {
 } from '../services/likeService';
 
 /** 📌 좋아요한 유저 타입 */
-interface LikedMember {
+export interface LikedMember {
     memberId: number;
     nickname: string;
     profileImageUrl: string | null;
