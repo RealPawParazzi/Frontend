@@ -1,5 +1,8 @@
 import { create } from 'zustand';
-import { createBoard, getBoardList, getBoardDetail, updateBoard, deleteBoard, getBoardsByMember } from '../services/boardService';
+import { createBoard, getBoardList, getBoardDetail,
+    updateBoard, deleteBoard, getBoardsByMember,
+    toggleLike, fetchLikes,
+} from '../services/boardService';
 
 /** 📌 게시글 데이터 타입 정의 */
 interface Board {
@@ -49,6 +52,8 @@ const boardStore = create<{
     updateExistingBoard: (boardId: number, data: any) => Promise<void>;
     deleteExistingBoard: (boardId: number) => Promise<void>;
     fetchUserBoards: (memberId: number) => Promise<void>;
+    toggleBoardLike: (boardId: number) => Promise<void>;
+    fetchBoardLikes: (boardId: number) => Promise<void>;
 }>((set) => ({
     /** ✅ 게시글 리스트 (초기값: 기본 더미 데이터) */
     boardList: [defaultBoard],
@@ -129,6 +134,37 @@ const boardStore = create<{
         } catch (error) {
             console.error('❌ 특정 회원의 게시글 목록 불러오기 실패:', error);
             set({ boardList: [defaultBoard] }); // ❌ 오류 발생 시 기본 데이터 반환
+        }
+    },
+
+    /** ✅ 좋아요 토글 (등록/취소) */
+    toggleBoardLike: async (boardId) => {
+        try {
+            const result = await toggleLike(boardId);
+            set((state) => ({
+                selectedBoard: state.selectedBoard
+                    ? { ...state.selectedBoard, favoriteCount: result.favoriteCount }
+                    : null,
+                boardList: state.boardList.map((board) =>
+                    board.id === boardId ? { ...board, favoriteCount: result.favoriteCount } : board
+                ),
+            }));
+        } catch (error) {
+            console.error('❌ toggleBoardLike 오류:', error);
+        }
+    },
+
+    /** ✅ 특정 게시글의 좋아요 누른 회원 목록 조회 */
+    fetchBoardLikes: async (boardId) => {
+        try {
+            const data = await fetchLikes(boardId);
+            set((state) => ({
+                selectedBoard: state.selectedBoard
+                    ? { ...state.selectedBoard, likedMembers: data.likedMember, favoriteCount: data.likesCount }
+                    : null,
+            }));
+        } catch (error) {
+            console.error('❌ fetchBoardLikes 오류:', error);
         }
     },
 }));
