@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import {
-    createComment, updateComment, deleteComment, getCommentsByBoard,
+    createComment, updateComment,
+    deleteComment, getCommentsByBoard,
+    toggleCommentLike, fetchCommentLikes,
 } from '../services/commentService';
 
 /** 📌 댓글 타입 */
@@ -16,6 +18,7 @@ interface Comment {
         nickname: string;
         profileImageUrl: string | null;
     };
+    likedMembers?: { memberId: number; nickname: string; profileImageUrl: string | null }[];
 }
 
 /** 📌 Zustand 댓글 Store */
@@ -25,6 +28,8 @@ interface CommentStore {
     addComment: (boardId: number, content: string) => Promise<void>;
     editComment: (commentId: number, content: string) => Promise<void>;
     removeComment: (commentId: number) => Promise<void>;
+    toggleLikeOnComment: (commentId: number, boardId: number) => Promise<void>;
+    fetchCommentLikeDetails: (commentId: number, boardId: number) => Promise<void>;
 }
 
 /** ✅ Zustand 댓글 상태 */
@@ -97,6 +102,46 @@ const commentStore = create<CommentStore>((set) => ({
             });
         } catch (error) {
             console.error('❌ [댓글 삭제 실패]:', error);
+        }
+    },
+
+    /**
+     * ✅ 댓글 좋아요 토글 (등록/취소)
+     */
+    toggleLikeOnComment: async (commentId, boardId) => {
+        try {
+            const result = await toggleCommentLike(commentId);
+            set((state) => {
+                const updatedComments = { ...state.comments };
+                if (updatedComments[boardId]) {
+                    updatedComments[boardId] = updatedComments[boardId].map((c) =>
+                        c.commentId === commentId ? { ...c, likeCount: result.commentsLikeCount } : c
+                    );
+                }
+                return { comments: updatedComments };
+            });
+        } catch (error) {
+            console.error('❌ [댓글 좋아요 토글 실패]:', error);
+        }
+    },
+
+    /**
+     * ✅ 특정 댓글의 좋아요 목록 가져오기
+     */
+    fetchCommentLikeDetails: async (commentId, boardId) => {
+        try {
+            const data = await fetchCommentLikes(commentId);
+            set((state) => {
+                const updatedComments = { ...state.comments };
+                if (updatedComments[boardId]) {
+                    updatedComments[boardId] = updatedComments[boardId].map((c) =>
+                        c.commentId === commentId ? { ...c, likedMembers: data.likedMembers, likeCount: data.likeCount } : c
+                    );
+                }
+                return { comments: updatedComments };
+            });
+        } catch (error) {
+            console.error('❌ [댓글 좋아요 목록 불러오기 실패]:', error);
         }
     },
 }));

@@ -83,3 +83,40 @@ export const getCommentsByBoard = async (boardId: number) => {
         throw error;
     }
 };
+
+
+/**
+ * ✅ 댓글 좋아요 토글 API
+ * @param commentId 댓글 ID
+ * @returns { liked: boolean, commentsLikeCount: number }
+ */
+export const toggleCommentLike = async (commentId: number) => {
+    try {
+        console.log(`📤 [댓글 좋아요 토글] -> 댓글 ID: ${commentId}`);
+        const headers = await getAuthHeaders();
+        const response = await axios.post(`${BASE_URL}/${commentId}/like`, {}, { headers });
+        console.log('✅ [댓글 좋아요 토글 성공]', response.data);
+        return response.data; // { liked: boolean, commentsLikeCount: number }
+    } catch (error) {
+        console.error('❌ [댓글 좋아요 토글 실패]:', error);
+        throw error;
+    }
+};
+
+/**
+ * ✅ 특정 댓글의 좋아요 누른 회원 목록 조회 API
+ * @param commentId 댓글 ID
+ * @returns 좋아요 누른 회원 목록 및 좋아요 개수
+ */
+export const fetchCommentLikes = async (commentId: number) => {
+    try {
+        console.log(`📥 [댓글 좋아요 목록 요청] -> 댓글 ID: ${commentId}`);
+        const response = await axios.get(`${BASE_URL}/${commentId}/likes`);
+        console.log('✅ [댓글 좋아요 목록 가져오기 성공]', response.data);
+        return response.data; // { commentId, likeCount, likedMembers }
+    } catch (error) {
+        console.error('❌ [댓글 좋아요 목록 가져오기 실패]:', error);
+        throw error;
+    }
+};
+
