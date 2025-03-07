@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, Alert, ActionSheetIOS, Platform } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import commentStore from '../../context/commentStore';
-import likeStore from '../../context/likeStore';
 
 interface CommentCardProps {
     comment: {
@@ -20,8 +19,7 @@ interface CommentCardProps {
 
 /** ✅ 개별 댓글 카드 컴포넌트 */
 const CommentCard = ({ comment }: CommentCardProps) => {
-    const { removeComment } = commentStore();
-    const { toggleCommentLike } = likeStore();
+    const { removeComment, toggleLikeOnComment } = commentStore();
     const [liked, setLiked] = useState(false);
 
     // ✅ 댓글 삭제 핸들러
