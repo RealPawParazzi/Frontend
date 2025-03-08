@@ -4,8 +4,7 @@ import {
     SafeAreaView, ActivityIndicator, ActionSheetIOS, Platform, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard,
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import boardStore from '../context/boardStore';
-import likeStore from '../context/likeStore'; // ✅ 좋아요 상태 전역 관리
+import boardStore from '../context/boardStore'; // ✅ 좋아요 상태 전역 관리
 import CommentList from '../components/Comments/CommentList'; // ✅ 댓글 목록 컴포넌트
 import CommentInput from '../components/Comments/CommentInput'; // ✅ 댓글 입력 바 컴포넌트
 import { RouteProp } from '@react-navigation/native';
@@ -26,14 +25,12 @@ const StorybookDetailScreen = ({ route, navigation }: { route: StorybookDetailSc
     const selectedBoard = boardStore((state) => state.selectedBoard);
 
     // ✅ Zustand에서 좋아요 상태 불러오기
-    const toggleBoardLike = likeStore((state) => state.toggleBoardLike);
-    const fetchBoardLikes = likeStore((state) => state.fetchBoardLikes);
-    const boardLikedStatus = likeStore((state) => state.boardLikedStatus);
-    const boardLikes = likeStore((state) => state.boardLikes);
+    const toggleBoardLike = boardStore((state) => state.toggleBoardLike);
+    const fetchBoardLikes = boardStore((state) => state.fetchBoardLikes);
 
-    // ✅ 현재 게시글의 좋아요 상태 (전역 상태 활용)
-    const isLiked = boardLikedStatus[boardId] || false;
-    const likeCount = boardLikes[boardId]?.length || 0;
+    const [isLiked, setIsLiked] = useState(false);
+    const [likeCount, setLikeCount] = useState(0);
+
 
 
     const [loading, setLoading] = useState(true);
@@ -53,6 +50,14 @@ const StorybookDetailScreen = ({ route, navigation }: { route: StorybookDetailSc
         };
         loadPost();
     }, [boardId, fetchBoardDetail, fetchBoardLikes, navigation]);
+
+    useEffect(() => {
+        if (selectedBoard) {
+            setIsLiked(selectedBoard?.likedMembers?.some((member: { id: number }) => member.id === 1) || false);
+            setLikeCount(selectedBoard?.favoriteCount || 0);
+        }
+    }, [selectedBoard]);
+
 
     // ✅ 게시글 삭제 함수
     const handleDeletePost = async () => {
@@ -120,12 +125,30 @@ const StorybookDetailScreen = ({ route, navigation }: { route: StorybookDetailSc
      */
     const handleToggleLike = async () => {
         try {
+            // ✅ 1. UI 즉시 변경 (사용자가 하트 누른 것 반영)
+            const newLikedState = !isLiked;
+            setIsLiked(newLikedState);
+            setLikeCount((prev) => (newLikedState ? prev + 1 : prev - 1));
+
+            // ✅ 2. 서버에 좋아요 요청
             await toggleBoardLike(boardId);
-            await fetchBoardLikes(boardId);
+
+            // ✅ 3. 최신 좋아요 상태 불러오기
+            const updatedBoard = await fetchBoardLikes(boardId);
+
+            // ✅ 4. 서버에서 받아온 최신 데이터로 UI 동기화
+            if (updatedBoard) {
+                setIsLiked(updatedBoard.likedMembers?.some((member: { id: number }) => member.id === 1) || false);
+                setLikeCount(updatedBoard.likesCount || 0);
+            }
         } catch (error) {
             Alert.alert('❌ 오류', '좋아요 처리 중 문제가 발생했습니다.');
+            setIsLiked((prev) => !prev);
+            setLikeCount((prev) => (isLiked ? prev + 1 : prev - 1));
         }
     };
+
+
 
 
 

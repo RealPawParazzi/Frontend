@@ -53,7 +53,8 @@ const boardStore = create<{
     deleteExistingBoard: (boardId: number) => Promise<void>;
     fetchUserBoards: (memberId: number) => Promise<void>;
     toggleBoardLike: (boardId: number) => Promise<void>;
-    fetchBoardLikes: (boardId: number) => Promise<void>;
+    fetchBoardLikes: (boardId: number) => Promise<{ likedMembers: { id: number }[], likesCount: number } | null>;
+
 }>((set) => ({
     /** ✅ 게시글 리스트 (초기값: 기본 더미 데이터) */
     boardList: [defaultBoard],
@@ -163,6 +164,7 @@ const boardStore = create<{
                     ? { ...state.selectedBoard, likedMembers: data.likedMember, favoriteCount: data.likesCount }
                     : null,
             }));
+            return data;  // ✅ 반환값 추가
         } catch (error) {
             console.error('❌ fetchBoardLikes 오류:', error);
         }
