@@ -11,6 +11,7 @@ import ImageEditorScreen from '../screens/ImageEditorScreen';
 import PetRegistrationScreen from '../screens/PetRegistrationScreen';
 import PetInfoScreen from '../screens/PetInfoScreen';
 import PetEditScreen from '../screens/PetEditScreen';
+import FollowListScreen from '../screens/FollowListScreen'; // 🆕 팔로워/팔로잉 목록 화면 추가
 import { loadUserData }  from '../context/userStore';
 import { ActivityIndicator, View } from 'react-native';
 
@@ -26,6 +27,7 @@ export type RootStackParamList = {
     PetRegistrationScreen: undefined;
     PetInfoScreen: undefined;
     PetEditScreen: { pet: object };
+    FollowListScreen: { type: 'followers' | 'following' }; // 🆕 팔로워/팔로잉 목록 네비게이션 추가
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -66,6 +68,7 @@ const AppNavigator = () => {
             <Stack.Screen name="PetRegistrationScreen" component={PetRegistrationScreen} />
             <Stack.Screen name="PetInfoScreen" component={PetInfoScreen} />
             <Stack.Screen name="PetEditScreen" component={PetEditScreen} />
+            <Stack.Screen name="FollowListScreen" component={FollowListScreen} />
         </Stack.Navigator>
     );
 };
