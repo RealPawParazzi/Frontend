@@ -1,5 +1,15 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Alert, ActionSheetIOS, Platform } from 'react-native';
+import {
+    View,
+    Text,
+    Image,
+    TouchableOpacity,
+    StyleSheet,
+    Alert,
+    ActionSheetIOS,
+    Platform,
+    TextInput,
+} from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import commentStore from '../../context/commentStore';
 
@@ -19,7 +29,9 @@ interface CommentCardProps {
 
 /** ✅ 개별 댓글 카드 컴포넌트 */
 const CommentCard = ({ comment }: CommentCardProps) => {
-    const { removeComment, toggleLikeOnComment } = commentStore();
+    const { removeComment, editComment,  toggleLikeOnComment } = commentStore();
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedText, setEditedText] = useState(comment.content);
     const [liked, setLiked] = useState(false);
 
     // ✅ 댓글 삭제 핸들러
@@ -41,6 +53,17 @@ const CommentCard = ({ comment }: CommentCardProps) => {
         ]);
     };
 
+    // ✅ 댓글 수정 저장 핸들러
+    const handleSaveEdit = async () => {
+        if (!editedText.trim()) { return; }
+        try {
+            await editComment(comment.commentId, editedText);
+            setIsEditing(false);
+        } catch (error) {
+            Alert.alert('❌ 오류', '댓글 수정 중 문제가 발생했습니다.');
+        }
+    };
+
     // ✅ 옵션 메뉴 (수정/삭제)
     const openActionSheet = () => {
         if (Platform.OS === 'ios') {
@@ -51,13 +74,16 @@ const CommentCard = ({ comment }: CommentCardProps) => {
                     cancelButtonIndex: 2,
                 },
                 (buttonIndex) => {
-                    if (buttonIndex === 1) {
+                    if (buttonIndex === 0) {
+                        setIsEditing(true);
+                    } else if (buttonIndex === 1) {
                         handleDelete();
                     }
                 }
             );
         } else {
             Alert.alert('댓글 관리', '수정 또는 삭제할 수 있습니다.', [
+                { text: '수정하기', onPress: () => setIsEditing(true) },
                 { text: '삭제하기', onPress: handleDelete, style: 'destructive' },
                 { text: '취소', style: 'cancel' },
             ]);
@@ -83,8 +109,26 @@ const CommentCard = ({ comment }: CommentCardProps) => {
                 </TouchableOpacity>
             </View>
 
-            {/* 댓글 내용 */}
-            <Text style={styles.content}>{comment.content}</Text>
+            {/* ✅ 댓글 수정 중일 때 입력 필드 표시 */}
+            {isEditing ? (
+                <View style={styles.editContainer}>
+                    <TextInput
+                        style={styles.editInput}
+                        value={editedText}
+                        onChangeText={setEditedText}
+                        autoFocus
+                        placeholder="댓글을 수정하세요..."
+                        placeholderTextColor="#999"
+                    />
+                    <TouchableOpacity onPress={handleSaveEdit} style={styles.saveButton}>
+                        <MaterialIcons name="check" size={18} color="white" />
+                    </TouchableOpacity>
+                </View>
+            ) : (
+                <Text style={styles.content}>{comment.content}</Text>
+            )}
+
+
 
             {/* 좋아요 & 대댓글 버튼 */}
             <View style={styles.actions}>
@@ -134,7 +178,30 @@ const styles = StyleSheet.create({
     },
     content: {
         fontSize: 14,
-        marginVertical: 5,
+        marginVertical: 30,
+        marginHorizontal: 10,
+    },
+    editContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F5F5F5',
+        borderRadius: 30,
+        paddingHorizontal: 15,
+        paddingVertical: 10,
+        marginTop: 20,
+        marginBottom: 20,
+    },
+    editInput: {
+        flex: 1,
+        fontSize: 14,
+        padding: 5,
+        color: '#333',
+    },
+    saveButton: {
+        marginLeft: 10,
+        backgroundColor: 'rgba(51,51,51,0.28)',
+        padding: 8,
+        borderRadius: 50,
     },
     actions: {
         flexDirection: 'row',
