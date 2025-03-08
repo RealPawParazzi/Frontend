@@ -8,10 +8,37 @@ export interface UserData {
     name: string;
     email: string;
     nickName: string;
-    profileImageUrl: string;
+    profileImage: string;
     petList: { id: string; name: string; imageUrl: string }[];
     recentPosts: { id: string; title: string; content: string; imageUrl: string }[];
 }
+
+/**
+ * ✅ 전체 회원 목록 조회 API
+ * @returns 가입된 모든 사용자 목록 반환
+ */
+export const fetchAllUsers = async (): Promise<UserData[]> => {
+    try {
+        const response = await fetch(`${API_BASE_URL}`);
+        if (!response.ok) { throw new Error('전체 유저 목록을 불러오지 못했습니다.'); }
+
+        const users: { id: number; name: string; nickName: string; profileImage: string }[] = await response.json();
+
+        // ✅ 구조분해 할당을 사용하여 `profileImage` 유지
+        return users.map(({ id, name, nickName, profileImage }) => ({
+            id: String(id), // ✅ number → string 변환
+            name,
+            nickName,
+            profileImage, // ✅ 유지
+            email: '', // 기본값 추가 (선택적 필드)
+            petList: [], // 빈 배열로 기본값 설정
+            recentPosts: [], // 빈 배열로 기본값 설정
+        }));
+    } catch (error) {
+        console.error('❌ 전체 유저 목록 불러오기 실패:', error);
+        throw error;
+    }
+};
 
 /**
  * ✅ 현재 로그인된 사용자 정보 가져오기
@@ -27,7 +54,7 @@ export const fetchUserData = async (): Promise<UserData> => {
             headers: { Authorization: `Bearer ${token}` },
         });
 
-        if (!response.ok) throw new Error('사용자 정보를 불러오지 못했습니다.');
+        if (!response.ok) { throw new Error('사용자 정보를 불러오지 못했습니다.'); }
         return await response.json();
     } catch (error) {
         console.error('❌ 사용자 데이터 로드 실패:', error);
@@ -43,7 +70,7 @@ export const fetchUserData = async (): Promise<UserData> => {
 export const updateUser = async (updateData: {
     name?: string;
     nickName?: string;
-    profileImageUrl?: string;
+    profileImage?: string;
 }) => {
     try {
         console.log('📤 사용자 정보 수정 요청:', updateData);
