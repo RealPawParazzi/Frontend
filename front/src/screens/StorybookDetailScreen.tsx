@@ -162,13 +162,6 @@ const StorybookDetailScreen = ({ route, navigation }: { route: StorybookDetailSc
 
     return (
         <SafeAreaView style={styles.safeContainer}>
-            {/* 키보드가 올라오면 자동으로 입력 바 위치 조정 */}
-            <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={{ flex: 1 }}
-            >
-                {/* 키보드 바깥을 클릭하면 키보드 닫힘 */}
-                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                     <View style={{ flex: 1 }}>
                         {/* 상단 네비게이션 바 */}
                         <View style={styles.navBar}>
@@ -187,8 +180,13 @@ const StorybookDetailScreen = ({ route, navigation }: { route: StorybookDetailSc
                         </View>
 
                         {/* 본문 스크롤뷰 */}
-                        <ScrollView style={styles.contentContainer}>
-                            {/* 작성자 정보 */}
+                        <ScrollView
+                            style={styles.contentContainer}
+                            contentContainerStyle={{ paddingBottom: 60 }}
+                            keyboardShouldPersistTaps="handled"
+                        >
+
+                        {/* 작성자 정보 */}
                             <View style={styles.authorContainer}>
                                 <Image source={{ uri: selectedBoard.author.profileImageUrl }} style={styles.authorImage} />
                                 <View>
@@ -233,13 +231,10 @@ const StorybookDetailScreen = ({ route, navigation }: { route: StorybookDetailSc
                             <CommentList boardId={boardId} />
                         </ScrollView>
                     </View>
-                </TouchableWithoutFeedback>
-
                 {/* 🔥 댓글 입력 바 - 하단에 고정 */}
                 <View style={styles.commentInputContainer}>
                     <CommentInput boardId={boardId} />
                 </View>
-            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 };
@@ -302,12 +297,12 @@ const styles = StyleSheet.create({
     /* 🔥 댓글 입력 바를 하단에 고정 */
     commentInputContainer: {
         position: 'absolute',
-        bottom: 0,
+        bottom: 30,
         left: 0,
         right: 0,
         backgroundColor: '#FFF',
         paddingVertical: 10,
-        borderTopWidth: 1,
+        borderTopWidth: 5,
         borderColor: '#EEE',
     },
 
