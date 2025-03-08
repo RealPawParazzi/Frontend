@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -12,6 +12,8 @@ import {
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import commentStore from '../../context/commentStore';
+import replyStore from '../../context/replyStore'; // ✅ 대댓글 상태 추가
+import ReplyCard from './ReplyCard'; // ✅ 대댓글 카드 추가
 
 interface CommentCardProps {
     comment: {
@@ -30,9 +32,17 @@ interface CommentCardProps {
 /** ✅ 개별 댓글 카드 컴포넌트 */
 const CommentCard = ({ comment }: CommentCardProps) => {
     const { removeComment, editComment,  toggleLikeOnComment } = commentStore();
+    const { replies, fetchRepliesByComment, addReply } = replyStore(); // ✅ 대댓글 기능 추가
     const [isEditing, setIsEditing] = useState(false);
     const [editedText, setEditedText] = useState(comment.content);
     const [liked, setLiked] = useState(false);
+    const [showReplyInput, setShowReplyInput] = useState(false); // ✅ 대댓글 입력창 토글
+    const [replyText, setReplyText] = useState(''); // ✅ 대댓글 입력값
+
+    // ✅ 대댓글 불러오기 (최초 렌더링 시)
+    useEffect(() => {
+        fetchRepliesByComment(comment.commentId);
+    }, [comment.commentId, fetchRepliesByComment]);
 
     // ✅ 댓글 삭제 핸들러
     const handleDelete = async () => {
@@ -90,6 +100,18 @@ const CommentCard = ({ comment }: CommentCardProps) => {
         }
     };
 
+    // ✅ 대댓글 추가 핸들러
+    const handleAddReply = async () => {
+        if (!replyText.trim()) { return; }
+        try {
+            await addReply(comment.commentId, replyText);
+            setReplyText('');
+            setShowReplyInput(false); // ✅ 등록 후 입력 필드 숨김
+        } catch (error) {
+            console.error('❌ 대댓글 추가 실패:', error);
+        }
+    };
+
     return (
         <View style={styles.container}>
             <View style={styles.header}>
@@ -137,10 +159,33 @@ const CommentCard = ({ comment }: CommentCardProps) => {
                     <Text style={styles.actionText}>{liked ? comment.likeCount + 1 : comment.likeCount}</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.actionButton}>
+                <TouchableOpacity onPress={() => setShowReplyInput(!showReplyInput)} style={styles.actionButton}>
                     <MaterialIcons name="chat-bubble-outline" size={18} color="black" />
                     <Text style={styles.actionText}>대댓글</Text>
                 </TouchableOpacity>
+            </View>
+
+            {/* ✅ 대댓글 입력창 (토글 가능) */}
+            {showReplyInput && (
+                <View style={styles.replyInputContainer}>
+                    <TextInput
+                        style={styles.replyInput}
+                        value={replyText}
+                        onChangeText={setReplyText}
+                        placeholder="대댓글을 입력하세요..."
+                        placeholderTextColor="#999"
+                    />
+                    <TouchableOpacity onPress={handleAddReply} style={styles.replyButton}>
+                        <Text style={styles.replyButtonText}>등록</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
+
+            {/* ✅ 대댓글 리스트 */}
+            <View style={styles.replyContainer}>
+                {replies[comment.commentId]?.map((reply) => (
+                    <ReplyCard key={reply.replyId} reply={reply} commentId={comment.commentId} />
+                ))}
             </View>
         </View>
     );
@@ -216,6 +261,36 @@ const styles = StyleSheet.create({
     actionText: {
         fontSize: 14,
         marginLeft: 5,
+    },
+    replyInputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#DDD',
+        borderRadius: 8,
+        padding: 5,
+        marginTop: 10,
+    },
+    replyInput: {
+        flex: 1,
+        fontSize: 14,
+        padding: 5,
+        color: '#333',
+    },
+    replyButton: {
+        marginLeft: 10,
+        backgroundColor: '#FF6F00',
+        padding: 8,
+        borderRadius: 5,
+    },
+    replyButtonText: {
+        color: '#FFF',
+        fontWeight: 'bold',
+    },
+    replyContainer: {
+        marginTop: 10,
+        paddingLeft: 10, // ✅ 대댓글 들여쓰기
+        borderColor: '#DDD',
     },
 });
 
