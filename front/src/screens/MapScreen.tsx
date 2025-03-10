@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, Image } from 'react-native';
+import {View, Text, TouchableOpacity, StyleSheet, FlatList, Image, Alert } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import Geolocation from 'react-native-geolocation-service'; // ✅ 위치 추적
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -9,26 +9,32 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const MapScreen = () => {
     const { userData } = userStore();
-    const { saveWalk } = walkStore();
+    const { saveWalk, fetchWalks, walks } = walkStore();
     const [selectedPet, setSelectedPet] = useState(userData.petList[0]);
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [isWalking, setIsWalking] = useState(false);
     const [walkRoute, setWalkRoute] = useState<{ latitude: number; longitude: number; timestamp: string }[]>([]);
     const [startTime, setStartTime] = useState<string | null>(null);
+    const [totalDistance, setTotalDistance] = useState(0);
+    const [averageSpeed, setAverageSpeed] = useState(0);
+
+    /** ✅ 날짜별 산책 히스토리 불러오기 */
+    useEffect(() => {
+        fetchWalks(Number(selectedPet.id));
+    }, [selectedPet, selectedDate, fetchWalks]);
 
     /** ✅ 위치 추적 설정 */
     useEffect(() => {
         let watchId: any = null;
         if (isWalking) {
-            setStartTime(new Date().toISOString()); // ✅ 산책 시작 시간 저장
+            setStartTime(new Date().toISOString());
             watchId = Geolocation.watchPosition(
                 (position) => {
                     const { latitude, longitude } = position.coords;
                     if (walkRoute.length === 0 ||
                         (latitude !== walkRoute[walkRoute.length - 1].latitude &&
                             longitude !== walkRoute[walkRoute.length - 1].longitude)) {
-                        // ✅ 이전 위치와 비교하여 다를 경우만 저장
                         setWalkRoute((prevRoute) => [...prevRoute, { latitude, longitude, timestamp: new Date().toISOString() }]);
                     }
                 },
@@ -36,13 +42,35 @@ const MapScreen = () => {
                 { enableHighAccuracy: true, distanceFilter: 10, interval: 5000 }
             );
         } else {
-            if (watchId) { Geolocation.clearWatch(watchId); }
+            if (watchId) Geolocation.clearWatch(watchId);
         }
         return () => {
-            if (watchId) { Geolocation.clearWatch(watchId); }
+            if (watchId) Geolocation.clearWatch(watchId);
         };
     }, [isWalking, walkRoute]);
 
+    /** ✅ 실시간 거리 및 평균 속도 업데이트 */
+    useEffect(() => {
+        if (walkRoute.length > 1) {
+            const distance = calculateDistance(walkRoute);
+            setTotalDistance(distance);
+            const duration = (new Date().getTime() - new Date(startTime || '').getTime()) / (1000 * 60 * 60);
+            setAverageSpeed(duration > 0 ? parseFloat((distance / duration).toFixed(2)) : 0);
+        }
+    }, [startTime, walkRoute]);
+
+    /** ✅ 거리 계산 함수 */
+    const calculateDistance = (route: { latitude: number; longitude: number }[]) => {
+        let distance = 0;
+        for (let i = 1; i < route.length; i++) {
+            const prev = route[i - 1];
+            const curr = route[i];
+            distance += Math.sqrt(
+                Math.pow(curr.latitude - prev.latitude, 2) + Math.pow(curr.longitude - prev.longitude, 2)
+            ) * 111;
+        }
+        return parseFloat(distance.toFixed(2));
+    };
 
     /** ✅ 산책 종료 후 데이터 저장 */
     const handleWalkEnd = async () => {
@@ -52,10 +80,9 @@ const MapScreen = () => {
             await saveWalk(Number(selectedPet.id), walkRoute, startTime, endTime);
             setWalkRoute([]);
             setStartTime(null);
+            Alert.alert('산책 기록이 저장되었습니다! 📍');
         }
     };
-
-
 
     return (
         <View style={styles.container}>
@@ -73,7 +100,7 @@ const MapScreen = () => {
                         display="default"
                         onChange={(event, date) => {
                             setShowDatePicker(false);
-                            if (date) {setSelectedDate(date);}
+                            if (date) { setSelectedDate(date); }
                         }}
                     />
                 )}
@@ -107,11 +134,17 @@ const MapScreen = () => {
                 </MapView>
             </View>
 
+            {/* ✅ 실시간 거리 & 속도 표시 */}
+            <View style={styles.statsContainer}>
+                <Text style={styles.statsText}>이동 거리: {totalDistance} km</Text>
+                <Text style={styles.statsText}>평균 속도: {averageSpeed} km/h</Text>
+            </View>
+
             {/* 🐾 산책 컨트롤 버튼 */}
             <View style={styles.walkControl}>
                 <TouchableOpacity
                     style={[styles.walkButton, isWalking && styles.walking]}
-                    onPress={() => setIsWalking(!isWalking)}
+                    onPress={isWalking ? handleWalkEnd : () => setIsWalking(true)}
                 >
                     <Text style={styles.walkButtonText}>
                         {isWalking ? '산책 종료' : '산책 시작'}
@@ -129,7 +162,7 @@ const MapScreen = () => {
                     <TouchableOpacity
                         style={[
                             styles.petButton,
-                            selectedPet.id === item.id && styles.selectedPetButton
+                            selectedPet.id === item.id && styles.selectedPetButton,
                         ]}
                         onPress={() => setSelectedPet(item)}
                     >
@@ -171,6 +204,9 @@ const styles = StyleSheet.create({
     /** 🗺️ 지도 스타일 */
     mapContainer: { flex: 1.5, overflow: 'hidden', borderRadius: 15, marginHorizontal: 10 },
     map: { width: '100%', height: '100%' },
+
+    statsContainer: { alignItems: 'center', padding: 10 },
+    statsText: { fontSize: 16, fontWeight: 'bold' },
 
     /** 🐾 산책 버튼 */
     walkControl: {
