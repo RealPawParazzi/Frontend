@@ -137,7 +137,7 @@ export const deleteBoard = async (boardId: number) => {
 /**
  * ✅ 게시글 좋아요 토글 API
  * @param boardId 게시글 ID
- * @returns { liked: boolean, favoriteCount: number }
+ * @returns { memberId: number, boardId: number, liked: boolean, favoriteCount: number }
  */
 export const toggleLike = async (boardId: number) => {
     try {
@@ -145,9 +145,8 @@ export const toggleLike = async (boardId: number) => {
         if (!token) { throw new Error('로그인이 필요합니다.'); }
 
         const response = await fetch(`${API_BASE_URL}/${boardId}/like`, {
-            method: 'POST',
+            method: 'POST', // ✅ 좋아요 및 취소 동일한 엔드포인트
             headers: {
-                'Content-Type': 'application/json',
                 Authorization: `Bearer ${token}`,
             },
         });
@@ -157,7 +156,11 @@ export const toggleLike = async (boardId: number) => {
             throw new Error(errorData.message || '좋아요 처리 실패');
         }
 
-        return await response.json(); // { liked: boolean, favoriteCount: number }
+        const result = await response.json();
+
+        console.log('🟢 좋아요 응답:', result); //  API 응답 디버깅 로그
+
+        return result; //  API 응답 값 그대로 반환
     } catch (error) {
         console.error('❌ toggleLike 오류:', error);
         throw error;
@@ -167,7 +170,7 @@ export const toggleLike = async (boardId: number) => {
 /**
  * ✅ 특정 게시글의 좋아요 누른 회원 목록 조회 API
  * @param boardId 게시글 ID
- * @returns 좋아요 누른 회원 목록 및 좋아요 개수
+ * @returns { boardId: number, likesCount: number, likedMember: Array<{memberId: number, nickname: string, profileImageUrl: string}> }
  */
 export const fetchLikes = async (boardId: number) => {
     try {
@@ -179,6 +182,5 @@ export const fetchLikes = async (boardId: number) => {
         throw error;
     }
 };
-
 
 
