@@ -20,7 +20,7 @@ const CommentList = ({ boardId }: CommentListProps) => {
             <FlatList
                 data={comments[boardId] || []}
                 keyExtractor={(item) => item.commentId.toString()}
-                renderItem={({ item }) => <CommentCard comment={item} />}
+                renderItem={({ item }) => <CommentCard comment={item} boardId={boardId} />}
                 contentContainerStyle={styles.listContainer}
             />
         </View>

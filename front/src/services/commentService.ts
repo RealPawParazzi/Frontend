@@ -96,7 +96,7 @@ export const toggleCommentLike = async (commentId: number) => {
         const headers = await getAuthHeaders();
         const response = await axios.post(`${BASE_URL}/${commentId}/like`, {}, { headers });
         console.log('✅ [댓글 좋아요 토글 성공]', response.data);
-        return response.data; // { liked: boolean, commentsLikeCount: number }
+        return response.data; // { memberId, commentId, liked, commentsLikeCount }
     } catch (error) {
         console.error('❌ [댓글 좋아요 토글 실패]:', error);
         throw error;

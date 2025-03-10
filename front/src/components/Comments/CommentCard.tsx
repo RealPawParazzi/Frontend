@@ -21,23 +21,37 @@ interface CommentCardProps {
         commentId: number;
         content: string;
         likeCount: number;
+        replyCount: number;
         createdAt: string;
+        updatedAt: string;
         commentMember: {
             memberId: number;
             nickname: string;
             profileImageUrl: string | null;
         };
+        likedMembers?: {
+            memberId: number;
+            nickname: string;
+            profileImageUrl: string | null
+        }[];
     };
+    boardId: number; // 게시글 ID를 props로 받도록 추가
 }
 
 /** ✅ 개별 댓글 카드 컴포넌트 */
-const CommentCard = ({ comment }: CommentCardProps) => {
-    const { removeComment, editComment,  toggleLikeOnComment } = commentStore();
+const CommentCard = ({ comment, boardId }: CommentCardProps) => {
+    const {
+        removeComment,
+        editComment,
+        toggleLikeOnComment,
+        fetchCommentLikeDetails,
+        isLikedByMe,
+    } = commentStore();
     const { replies, fetchRepliesByComment } = replyStore(); // ✅ 대댓글 기능 추가
     const [isEditing, setIsEditing] = useState(false);
     const [editedText, setEditedText] = useState(comment.content);
-    const [liked, setLiked] = useState(false);
     const [showReplyInput, setShowReplyInput] = useState(false); // ✅ 대댓글 입력창 토글
+    const [showLikes, setShowLikes] = useState(false); // 좋아요 상세 목록 표시 여부
 
     // ✅ 대댓글 불러오기 (최초 렌더링 시)
     useEffect(() => {
@@ -100,6 +114,27 @@ const CommentCard = ({ comment }: CommentCardProps) => {
         }
     };
 
+    // ✅ 좋아요 버튼 핸들러
+    const handleLikeToggle = async () => {
+        try {
+            await toggleLikeOnComment(comment.commentId, boardId);
+        } catch (error) {
+            Alert.alert('❌ 오류', '좋아요 처리 중 문제가 발생했습니다.');
+        }
+    };
+
+    // ✅ 좋아요 상세 목록 표시 핸들러
+    const handleShowLikes = async () => {
+        if (comment.likeCount > 0) {
+            try {
+                await fetchCommentLikeDetails(comment.commentId, boardId);
+                setShowLikes(!showLikes);
+            } catch (error) {
+                Alert.alert('❌ 오류', '좋아요 목록을 불러오는 중 문제가 발생했습니다.');
+            }
+        }
+    };
+
     return (
         <View style={styles.container}>
             <View style={styles.header}>
@@ -142,16 +177,38 @@ const CommentCard = ({ comment }: CommentCardProps) => {
 
             {/* 좋아요 & 대댓글 버튼 */}
             <View style={styles.actions}>
-                <TouchableOpacity onPress={() => setLiked(!liked)} style={styles.actionButton}>
-                    <MaterialIcons name={liked ? 'favorite' : 'favorite-border'} size={18} color={liked ? 'red' : 'black'} />
-                    <Text style={styles.actionText}>{liked ? comment.likeCount + 1 : comment.likeCount}</Text>
+                <TouchableOpacity onPress={handleLikeToggle} style={styles.actionButton}>
+                    <MaterialIcons
+                        name={isLikedByMe[comment.commentId] ? 'favorite' : 'favorite-border'}
+                        size={18}
+                        color={isLikedByMe[comment.commentId] ? 'red' : 'black'}
+                    />
+                    <TouchableOpacity onPress={handleShowLikes}>
+                        <Text style={styles.actionText}>{comment.likeCount}</Text>
+                    </TouchableOpacity>
                 </TouchableOpacity>
 
                 <TouchableOpacity onPress={() => setShowReplyInput(!showReplyInput)} style={styles.actionButton}>
                     <MaterialIcons name="chat-bubble-outline" size={18} color="black" />
-                    <Text style={styles.actionText}>대댓글</Text>
+                    <Text style={styles.actionText}>대댓글 {comment.replyCount > 0 ? `(${comment.replyCount})` : ''}</Text>
                 </TouchableOpacity>
             </View>
+
+            {/* 좋아요 누른 사용자 목록 */}
+            {showLikes && comment.likedMembers && comment.likedMembers.length > 0 && (
+                <View style={styles.likesContainer}>
+                    <Text style={styles.likesTitle}>좋아요 {comment.likeCount}개</Text>
+                    {comment.likedMembers.map((member) => (
+                        <View key={member.memberId} style={styles.likedMember}>
+                            <Image
+                                source={member.profileImageUrl ? { uri: member.profileImageUrl } : require('../../assets/images/profile-1.png')}
+                                style={styles.likedMemberImage}
+                            />
+                            <Text style={styles.likedMemberName}>{member.nickname}</Text>
+                        </View>
+                    ))}
+                </View>
+            )}
 
             {/* ✅ 대댓글 입력창 (토글 가능) */}
             {showReplyInput && <ReplyInput commentId={comment.commentId} onReplyAdded={() => setShowReplyInput(false)} />}
@@ -236,6 +293,31 @@ const styles = StyleSheet.create({
     actionText: {
         fontSize: 14,
         marginLeft: 5,
+    },
+    likesContainer: {
+        marginTop: 10,
+        padding: 10,
+        backgroundColor: '#f8f8f8',
+        borderRadius: 8,
+    },
+    likesTitle: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        marginBottom: 8,
+    },
+    likedMember: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 5,
+    },
+    likedMemberImage: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        marginRight: 8,
+    },
+    likedMemberName: {
+        fontSize: 13,
     },
     replyInputContainer: {
         flexDirection: 'row',
