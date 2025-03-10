@@ -17,6 +17,7 @@ interface Reply {
         profileImageUrl: string | null;
     };
     likedMembers?: { memberId: number; nickname: string; profileImageUrl: string | null }[];
+    liked?: boolean; // 현재 사용자가 좋아요를 눌렀는지 여부
 }
 
 /** 📌 Zustand 대댓글 Store */
@@ -26,12 +27,14 @@ interface ReplyStore {
     addReply: (commentId: number, content: string) => Promise<void>;
     editReply: (replyId: number, content: string) => Promise<void>;
     removeReply: (replyId: number) => Promise<void>;
+    isReplyLikedByMe: { [key: number]: boolean }; // 댓글 ID별 현재 사용자의 좋아요 상태
     toggleLikeOnReply: (replyId: number, commentId: number) => Promise<void>;
     fetchReplyLikeDetails: (replyId: number, commentId: number) => Promise<void>;
 }
 /** ✅ Zustand 대댓글 상태 */
 const replyStore = create<ReplyStore>((set) => ({
     replies: {},
+    isReplyLikedByMe: {},
 
     /**
      * ✅ 특정 댓글의 대댓글 목록 가져오기
@@ -101,6 +104,7 @@ const replyStore = create<ReplyStore>((set) => ({
             console.error('❌ [대댓글 삭제 실패]:', error);
         }
     },
+
     /**
      * ✅ 대댓글 좋아요 토글 (등록/취소)
      */
@@ -109,13 +113,26 @@ const replyStore = create<ReplyStore>((set) => ({
             const result = await toggleReplyLike(replyId);
             set((state) => {
                 const updatedReplies = { ...state.replies };
+                const updatedIsLikedByMe = { ...state.isReplyLikedByMe };
+
+                // 해당 대댓글의 좋아요 상태 업데이트
+                updatedIsLikedByMe[replyId] = result.liked;
+
                 if (updatedReplies[commentId]) {
                     updatedReplies[commentId] = updatedReplies[commentId].map((r) =>
-                        r.replyId === replyId ? { ...r, likeCount: result.commentsLikeCount } : r
+                        r.replyId === replyId ? {
+                            ...r,
+                            likeCount: result.replyLikeCount,
+                            liked: result.liked,
+                        } : r
                     );
                 }
-                return { replies: updatedReplies };
+                return {
+                    replies: updatedReplies,
+                    isReplyLikedByMe: updatedIsLikedByMe,
+                };
             });
+            return result;
         } catch (error) {
             console.error('❌ [대댓글 좋아요 토글 실패]:', error);
         }
@@ -131,11 +148,16 @@ const replyStore = create<ReplyStore>((set) => ({
                 const updatedReplies = { ...state.replies };
                 if (updatedReplies[commentId]) {
                     updatedReplies[commentId] = updatedReplies[commentId].map((r) =>
-                        r.replyId === replyId ? { ...r, likedMembers: data.likedMembers, likeCount: data.totalLikes } : r
+                        r.replyId === replyId ? {
+                            ...r,
+                            likedMembers: data.likedMembers,
+                            likeCount: data.totalLikes,
+                        } : r
                     );
                 }
                 return { replies: updatedReplies };
             });
+            return data;
         } catch (error) {
             console.error('❌ [대댓글 좋아요 목록 불러오기 실패]:', error);
         }

@@ -24,7 +24,7 @@ interface Comment {
 /** 📌 Zustand 댓글 Store */
 interface CommentStore {
     comments: { [key: number]: Comment[] }; // 게시글 ID별 댓글 리스트 저장
-    isLikedByMe: { [key: number]: boolean }; // 댓글 ID별 현재 사용자의 좋아요 상태
+    isCommentLikedByMe: { [key: number]: boolean }; // 댓글 ID별 현재 사용자의 좋아요 상태
     fetchCommentsByBoard: (boardId: number) => Promise<void>;
     addComment: (boardId: number, content: string) => Promise<void>;
     editComment: (commentId: number, content: string) => Promise<void>;
@@ -36,7 +36,7 @@ interface CommentStore {
 /** ✅ Zustand 댓글 상태 */
 const commentStore = create<CommentStore>((set) => ({
     comments: {},
-    isLikedByMe: {},
+    isCommentLikedByMe: {},
 
     /**
      * ✅ 특정 게시글의 댓글 목록 가져오기
@@ -118,7 +118,7 @@ const commentStore = create<CommentStore>((set) => ({
 
             set((state) => {
                 const updatedComments = { ...state.comments };
-                const updatedIsLikedByMe = { ...state.isLikedByMe };
+                const updatedIsLikedByMe = { ...state.isCommentLikedByMe };
 
                 // 해당 댓글의 좋아요 상태 업데이트
                 updatedIsLikedByMe[commentId] = result.liked;
@@ -134,7 +134,7 @@ const commentStore = create<CommentStore>((set) => ({
 
                 return {
                     comments: updatedComments,
-                    isLikedByMe: updatedIsLikedByMe,
+                    isCommentLikedByMe: updatedIsLikedByMe,
                 };
             });
         } catch (error) {

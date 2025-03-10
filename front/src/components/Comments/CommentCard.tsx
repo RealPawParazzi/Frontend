@@ -45,7 +45,7 @@ const CommentCard = ({ comment, boardId }: CommentCardProps) => {
         editComment,
         toggleLikeOnComment,
         fetchCommentLikeDetails,
-        isLikedByMe,
+        isCommentLikedByMe,
     } = commentStore();
     const { replies, fetchRepliesByComment } = replyStore(); // ✅ 대댓글 기능 추가
     const [isEditing, setIsEditing] = useState(false);
@@ -179,9 +179,9 @@ const CommentCard = ({ comment, boardId }: CommentCardProps) => {
             <View style={styles.actions}>
                 <TouchableOpacity onPress={handleLikeToggle} style={styles.actionButton}>
                     <MaterialIcons
-                        name={isLikedByMe[comment.commentId] ? 'favorite' : 'favorite-border'}
+                        name={isCommentLikedByMe[comment.commentId] ? 'favorite' : 'favorite-border'}
                         size={18}
-                        color={isLikedByMe[comment.commentId] ? 'red' : 'black'}
+                        color={isCommentLikedByMe[comment.commentId] ? 'red' : 'black'}
                     />
                     <TouchableOpacity onPress={handleShowLikes}>
                         <Text style={styles.actionText}>{comment.likeCount}</Text>

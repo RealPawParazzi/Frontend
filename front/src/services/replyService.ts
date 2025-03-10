@@ -89,15 +89,16 @@ export const getRepliesByComment = async (commentId: number) => {
 /**
  * ✅ 대댓글 좋아요 토글 API
  * @param replyId 대댓글 ID
- * @returns { liked: boolean, commentsLikeCount: number }
+ * @returns { memberId: number, replyId: number, liked: boolean, replyLikeCount: number }
  */
+
 export const toggleReplyLike = async (replyId: number) => {
     try {
         console.log(`📤 [대댓글 좋아요 토글] -> 대댓글 ID: ${replyId}`);
         const headers = await getAuthHeaders();
         const response = await axios.post(`${BASE_URL}/${replyId}/like`, {}, { headers });
         console.log('✅ [대댓글 좋아요 토글 성공]', response.data);
-        return response.data; // { liked: boolean, commentsLikeCount: number }
+        return response.data; // { memberId, replyId, liked, replyLikeCount }
     } catch (error) {
         console.error('❌ [대댓글 좋아요 토글 실패]:', error);
         throw error;
@@ -107,7 +108,7 @@ export const toggleReplyLike = async (replyId: number) => {
 /**
  * ✅ 특정 대댓글의 좋아요 누른 회원 목록 조회 API
  * @param replyId 대댓글 ID
- * @returns 좋아요 누른 회원 목록 및 좋아요 개수
+ * @returns { replyId: number, totalLikes: number, likedMembers: Array }
  */
 export const fetchReplyLikes = async (replyId: number) => {
     try {

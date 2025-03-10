@@ -6,10 +6,13 @@ import {
     TouchableOpacity,
     TextInput,
     StyleSheet,
-    Alert, Platform, ActionSheetIOS,
+    Alert,
+    Platform,
+    ActionSheetIOS,
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import replyStore from '../../context/replyStore';
+import { fetchReplyLikes } from '../../services/replyService'; // ✅ 현재 로그인한 유저 정보 가져오기
 
 interface ReplyCardProps {
     reply: {
@@ -22,17 +25,27 @@ interface ReplyCardProps {
             nickname: string;
             profileImageUrl: string | null;
         };
+        likedMembers?: {
+            memberId: number;
+            nickname: string;
+            profileImageUrl: string | null
+        }[];
     };
     commentId: number; // 부모 댓글 ID
 }
 
 /** ✅ 개별 대댓글(답글) 카드 컴포넌트 */
 const ReplyCard = ({ reply, commentId }: ReplyCardProps) => {
-    const { removeReply, editReply, toggleLikeOnReply } = replyStore();
+    const {
+        removeReply,
+        editReply,
+        toggleLikeOnReply,
+        isReplyLikedByMe,
+    } = replyStore();
     const [isEditing, setIsEditing] = useState(false);
     const [editedText, setEditedText] = useState(reply.content);
-    const [isLiked, setIsLiked] = useState(false);
-    const [likeCount, setLikeCount] = useState(reply.likeCount);
+    const [showLikes, setShowLikes] = useState(false); // 좋아요 상세 목록 표시 여부
+
 
     // ✅ 대댓글 수정 저장 핸들러
     const handleSaveEdit = async () => {
@@ -69,10 +82,20 @@ const ReplyCard = ({ reply, commentId }: ReplyCardProps) => {
     const handleToggleLike = async () => {
         try {
             await toggleLikeOnReply(reply.replyId, commentId);
-            setIsLiked((prev) => !prev);
-            setLikeCount((prev) => (isLiked ? prev - 1 : prev + 1));
         } catch (error) {
             console.error('❌ 좋아요 업데이트 실패:', error);
+        }
+    };
+
+    // ✅ 좋아요 상세 목록 표시 핸들러
+    const handleShowLikes = async () => {
+        if (reply.likeCount > 0) {
+            try {
+                await fetchReplyLikes(reply.replyId);
+                setShowLikes(!showLikes);
+            } catch (error) {
+                Alert.alert('❌ 오류', '좋아요 목록을 불러오는 중 문제가 발생했습니다.');
+            }
         }
     };
 
@@ -147,10 +170,33 @@ const ReplyCard = ({ reply, commentId }: ReplyCardProps) => {
             {/* 좋아요 버튼 */}
             <View style={styles.actions}>
                 <TouchableOpacity onPress={handleToggleLike} style={styles.actionButton}>
-                    <MaterialIcons name={isLiked ? 'favorite' : 'favorite-border'} size={18} color={isLiked ? 'red' : 'black'} />
-                    <Text style={styles.actionText}>{likeCount}</Text>
+                    <MaterialIcons
+                        name={isReplyLikedByMe[reply.replyId] ? 'favorite' : 'favorite-border'}
+                        size={18}
+                        color={isReplyLikedByMe[reply.replyId] ? 'red' : 'black'}
+                    />
+                    <TouchableOpacity onPress={handleShowLikes}>
+                        <Text style={styles.actionText}>{reply.likeCount}</Text>
+                    </TouchableOpacity>
                 </TouchableOpacity>
             </View>
+
+            {/* 좋아요 누른 사용자 목록 */}
+            {showLikes && reply.likedMembers && reply.likedMembers.length > 0 && (
+                <View style={styles.likesContainer}>
+                    <Text style={styles.likesTitle}>좋아요 {reply.likeCount}개</Text>
+                    {reply.likedMembers.map((member) => (
+                        <View key={member.memberId} style={styles.likedMember}>
+                            <Image
+                                source={member.profileImageUrl ? { uri: member.profileImageUrl } : require('../../assets/images/profile-1.png')}
+                                style={styles.likedMemberImage}
+                            />
+                            <Text style={styles.likedMemberName}>{member.nickname}</Text>
+                        </View>
+                    ))}
+                </View>
+            )}
+
         </View>
     );
 };
@@ -232,6 +278,31 @@ const styles = StyleSheet.create({
         marginVertical: 5,
         fontSize: 14,
         marginLeft: 5,
+    },
+    likesContainer: {
+        marginTop: 10,
+        padding: 10,
+        backgroundColor: '#f8f8f8',
+        borderRadius: 8,
+    },
+    likesTitle: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        marginBottom: 8,
+    },
+    likedMember: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 5,
+    },
+    likedMemberImage: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        marginRight: 8,
+    },
+    likedMemberName: {
+        fontSize: 13,
     },
 });
 
