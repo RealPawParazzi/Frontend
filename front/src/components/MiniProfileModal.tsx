@@ -1,32 +1,52 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View, Text, Image, Modal, StyleSheet, TouchableOpacity,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import followStore from '../context/followStore';
+import boardStore from '../context/boardStore';
 
 interface MiniProfileModalProps {
     visible: boolean;
     onClose: () => void;
     user: {
-        id: string;
+        id: number;
         name: string;
-        profileImage: any;
-        // postCount: number;
+        profileImage: string;
     };
 }
 
-
 const MiniProfileModal = ({ visible, onClose, user }: MiniProfileModalProps) => {
     const navigation = useNavigation();
-    const { followers, following, fetchFollowers, fetchFollowing } = followStore();
+    const { followers, following, fetchFollowers, fetchFollowing, followUser, unfollowUser } = followStore();
+    const { boardList, fetchUserBoards } = boardStore();
+    const [isFollowing, setIsFollowing] = useState(false);
+    const [postCount, setPostCount] = useState(0);
 
+    /** ✅ 프로필 정보 불러오기 */
     useEffect(() => {
         if (visible) {
-            fetchFollowers(user.name);
-            fetchFollowing(user.name);
+            fetchFollowers(user.id);
+            fetchFollowing(user.id);
+            fetchUserBoards(user.id);
         }
-    }, [fetchFollowers, fetchFollowing, user.name, visible]);
+    }, [visible, user.id, fetchFollowers, fetchFollowing, fetchUserBoards]);
+
+    /** ✅ 팔로잉 상태 & 게시물 개수 업데이트 */
+    useEffect(() => {
+        setIsFollowing(following.some((f) => f.followingNickName === user.name));
+        setPostCount(boardList.length || 0);
+    }, [following, boardList, user.name]);
+
+    /** ✅ 팔로우/언팔로우 토글 */
+    const handleFollowToggle = async () => {
+        if (isFollowing) {
+            await unfollowUser(user.id);
+        } else {
+            await followUser(user.id);
+        }
+        setIsFollowing(!isFollowing);
+    };
 
     return (
         <Modal visible={visible} animationType="slide" transparent>
@@ -43,31 +63,34 @@ const MiniProfileModal = ({ visible, onClose, user }: MiniProfileModalProps) => 
                     {/* 닉네임 */}
                     <Text style={styles.username}>{user.name}</Text>
 
-                    {/* 게시글, 팔로워, 팔로잉 */}
+                    {/* 게시물 수, 팔로워, 팔로잉 */}
                     <View style={styles.statsContainer}>
-                        <View style={styles.statBox}>
-                            {/*<Text style={styles.statNumber}>{user.postCount}</Text>*/}
-                            <Text style={styles.statText}>게시글</Text>
-                        </View>
                         <TouchableOpacity
                             style={styles.statBox}
-                            onPress={() => navigation.navigate('FollowListScreen', { type: 'followers', nickName: user.nickName })}
+                            onPress={() => navigation.navigate('UserPostsScreen', { userId: user.id })}
                         >
-                            <Text style={styles.statNumber}>{followers.length}</Text>
+                            <Text style={styles.statNumber}>{postCount}</Text>
+                            <Text style={styles.statText}>게시물</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.statBox}
+                            onPress={() => navigation.navigate('FollowListScreen', { type: 'followers', userId: user.id })}
+                        >
+                            <Text style={styles.statNumber}>{followers.length || 0}</Text>
                             <Text style={styles.statText}>팔로워</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.statBox}
-                            onPress={() => navigation.navigate('FollowListScreen', { type: 'following', nickName: user.nickName })}
+                            onPress={() => navigation.navigate('FollowListScreen', { type: 'following', userId: user.id })}
                         >
-                            <Text style={styles.statNumber}>{following.length}</Text>
+                            <Text style={styles.statNumber}>{following.length || 0}</Text>
                             <Text style={styles.statText}>팔로잉</Text>
                         </TouchableOpacity>
                     </View>
 
                     {/* 팔로우 버튼 */}
-                    <TouchableOpacity style={styles.followButton}>
-                        <Text style={styles.followText}>팔로우</Text>
+                    <TouchableOpacity style={styles.followButton} onPress={handleFollowToggle}>
+                        <Text style={styles.followText}>{isFollowing ? '언팔로우' : '팔로우'}</Text>
                     </TouchableOpacity>
                 </View>
             </View>

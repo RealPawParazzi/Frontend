@@ -18,10 +18,10 @@ export interface Following {
 interface FollowStore {
     followers: Follower[];
     following: Following[];
-    fetchFollowers: (nickName: string) => Promise<void>;
-    fetchFollowing: (nickName: string) => Promise<void>;
-    followUser: (targetNickName: string) => Promise<void>;
-    unfollowUser: (targetNickName: string) => Promise<void>;
+    fetchFollowers: (targetId: number) => Promise<void>;
+    fetchFollowing: (targetId: number) => Promise<void>;
+    followUser: (targetId: number) => Promise<void>;
+    unfollowUser: (targetId: number) => Promise<void>;
 }
 
 /** ✅ Zustand 팔로우 상태 */
@@ -29,63 +29,52 @@ const followStore = create<FollowStore>((set) => ({
     followers: [],
     following: [],
 
-    /**
-     * ✅ 팔로워 목록 가져오기
-     */
-    fetchFollowers: async (nickName) => {
+    /** ✅ 팔로워 목록 가져오기 */
+    fetchFollowers: async (targetId) => {
         try {
-            console.log(`📥 [팔로워 목록 가져오기 요청] -> ${nickName}`);
-            const followers = await getFollowers(nickName);
-            set({ followers });
+            console.log(`📥 [팔로워 목록 요청] -> ${targetId}`);
+            const followers = await getFollowers(targetId);
+            set({ followers: followers.length > 0 ? followers : [] });
         } catch (error) {
             console.error('❌ [팔로워 목록 가져오기 실패]:', error);
+            set({ followers: [] }); // 오류 발생 시 기본값 유지
         }
     },
 
-    /**
-     * ✅ 팔로잉 목록 가져오기
-     */
-    fetchFollowing: async (nickName) => {
+    /** ✅ 팔로잉 목록 가져오기 */
+    fetchFollowing: async (targetId) => {
         try {
-            console.log(`📥 [팔로잉 목록 가져오기 요청] -> ${nickName}`);
-            const following = await getFollowing(nickName);
-            set({ following });
+            console.log(`📥 [팔로잉 목록 요청] -> ${targetId}`);
+            const following = await getFollowing(targetId);
+            set({ following: following.length > 0 ? following : [] });
         } catch (error) {
             console.error('❌ [팔로잉 목록 가져오기 실패]:', error);
+            set({ following: [] }); // 오류 발생 시 기본값 유지
         }
     },
 
-    /**
-     * ✅ 유저 팔로우 후 상태 업데이트
-     */
-    followUser: async (targetNickName) => {
+    /** ✅ 유저 팔로우 후 상태 업데이트 */
+    followUser: async (targetId) => {
         try {
-            console.log(`📤 [팔로우 요청] -> ${targetNickName}`);
-            const response = await followUser(targetNickName);
-            set((state) => ({
-                following: [
-                    ...state.following,
-                    {
-                        followingNickName: response.followingNickName,
-                        followingName: response.followingNickName,
-                        followingProfileImageUrl: response.followingProfileImageUrl,
-                    },
-                ],
-            }));
+            console.log(`📤 [팔로우 요청] -> ${targetId}`);
+            const response = await followUser(targetId);
+            if (response) {
+                set((state) => ({
+                    following: [...state.following, response],
+                }));
+            }
         } catch (error) {
             console.error('❌ [팔로우 요청 실패]:', error);
         }
     },
 
-    /**
-     * ✅ 유저 언팔로우 후 상태 업데이트
-     */
-    unfollowUser: async (targetNickName) => {
+    /** ✅ 유저 언팔로우 후 상태 업데이트 */
+    unfollowUser: async (targetId) => {
         try {
-            console.log(`📤 [언팔로우 요청] -> ${targetNickName}`);
-            await unfollowUser(targetNickName);
+            console.log(`📤 [언팔로우 요청] -> ${targetId}`);
+            await unfollowUser(targetId);
             set((state) => ({
-                following: state.following.filter(user => user.followingNickName !== targetNickName),
+                following: state.following.filter(user => user.followingNickName !== targetId.toString()),
             }));
         } catch (error) {
             console.error('❌ [언팔로우 요청 실패]:', error);
