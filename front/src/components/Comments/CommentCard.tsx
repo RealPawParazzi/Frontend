@@ -13,8 +13,8 @@ import {
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import commentStore from '../../context/commentStore';
 import replyStore from '../../context/replyStore'; // ✅ 대댓글 상태 추가
-import ReplyCard from './ReplyCard'; // ✅ 대댓글 카드 추가
-import ReplyInput from './ReplyInput'; // ✅ 대댓글 입력창 추가
+import ReplyCard from './Replys/ReplyCard'; // ✅ 대댓글 카드 추가
+import ReplyInput from './Replys/ReplyInput'; // ✅ 대댓글 입력창 추가
 
 interface CommentCardProps {
     comment: {

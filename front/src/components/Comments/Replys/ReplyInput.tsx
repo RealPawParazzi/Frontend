@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import replyStore from '../../context/replyStore';
+import replyStore from '../../../context/replyStore';
 
 interface ReplyInputProps {
     commentId: number; // 부모 댓글 ID
@@ -14,11 +14,11 @@ const ReplyInput = ({ commentId, onReplyAdded }: ReplyInputProps) => {
     const [replyText, setReplyText] = useState('');
 
     const handleSendReply = async () => {
-        if (!replyText.trim()) return;
+        if (!replyText.trim()) { return; }
         try {
             await addReply(commentId, replyText);
             setReplyText(''); // ✅ 입력 후 초기화
-            if (onReplyAdded) onReplyAdded(); // ✅ 대댓글 추가 후 실행할 함수 호출
+            if (onReplyAdded) { onReplyAdded(); } // ✅ 대댓글 추가 후 실행할 함수 호출
         } catch (error) {
             console.error('❌ 대댓글 작성 실패:', error);
         }

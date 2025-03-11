@@ -11,8 +11,8 @@ import {
     ActionSheetIOS,
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import replyStore from '../../context/replyStore';
-import { fetchReplyLikes } from '../../services/replyService'; // ✅ 현재 로그인한 유저 정보 가져오기
+import replyStore from '../../../context/replyStore';
+import { fetchReplyLikes } from '../../../services/replyService'; // ✅ 현재 로그인한 유저 정보 가져오기
 
 interface ReplyCardProps {
     reply: {
@@ -134,7 +134,7 @@ const ReplyCard = ({ reply, commentId }: ReplyCardProps) => {
             <View style={styles.replyContent}>
                 {/* 프로필 & 정보 */}
                 <Image
-                    source={reply.replyMember.profileImageUrl ? { uri: reply.replyMember.profileImageUrl } : require('../../assets/images/profile-1.png')}
+                    source={reply.replyMember.profileImageUrl ? { uri: reply.replyMember.profileImageUrl } : require('../../../assets/images/profile-1.png')}
                     style={styles.profileImage}
                 />
                 <View style={styles.textWrapper}>
@@ -188,7 +188,7 @@ const ReplyCard = ({ reply, commentId }: ReplyCardProps) => {
                     {reply.likedMembers.map((member) => (
                         <View key={member.memberId} style={styles.likedMember}>
                             <Image
-                                source={member.profileImageUrl ? { uri: member.profileImageUrl } : require('../../assets/images/profile-1.png')}
+                                source={member.profileImageUrl ? { uri: member.profileImageUrl } : require('../../../assets/images/profile-1.png')}
                                 style={styles.likedMemberImage}
                             />
                             <Text style={styles.likedMemberName}>{member.nickname}</Text>
