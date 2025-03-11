@@ -10,6 +10,7 @@ import CommentList from '../components/Comments/CommentList'; // ✅ 댓글 목�
 import CommentInput from '../components/Comments/CommentInput'; // ✅ 댓글 입력 바 컴포넌트
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
+
 /**
  * 📄 스토리북 상세 조회 화면
  */
@@ -44,7 +45,7 @@ const StorybookDetailScreen = ({ route, navigation }: { route: StorybookDetailSc
 
         const loadPost = async () => {
             try {
-                //const boardDetail = await fetchBoardDetail(boardId);
+                await fetchBoardDetail(boardId);
                 const likesData = await fetchBoardLikes(boardId);
 
                 if (isMounted) {
