@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
     View,
     Text,
@@ -12,13 +12,15 @@ import {
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import replyStore from '../../../context/replyStore';
-import { fetchReplyLikes } from '../../../services/replyService'; // ✅ 현재 로그인한 유저 정보 가져오기
+import { fetchReplyLikes } from '../../../services/replyService';
+import userStore from '../../../context/userStore'; // ✅ 현재 로그인한 유저 정보 가져오기
 
 interface ReplyCardProps {
     reply: {
         replyId: number;
         content: string;
-        likeCount: number;
+        replyLiked: boolean;
+        repliesLikeCount: number;
         createdAt: string;
         replyMember: {
             memberId: number;
@@ -40,12 +42,32 @@ const ReplyCard = ({ reply, commentId }: ReplyCardProps) => {
         removeReply,
         editReply,
         toggleLikeOnReply,
-        isReplyLikedByMe,
+        fetchReplyLikeDetails,
     } = replyStore();
     const [isEditing, setIsEditing] = useState(false);
     const [editedText, setEditedText] = useState(reply.content);
     const [showLikes, setShowLikes] = useState(false); // 좋아요 상세 목록 표시 여부
 
+    // 좋아요 상태 & 좋아요 개수 상태 추가
+    const [isLiked, setIsLiked] = useState(reply.replyLiked);
+    const [likeCount, setLikeCount] = useState(reply.repliesLikeCount);
+
+    // ✅ 로그인한 사용자 정보 가져오기
+    const { userData } = userStore();
+
+    // ✅ 좋아요 정보 불러오기
+    useEffect(() => {
+        const loadLikes = async () => {
+            try {
+                const likesData = await fetchReplyLikeDetails(reply.replyId, commentId);
+                setIsLiked(likesData?.likedMembers?.some(member => member.memberId === Number(userData.id)) || false);
+                setLikeCount(likesData?.likeCount || 0);
+            } catch (error) {
+                console.error('❌ 좋아요 정보 불러오기 오류:', error);
+            }
+        };
+        loadLikes();
+    }, [userData.id, fetchReplyLikeDetails, reply.replyId, commentId]);
 
     // ✅ 대댓글 수정 저장 핸들러
     const handleSaveEdit = async () => {
@@ -80,16 +102,27 @@ const ReplyCard = ({ reply, commentId }: ReplyCardProps) => {
 
     // ✅ 대댓글 좋아요 토글 핸들러
     const handleToggleLike = async () => {
+        if (!userData?.id) {
+            return Alert.alert('❌ 오류', '로그인이 필요합니다.');
+        }
+
         try {
-            await toggleLikeOnReply(reply.replyId, commentId);
+            const response = await toggleLikeOnReply(reply.replyId, commentId);
+
+            if (response) {
+                setIsLiked(response.liked);
+                setLikeCount(response.replyLikeCount);
+            }
         } catch (error) {
-            console.error('❌ 좋아요 업데이트 실패:', error);
+            console.error('❌ 좋아요 토글 오류:', error);
+            Alert.alert('❌ 오류', '좋아요 처리 중 문제가 발생했습니다.');
+
         }
     };
 
     // ✅ 좋아요 상세 목록 표시 핸들러
     const handleShowLikes = async () => {
-        if (reply.likeCount > 0) {
+        if (reply.repliesLikeCount > 0) {
             try {
                 await fetchReplyLikes(reply.replyId);
                 setShowLikes(!showLikes);
@@ -171,12 +204,12 @@ const ReplyCard = ({ reply, commentId }: ReplyCardProps) => {
             <View style={styles.actions}>
                 <TouchableOpacity onPress={handleToggleLike} style={styles.actionButton}>
                     <MaterialIcons
-                        name={isReplyLikedByMe[reply.replyId] ? 'favorite' : 'favorite-border'}
+                        name={isLiked ? 'favorite' : 'favorite-border'}
                         size={18}
-                        color={isReplyLikedByMe[reply.replyId] ? 'red' : 'black'}
+                        color={isLiked ? 'red' : 'black'}
                     />
                     <TouchableOpacity onPress={handleShowLikes}>
-                        <Text style={styles.actionText}>{reply.likeCount}</Text>
+                        <Text style={styles.actionText}>{likeCount}</Text>
                     </TouchableOpacity>
                 </TouchableOpacity>
             </View>
@@ -184,7 +217,7 @@ const ReplyCard = ({ reply, commentId }: ReplyCardProps) => {
             {/* 좋아요 누른 사용자 목록 */}
             {showLikes && reply.likedMembers && reply.likedMembers.length > 0 && (
                 <View style={styles.likesContainer}>
-                    <Text style={styles.likesTitle}>좋아요 {reply.likeCount}개</Text>
+                    <Text style={styles.likesTitle}>좋아요 {likeCount}개</Text>
                     {reply.likedMembers.map((member) => (
                         <View key={member.memberId} style={styles.likedMember}>
                             <Image

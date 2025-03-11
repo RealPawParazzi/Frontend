@@ -144,7 +144,7 @@ const commentStore = create<CommentStore>((set) => ({
         try {
             // API 호출
             const result: CommentLikeToggleResponse = await toggleCommentLike(commentId);
-            console.log('🔥 좋아요 API 응답:', result);
+            console.log('🔥 댓글 좋아요 API 응답:', result);
 
             // 좋아요 상태 업데이트
             set((state) => ({
@@ -179,7 +179,7 @@ const commentStore = create<CommentStore>((set) => ({
     fetchCommentLikeDetails: async (commentId, boardId) => {
         try {
             const data: CommentLikeResponse = await fetchCommentLikes(commentId);
-
+            console.log('🔥 댓글 Like Details API 응답:', data);
             // 좋아요 목록 업데이트
             set((state) => ({
                 comments: {

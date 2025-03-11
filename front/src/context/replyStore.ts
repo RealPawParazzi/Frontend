@@ -8,7 +8,8 @@ import {
 interface Reply {
     replyId: number;
     content: string;
-    likeCount: number;
+    replyLiked: boolean; // ✅ 좋아요 상태 추가
+    replyLikeCount: number;
     createdAt: string;
     updatedAt: string;
     replyMember: {
@@ -17,7 +18,6 @@ interface Reply {
         profileImageUrl: string | null;
     };
     likedMembers?: { memberId: number; nickname: string; profileImageUrl: string | null }[];
-    liked?: boolean; // 현재 사용자가 좋아요를 눌렀는지 여부
 }
 
 /** 📌 Zustand 대댓글 Store */
@@ -27,14 +27,35 @@ interface ReplyStore {
     addReply: (commentId: number, content: string) => Promise<void>;
     editReply: (replyId: number, content: string) => Promise<void>;
     removeReply: (replyId: number) => Promise<void>;
-    isReplyLikedByMe: { [key: number]: boolean }; // 댓글 ID별 현재 사용자의 좋아요 상태
-    toggleLikeOnReply: (replyId: number, commentId: number) => Promise<void>;
-    fetchReplyLikeDetails: (replyId: number, commentId: number) => Promise<void>;
+    toggleLikeOnReply: (replyId: number, commentId: number) => Promise<ReplyLikeToggleResponse | undefined>;
+    fetchReplyLikeDetails: (replyId: number, commentId: number) => Promise<ReplyLikeResponse | undefined>;
 }
+
+// ✅ 대댓글 좋아요 토글 응답 타입
+interface ReplyLikeToggleResponse {
+    memberId: number;      // 좋아요를 누른 사용자 ID
+    replyId: number;     // 좋아요가 적용된 대댓글 ID
+    liked: boolean;        // 좋아요 상태 (true: 좋아요 등록, false: 좋아요 취소)
+    replyLikeCount: number;     // 업데이트된 좋아요 수
+}
+
+// ✅ 대댓글 좋아요 누른 회원 목록 응답 타입
+interface ReplyLikedMember {
+    memberId: number;
+    nickname: string;
+    profileImageUrl: string | null;
+}
+
+// ✅ 특정 대댓글의 좋아요 정보 응답 타입
+interface ReplyLikeResponse {
+    replyId: number;
+    likeCount: number;              // 총 좋아요 수
+    likedMembers: ReplyLikedMember[]; // 좋아요 누른 사용자 목록
+}
+
 /** ✅ Zustand 대댓글 상태 */
 const replyStore = create<ReplyStore>((set) => ({
     replies: {},
-    isReplyLikedByMe: {},
 
     /**
      * ✅ 특정 댓글의 대댓글 목록 가져오기
@@ -43,7 +64,13 @@ const replyStore = create<ReplyStore>((set) => ({
         try {
             const response = await getRepliesByComment(commentId);
             set((state) => ({
-                replies: { ...state.replies, [commentId]: response.replies },
+                replies: {
+                    ...state.replies,
+                    [commentId]: response.replies.map((r: { replyLikeCount: any; }) => ({
+                        ...r,
+                        replyLikeCount: r.replyLikeCount ?? 0, // ✅ undefined 방지
+                    })),
+                },
             }));
         } catch (error) {
             console.error('❌ [대댓글 목록 가져오기 실패]:', error);
@@ -110,33 +137,35 @@ const replyStore = create<ReplyStore>((set) => ({
      */
     toggleLikeOnReply: async (replyId, commentId) => {
         try {
-            const result = await toggleReplyLike(replyId);
-            set((state) => {
-                const updatedReplies = { ...state.replies };
-                const updatedIsLikedByMe = { ...state.isReplyLikedByMe };
+            const result : ReplyLikeToggleResponse = await toggleReplyLike(replyId);
+            console.log('🔥 대댓글 좋아요 API 응답:', result);
+            // 좋아요 상태 업데이트
+            set((state) => ({
+                replies: {
+                    ...state.replies,
+                    [commentId]: state.replies[commentId]?.map((r) =>
+                        r.replyId === result.replyId
+                            ? {
+                                ...r,
+                                replyLiked: result.liked, // ✅ 좋아요 상태 업데이트
+                                replyLikeCount: result.replyLikeCount, // ✅ 기존 값 유지
+                            }
+                            : r
+                    ),
+                },
+            }));
 
-                // 해당 대댓글의 좋아요 상태 업데이트
-                updatedIsLikedByMe[replyId] = result.liked;
+            console.log(
+                `🟢 memberId: ${result.memberId}가 commentId: ${result.replyId}에 좋아요 ${result.liked ? '추가' : '취소'}됨. (총 ${result.replyLikeCount}개)`
+            );
 
-                if (updatedReplies[commentId]) {
-                    updatedReplies[commentId] = updatedReplies[commentId].map((r) =>
-                        r.replyId === replyId ? {
-                            ...r,
-                            likeCount: result.replyLikeCount,
-                            liked: result.liked,
-                        } : r
-                    );
-                }
-                return {
-                    replies: updatedReplies,
-                    isReplyLikedByMe: updatedIsLikedByMe,
-                };
-            });
             return result;
         } catch (error) {
-            console.error('❌ [대댓글 좋아요 토글 실패]:', error);
+            console.error('❌ toggleLikeOnComment 오류:', error);
+            return undefined;
         }
     },
+
 
     /**
      * ✅ 특정 대댓글의 좋아요 목록 가져오기
@@ -144,22 +173,27 @@ const replyStore = create<ReplyStore>((set) => ({
     fetchReplyLikeDetails: async (replyId, commentId) => {
         try {
             const data = await fetchReplyLikes(replyId);
-            set((state) => {
-                const updatedReplies = { ...state.replies };
-                if (updatedReplies[commentId]) {
-                    updatedReplies[commentId] = updatedReplies[commentId].map((r) =>
-                        r.replyId === replyId ? {
-                            ...r,
-                            likedMembers: data.likedMembers,
-                            likeCount: data.totalLikes,
-                        } : r
-                    );
-                }
-                return { replies: updatedReplies };
-            });
+
+            // 좋아요 목록 업데이트
+            set((state) => ({
+                replies: {
+                    ...state.replies,
+                    [commentId]: state.replies[commentId]?.map((r) =>
+                        r.replyId === data.replyId
+                            ? {
+                                ...r,
+                                likedMembers: data.likedMembers, // ✅ 좋아요한 사용자 목록 업데이트
+                                replyLikeCount: data.likeCount, // ✅ 좋아요 개수 업데이트
+                            }
+                            : r
+                    ),
+                },
+            }));
+
             return data;
         } catch (error) {
-            console.error('❌ [대댓글 좋아요 목록 불러오기 실패]:', error);
+            console.error('❌ fetchCommentLikeDetails 오류:', error);
+            return undefined;
         }
     },
 }));
