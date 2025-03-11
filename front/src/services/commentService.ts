@@ -2,7 +2,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /** 📌 API 기본 URL */
-const BASE_URL = 'http://localhost:8080/api/v1/comments';
+const BASE_URL = 'http://localhost:8080/api/comments';
 
 /** ✅ 토큰 가져오기 */
 const getAuthHeaders = async () => {

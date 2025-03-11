@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // 🔹 백엔드 API 기본 URL
-const API_BASE_URL = 'http://localhost:8080/api/v1/boards';
+const API_BASE_URL = 'http://localhost:8080/api/boards';
 
 /**
  * ✅ 게시글 등록 API
