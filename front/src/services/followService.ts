@@ -1,11 +1,16 @@
-// followService.ts
+// followService.ts - API 통신 관련 서비스
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-/** 📌 API 기본 URL */
+/** 📌 API 기본 URL - 팔로우 기능의 기본 엔드포인트 정의 */
 const BASE_URL = 'http://localhost:8080/api/follow';
 
-/** ✅ 토큰 가져오기 */
+/**
+ * ✅ JWT 토큰 가져오기
+ * AsyncStorage에서 사용자 인증 토큰을 가져와 요청 헤더 생성
+ * @returns {Promise<{Authorization: string}>} 인증 헤더 객체
+ * @throws {Error} 토큰이 없거나 가져오기 실패 시 예외 발생
+ */
 const getAuthHeaders = async () => {
     try {
         const token = await AsyncStorage.getItem('userToken');
@@ -20,7 +25,10 @@ const getAuthHeaders = async () => {
 };
 
 /**
- * ✅ 에러 메시지 안전하게 가져오는 함수
+ * ✅ 에러 메시지 안전하게 가져오는 유틸리티 함수
+ * 다양한 에러 타입(Axios, 일반 Error)을 처리하여 일관된 메시지 반환
+ * @param {unknown} error - 발생한 에러 객체
+ * @returns {string} 사용자에게 표시할 에러 메시지
  */
 const getErrorMessage = (error: unknown): string => {
     if (axios.isAxiosError(error)) {
@@ -32,8 +40,11 @@ const getErrorMessage = (error: unknown): string => {
 };
 
 /**
- * ✅ 특정 유저 팔로우 요청
- * @param targetId 팔로우할 유저 ID
+ * ✅ 특정 유저 팔로우 요청 함수
+ * POST 요청을 통해 대상 유저를 팔로우하고 결과 반환
+ * @param {number} targetId - 팔로우할 유저 ID
+ * @returns {Promise<any>} 팔로우 성공 시 서버 응답 데이터
+ * @throws {Error} 요청 실패 시 상세 에러 메시지와 함께 예외 발생
  */
 export const followUser = async (targetId: number) => {
     try {
@@ -55,8 +66,10 @@ export const followUser = async (targetId: number) => {
 };
 
 /**
- * ✅ 특정 유저 언팔로우 요청
- * @param targetId 언팔로우할 유저 ID
+ * ✅ 특정 유저 언팔로우 요청 함수
+ * DELETE 요청을 통해 대상 유저 언팔로우 수행
+ * @param {number} targetId - 언팔로우할 유저 ID
+ * @throws {Error} 요청 실패 시 상세 에러 메시지와 함께 예외 발생
  */
 export const unfollowUser = async (targetId: number) => {
     try {
@@ -72,8 +85,10 @@ export const unfollowUser = async (targetId: number) => {
 };
 
 /**
- * ✅ 특정 유저의 팔로워 목록 가져오기
- * @param targetId 조회할 유저 ID
+ * ✅ 특정 유저의 팔로워 목록 가져오기 함수
+ * 대상 유저를 팔로우하는 사용자들의 목록 조회
+ * @param {number} targetId - 조회할 유저 ID
+ * @returns {Promise<Array>} 팔로워 목록 배열 (실패 시 빈 배열)
  */
 export const getFollowers = async (targetId: number) => {
     try {
@@ -95,8 +110,10 @@ export const getFollowers = async (targetId: number) => {
 };
 
 /**
- * ✅ 특정 유저의 팔로잉 목록 가져오기
- * @param targetId 조회할 유저 ID
+ * ✅ 특정 유저의 팔로잉 목록 가져오기 함수
+ * 대상 유저가 팔로우하는 사용자들의 목록 조회
+ * @param {number} targetId - 조회할 유저 ID
+ * @returns {Promise<Array>} 팔로잉 목록 배열 (실패 시 빈 배열)
  */
 export const getFollowing = async (targetId: number) => {
     try {
