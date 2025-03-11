@@ -11,16 +11,18 @@ import {
     TextInput,
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import userStore from '../../context/userStore';
 import commentStore from '../../context/commentStore';
 import replyStore from '../../context/replyStore'; // ✅ 대댓글 상태 추가
 import ReplyCard from './Replys/ReplyCard'; // ✅ 대댓글 카드 추가
-import ReplyInput from './Replys/ReplyInput'; // ✅ 대댓글 입력창 추가
+import ReplyInput from './Replys/ReplyInput';// ✅ 대댓글 입력창 추가
 
 interface CommentCardProps {
     comment: {
         commentId: number;
         content: string;
-        likeCount: number;
+        commentLiked: boolean; // ✅ 좋아요 상태 추가
+        commentsLikeCount: number;
         replyCount: number;
         createdAt: string;
         updatedAt: string;
@@ -45,7 +47,6 @@ const CommentCard = ({ comment, boardId }: CommentCardProps) => {
         editComment,
         toggleLikeOnComment,
         fetchCommentLikeDetails,
-        isCommentLikedByMe,
     } = commentStore();
     const { replies, fetchRepliesByComment } = replyStore(); // ✅ 대댓글 기능 추가
     const [isEditing, setIsEditing] = useState(false);
@@ -53,10 +54,31 @@ const CommentCard = ({ comment, boardId }: CommentCardProps) => {
     const [showReplyInput, setShowReplyInput] = useState(false); // ✅ 대댓글 입력창 토글
     const [showLikes, setShowLikes] = useState(false); // 좋아요 상세 목록 표시 여부
 
+    // 좋아요 상태 & 좋아요 개수 상태 추가
+    const [isLiked, setIsLiked] = useState(comment.commentLiked);
+    const [likeCount, setLikeCount] = useState(comment.commentsLikeCount);
+
+    // ✅ 로그인한 사용자 정보 가져오기
+    const { userData } = userStore();
+
     // ✅ 대댓글 불러오기 (최초 렌더링 시)
     useEffect(() => {
         fetchRepliesByComment(comment.commentId);
     }, [comment.commentId, fetchRepliesByComment]);
+
+    // ✅ 좋아요 정보 불러오기
+    useEffect(() => {
+        const loadLikes = async () => {
+            try {
+                const likesData = await fetchCommentLikeDetails(comment.commentId, boardId);
+                setIsLiked(likesData?.likedMembers?.some(member => member.memberId === Number(userData.id)) || false);
+                setLikeCount(likesData?.likeCount || 0);
+            } catch (error) {
+                console.error('❌ 좋아요 정보 불러오기 오류:', error);
+            }
+        };
+        loadLikes();
+    }, [comment.commentId, boardId, fetchCommentLikeDetails, userData.id]);
 
     // ✅ 댓글 삭제 핸들러
     const handleDelete = async () => {
@@ -116,16 +138,28 @@ const CommentCard = ({ comment, boardId }: CommentCardProps) => {
 
     // ✅ 좋아요 버튼 핸들러
     const handleLikeToggle = async () => {
+        if (!userData?.id) {
+            return Alert.alert('❌ 오류', '로그인이 필요합니다.');
+        }
+
         try {
-            await toggleLikeOnComment(comment.commentId, boardId);
+            const response = await toggleLikeOnComment(comment.commentId, boardId);
+
+            if (response) {
+                setIsLiked(response.liked);
+                setLikeCount(response.commentsLikeCount);
+            }
         } catch (error) {
+            console.error('❌ 좋아요 토글 오류:', error);
             Alert.alert('❌ 오류', '좋아요 처리 중 문제가 발생했습니다.');
+
         }
     };
 
+
     // ✅ 좋아요 상세 목록 표시 핸들러
     const handleShowLikes = async () => {
-        if (comment.likeCount > 0) {
+        if (comment.commentsLikeCount > 0) {
             try {
                 await fetchCommentLikeDetails(comment.commentId, boardId);
                 setShowLikes(!showLikes);
@@ -179,12 +213,12 @@ const CommentCard = ({ comment, boardId }: CommentCardProps) => {
             <View style={styles.actions}>
                 <TouchableOpacity onPress={handleLikeToggle} style={styles.actionButton}>
                     <MaterialIcons
-                        name={isCommentLikedByMe[comment.commentId] ? 'favorite' : 'favorite-border'}
+                        name={isLiked ? 'favorite' : 'favorite-border'}
                         size={18}
-                        color={isCommentLikedByMe[comment.commentId] ? 'red' : 'black'}
+                        color={isLiked ? 'red' : 'black'}
                     />
                     <TouchableOpacity onPress={handleShowLikes}>
-                        <Text style={styles.actionText}>{comment.likeCount}</Text>
+                        <Text style={styles.actionText}>{likeCount}</Text>
                     </TouchableOpacity>
                 </TouchableOpacity>
 
@@ -197,7 +231,7 @@ const CommentCard = ({ comment, boardId }: CommentCardProps) => {
             {/* 좋아요 누른 사용자 목록 */}
             {showLikes && comment.likedMembers && comment.likedMembers.length > 0 && (
                 <View style={styles.likesContainer}>
-                    <Text style={styles.likesTitle}>좋아요 {comment.likeCount}개</Text>
+                    <Text style={styles.likesTitle}>좋아요 {likeCount}개</Text>
                     {comment.likedMembers.map((member) => (
                         <View key={member.memberId} style={styles.likedMember}>
                             <Image
