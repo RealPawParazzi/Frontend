@@ -206,7 +206,7 @@ const boardStore = create<{
                 selectedBoard: state.selectedBoard && state.selectedBoard.id === boardId
                     ? {
                         ...state.selectedBoard,
-                        favoriteCount: data.likesCount
+                        favoriteCount: data.likesCount,
                     }
                     : state.selectedBoard,
             }));
