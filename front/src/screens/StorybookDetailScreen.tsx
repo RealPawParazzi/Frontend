@@ -44,12 +44,11 @@ const StorybookDetailScreen = ({ route, navigation }: { route: StorybookDetailSc
 
         const loadPost = async () => {
             try {
-                const boardDetail = await fetchBoardDetail(boardId);
+                //const boardDetail = await fetchBoardDetail(boardId);
                 const likesData = await fetchBoardLikes(boardId);
 
                 if (isMounted) {
                     setIsLiked(likesData?.likedMember?.some(member => member.memberId === Number(userData.id)) || false);
-
                     setLikeCount(likesData?.likesCount || 0);
                 }
             } catch (error) {
