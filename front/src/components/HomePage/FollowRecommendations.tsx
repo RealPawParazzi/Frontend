@@ -63,7 +63,7 @@ const FollowRecommendations = () => {
                 <MiniProfileModal
                     visible={isModalVisible}
                     onClose={() => setIsModalVisible(false)}
-                    user={selectedUser} // ✅ 수정된 유저 데이터 전달
+                    user={{ ...selectedUser, id: Number(selectedUser.id) }}  // ✅ 수정된 유저 데이터 전달
                 />
             )}
         </View>

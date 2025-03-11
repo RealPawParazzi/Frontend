@@ -60,7 +60,11 @@ const followStore = create<FollowStore>((set) => ({
             const response = await followUser(targetId);
             if (response) {
                 set((state) => ({
-                    following: [...state.following, response],
+                    following: [...state.following, {
+                        followingNickName: response.followingNickName,
+                        followingName: response.followingName,
+                        followingProfileImageUrl: response.followingProfileImageUrl
+                    }],
                 }));
             }
         } catch (error) {

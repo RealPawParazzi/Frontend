@@ -5,6 +5,8 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import followStore from '../context/followStore';
 import boardStore from '../context/boardStore';
+import userStore from '../context/userStore'; // ✅ 현재 로그인된 사용자 정보 가져오기
+
 
 interface MiniProfileModalProps {
     visible: boolean;
@@ -20,8 +22,13 @@ const MiniProfileModal = ({ visible, onClose, user }: MiniProfileModalProps) => 
     const navigation = useNavigation();
     const { followers, following, fetchFollowers, fetchFollowing, followUser, unfollowUser } = followStore();
     const { boardList, fetchUserBoards } = boardStore();
+    const { userData } = userStore(); // ✅ 현재 로그인된 사용자 정보 가져오기
+
     const [isFollowing, setIsFollowing] = useState(false);
     const [postCount, setPostCount] = useState(0);
+
+    /** ✅ 본인 프로필 여부 확인 */
+    const isOwnProfile = Number(userData.id) === user.id;
 
     /** ✅ 프로필 정보 불러오기 */
     useEffect(() => {
@@ -30,7 +37,10 @@ const MiniProfileModal = ({ visible, onClose, user }: MiniProfileModalProps) => 
             fetchFollowing(user.id);
             fetchUserBoards(user.id);
         }
-    }, [visible, user.id, fetchFollowers, fetchFollowing, fetchUserBoards]);
+        console.log('현재 로그인 유저 = ' , userData.id);
+        console.log('프로필의 주인인 유저 = ', user.id);
+
+    }, [visible, user.id, fetchFollowers, fetchFollowing, fetchUserBoards, userData.id]);
 
     /** ✅ 팔로잉 상태 & 게시물 개수 업데이트 */
     useEffect(() => {
@@ -88,10 +98,17 @@ const MiniProfileModal = ({ visible, onClose, user }: MiniProfileModalProps) => 
                         </TouchableOpacity>
                     </View>
 
-                    {/* 팔로우 버튼 */}
-                    <TouchableOpacity style={styles.followButton} onPress={handleFollowToggle}>
-                        <Text style={styles.followText}>{isFollowing ? '언팔로우' : '팔로우'}</Text>
-                    </TouchableOpacity>
+                    {/* ✅ 본인 프로필일 경우 -> 닫기 버튼 */}
+                    {isOwnProfile ? (
+                        <TouchableOpacity style={styles.closeProfileButton} onPress={onClose}>
+                            <Text style={styles.followText}>닫기</Text>
+                        </TouchableOpacity>
+                    ) : (
+                        /* ✅ 다른 유저 프로필일 경우 -> 팔로우 버튼 */
+                        <TouchableOpacity style={styles.followButton} onPress={handleFollowToggle}>
+                            <Text style={styles.followText}>{isFollowing ? '언팔로우' : '팔로우'}</Text>
+                        </TouchableOpacity>
+                    )}
                 </View>
             </View>
         </Modal>
@@ -160,6 +177,12 @@ const styles = StyleSheet.create({
     followText: {
         color: '#FFF',
         fontWeight: 'bold',
+    },
+    closeProfileButton: { // 🛠 본인 프로필일 때 닫기 버튼 스타일 추가
+        backgroundColor: '#888',
+        paddingVertical: 8,
+        paddingHorizontal: 20,
+        borderRadius: 5,
     },
 });
 
