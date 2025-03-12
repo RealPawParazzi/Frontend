@@ -67,22 +67,27 @@ export const followUser = async (targetId: number) => {
 
 /**
  * ✅ 특정 유저 언팔로우 요청 함수
- * DELETE 요청을 통해 대상 유저 언팔로우 수행
  * @param {number} targetId - 언팔로우할 유저 ID
- * @throws {Error} 요청 실패 시 상세 에러 메시지와 함께 예외 발생
+ * @returns {Promise<any>} 언팔로우 성공 시 서버 응답 데이터 (팔로워/팔로잉 수 포함)
  */
 export const unfollowUser = async (targetId: number) => {
     try {
         console.log(`📤 [언팔로우 요청] -> ${targetId}`);
         const headers = await getAuthHeaders();
-        await axios.delete(`${BASE_URL}/${targetId}`, { headers });
-        console.log('✅ [언팔로우 성공]');
+        const response = await axios.delete(`${BASE_URL}/${targetId}`, { headers });
+
+        if (!response.data) {
+            throw new Error('❌ [언팔로우 실패] 응답 데이터가 없습니다.');
+        }
+
+        console.log('✅ [언팔로우 성공]', response.data);
+        return response.data;
     } catch (error: unknown) {
-        const errorMessage = getErrorMessage(error);
-        console.error(`❌ [언팔로우 실패]: ${errorMessage}`, error);
-        throw new Error(errorMessage);
+        console.error(`❌ [언팔로우 실패]:`, error);
+        throw new Error('언팔로우 요청 중 오류가 발생했습니다.');
     }
 };
+
 
 /**
  * ✅ 특정 유저의 팔로워 목록 가져오기 함수
