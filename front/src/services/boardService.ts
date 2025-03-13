@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // 🔹 백엔드 API 기본 URL
-const API_BASE_URL = 'http://localhost:8080/api/v1/boards';
+const API_BASE_URL = 'http://localhost:8080/api/boards';
 
 /**
  * ✅ 게시글 등록 API
@@ -12,7 +12,7 @@ const API_BASE_URL = 'http://localhost:8080/api/v1/boards';
 export const createBoard = async (data: { title: string; contents: { type: 'text' | 'image'; value: string }[] }) => {
     try {
         const token = await AsyncStorage.getItem('userToken'); // 🔑 토큰 가져오기
-        if (!token) throw new Error('로그인이 필요합니다.');
+        if (!token) { throw new Error('로그인이 필요합니다.'); }
 
         // 🔹 titleImage 및 titleContent 자동 설정
         const titleImage = data.contents.find((c) => c.type === 'image')?.value || null;
@@ -48,12 +48,9 @@ export const createBoard = async (data: { title: string; contents: { type: 'text
 export const getBoardDetail = async (boardId: number) => {
     try {
         const response = await fetch(`${API_BASE_URL}/${boardId}`);
-        if (!response.ok) throw new Error('게시글 상세 조회 실패');
+        if (!response.ok) { throw new Error('게시글 상세 조회 실패'); }
 
-        const boardData = await response.json();
-        // console.log('📌 서버에서 받은 원본 데이터:', boardData); // 🔴 데이터 확인
-
-        return boardData;
+        return await response.json();
     } catch (error) {
         console.error('❌ getBoardDetail 오류:', error);
         throw error;
@@ -85,7 +82,7 @@ export const getBoardList = async () => {
 export const getBoardsByMember = async (memberId: number) => {
     const response = await fetch(`${API_BASE_URL}/member/${memberId}`);
 
-    if (!response.ok) {throw new Error('회원의 게시글 목록 조회 실패');}
+    if (!response.ok) { throw new Error('회원의 게시글 목록 조회 실패'); }
     return await response.json();
 };
 
@@ -123,7 +120,7 @@ export const updateBoard = async (boardId: number, data: { title?: string; conte
 export const deleteBoard = async (boardId: number) => {
     try {
         const token = await AsyncStorage.getItem('userToken');
-        if (!token) throw new Error('로그인이 필요합니다.');
+        if (!token) { throw new Error('로그인이 필요합니다.'); }
 
         const response = await fetch(`${API_BASE_URL}/${boardId}`, {
             method: 'DELETE',
@@ -136,3 +133,54 @@ export const deleteBoard = async (boardId: number) => {
         throw error;
     }
 };
+
+/**
+ * ✅ 게시글 좋아요 토글 API
+ * @param boardId 게시글 ID
+ * @returns { memberId: number, boardId: number, liked: boolean, favoriteCount: number }
+ */
+export const toggleLike = async (boardId: number) => {
+    try {
+        const token = await AsyncStorage.getItem('userToken');
+        if (!token) { throw new Error('로그인이 필요합니다.'); }
+
+        const response = await fetch(`${API_BASE_URL}/${boardId}/like`, {
+            method: 'POST', // ✅ 좋아요 및 취소 동일한 엔드포인트
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || '좋아요 처리 실패');
+        }
+
+        const result = await response.json();
+
+        console.log('🟢 좋아요 응답:', result); //  API 응답 디버깅 로그
+
+        return result; //  API 응답 값 그대로 반환
+    } catch (error) {
+        console.error('❌ toggleLike 오류:', error);
+        throw error;
+    }
+};
+
+/**
+ * ✅ 특정 게시글의 좋아요 누른 회원 목록 조회 API
+ * @param boardId 게시글 ID
+ * @returns { boardId: number, likesCount: number, likedMember: Array<{memberId: number, nickname: string, profileImageUrl: string}> }
+ */
+export const fetchLikes = async (boardId: number) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/${boardId}/likes`);
+        if (!response.ok) { throw new Error('좋아요 목록 조회 실패'); }
+        return await response.json();
+    } catch (error) {
+        console.error('❌ fetchLikes 오류:', error);
+        throw error;
+    }
+};
+
+

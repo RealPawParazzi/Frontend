@@ -1,5 +1,8 @@
 import { create } from 'zustand';
-import { createBoard, getBoardList, getBoardDetail, updateBoard, deleteBoard, getBoardsByMember } from '../services/boardService';
+import { createBoard, getBoardList, getBoardDetail,
+    updateBoard, deleteBoard, getBoardsByMember,
+    toggleLike, fetchLikes,
+} from '../services/boardService';
 
 /** 📌 게시글 데이터 타입 정의 */
 interface Board {
@@ -10,6 +13,7 @@ interface Board {
     titleContent: string;
     writeDatetime: string;
     favoriteCount: number;
+    liked: boolean; // ✅ 좋아요 상태 추가
     commentCount: number;
     viewCount: number;
     author: {
@@ -18,6 +22,26 @@ interface Board {
         profileImageUrl: string;
     };
     contents?: { type: 'text' | 'image'; value: string }[]; // 상세 조회 시 포함됨
+}
+
+// API 응답 타입 정의
+interface LikeToggleResponse {
+    memberId: number;
+    boardId: number;
+    liked: boolean;
+    favoriteCount: number;
+}
+
+interface LikedMember {
+    memberId: number;
+    nickname: string;
+    profileImageUrl: string;
+}
+
+interface LikeResponse {
+    boardId: number;
+    likesCount: number;
+    likedMember: LikedMember[];
 }
 
 /** ✅ 기본 더미 데이터 */
@@ -29,6 +53,7 @@ const defaultBoard: Board = {
     titleContent: '현재 작성된 게시글이 없습니다.',
     writeDatetime: new Date().toISOString(),
     favoriteCount: 0,
+    liked: false, // ✅ 기본 좋아요 상태 추가
     commentCount: 0,
     viewCount: 0,
     author: {
@@ -49,6 +74,8 @@ const boardStore = create<{
     updateExistingBoard: (boardId: number, data: any) => Promise<void>;
     deleteExistingBoard: (boardId: number) => Promise<void>;
     fetchUserBoards: (memberId: number) => Promise<void>;
+    toggleBoardLike: (boardId: number) => Promise<LikeToggleResponse | undefined>;
+    fetchBoardLikes: (boardId: number) => Promise<LikeResponse | undefined>;
 }>((set) => ({
     /** ✅ 게시글 리스트 (초기값: 기본 더미 데이터) */
     boardList: [defaultBoard],
@@ -129,6 +156,65 @@ const boardStore = create<{
         } catch (error) {
             console.error('❌ 특정 회원의 게시글 목록 불러오기 실패:', error);
             set({ boardList: [defaultBoard] }); // ❌ 오류 발생 시 기본 데이터 반환
+        }
+    },
+
+    /** ✅ 좋아요 토글 (등록/취소) */
+    toggleBoardLike: async (boardId) => {
+        try {
+            // API 호출 - 토큰에서 memberId 사용
+            const result = await toggleLike(boardId);
+
+            // 좋아요 상태 업데이트
+            set((state) => ({
+                boardList: state.boardList.map((board) =>
+                    board.id === result.boardId
+                        ? {
+                            ...board,
+                            liked: result.liked,
+                            favoriteCount: result.favoriteCount,
+                        }
+                        : board
+                ),
+                selectedBoard:
+                    state.selectedBoard && state.selectedBoard.id === result.boardId
+                        ? {
+                            ...state.selectedBoard,
+                            liked: result.liked,
+                            favoriteCount: result.favoriteCount,
+                        }
+                        : state.selectedBoard,
+            }));
+
+
+            console.log(`🟢 memberId: ${result.memberId}가 boardId: ${result.boardId}에 좋아요 ${result.liked ? '추가' : '취소'}됨. (총 ${result.favoriteCount}개)`);
+
+            return result;
+        } catch (error) {
+            console.error('❌ toggleBoardLike 오류:', error);
+            return undefined;
+        }
+    },
+
+    /** ✅ 특정 게시글의 좋아요 누른 회원 목록 조회 */
+    fetchBoardLikes: async (boardId) => {
+        try {
+            const data = await fetchLikes(boardId);
+
+            // 좋아요 목록 정보 업데이트
+            set((state) => ({
+                selectedBoard: state.selectedBoard && state.selectedBoard.id === boardId
+                    ? {
+                        ...state.selectedBoard,
+                        favoriteCount: data.likesCount,
+                    }
+                    : state.selectedBoard,
+            }));
+
+            return data;
+        } catch (error) {
+            console.error('❌ fetchBoardLikes 오류:', error);
+            return undefined;
         }
     },
 }));

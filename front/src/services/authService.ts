@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE_URL = 'http://localhost:8080/api/v1/auth'; // 🟢 백엔드 API 주소
+const API_BASE_URL = 'http://localhost:8080/api/auth'; // 🟢 백엔드 API 주소
 
 /**
  * ✅ 회원가입 API

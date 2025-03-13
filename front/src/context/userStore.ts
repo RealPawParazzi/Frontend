@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { fetchUserData } from '../services/userService';
+import { fetchAllUsers, fetchUserData } from '../services/userService';
 import petStore, { loadPetData } from './petStore'; // ✅ 펫 데이터 가져오기
 import boardStore, { loadBoardData } from './boardStore'; // ✅ 게시물 데이터 가져오기
 
@@ -90,8 +90,11 @@ const transformData = () => {
 /** ✅ Zustand 전역 상태 생성 */
 const userStore = create<{
     userData: UserData;
+    allUsers: UserData[]; // ✅ 전체 유저 목록 상태 추가
+    loadAllUsers: () => Promise<void>; // ✅ 전체 유저 불러오기 함수
     memoryVideos: { id: string; title: string; video: any }[];
     followRecommendations: { id: string; name: string; profileImage: any }[];
+    loadFollowRecommendations: () => Promise<void>;
     storyBooks: { id: string; title: string; thumbnail: any; author: string }[];
     storyReels: { id: string; image: any; video?: any }[];
     activityLog: { [key: string]: Post[] };
@@ -99,6 +102,32 @@ const userStore = create<{
 }>((set) => ({
     /** ✅ 사용자 데이터 (초기값: 기본 더미 데이터) */
     userData: defaultUserData,
+
+    allUsers: [], // 전체 유저 목록
+
+    /** ✅ 전체 유저 데이터 불러오기 */
+    loadAllUsers: async () => {
+        try {
+            const users = await fetchAllUsers();
+
+            // ✅ UserData 타입에 맞게 변환
+            const formattedUsers: UserData[] = users.map((user) => ({
+                id: user.id,
+                name: user.name,
+                nickName: user.nickName,
+                email: user.email || '',
+                profileImage: user.profileImage, // ✅ profileImage 유지
+                petCount: 0,
+                petList: [],
+                recentPosts: [],
+            }));
+
+            set({ allUsers: formattedUsers });
+        } catch (error) {
+            console.error('❌ 전체 유저 목록 불러오기 실패:', error);
+        }
+    },
+
 
     /** ✅ 메모리 영상 리스트 */
     memoryVideos: [
@@ -110,6 +139,24 @@ const userStore = create<{
         { id: '1', name: '초코네', profileImage: require('../assets/images/pets-1.jpg') },
         { id: '2', name: '댕댕이네', profileImage: require('../assets/images/pets-4.jpeg') },
     ],
+
+    /** ✅ 서버에서 전체 유저 가져와서 랜덤 추천 리스트 생성 */
+    loadFollowRecommendations: async () => {
+        try {
+            const users = await fetchAllUsers();
+
+            // ✅ 가입된 유저 데이터 가공
+            const recommendations = users.slice(0, 4).map((user) => ({
+                id: user.id,
+                name: user.nickName || user.name,
+                profileImage: user.profileImage, // ✅ profileImage 유지
+            }));
+
+            set({ followRecommendations: recommendations });
+        } catch (error) {
+            console.error('❌ 팔로우 추천 데이터 불러오기 실패:', error);
+        }
+    },
 
     /** ✅ 오늘의 스토리북 리스트 */
     storyBooks: [
@@ -170,7 +217,7 @@ export const loadUserData = async () => {
             email: userInfo.email,
             nickName: userInfo.nickName,
             name: userInfo.name,
-            profileImage: userInfo.profileImageUrl || require('../assets/images/profile-1.png'),
+            profileImage: userInfo.profileImage || require('../assets/images/profile-1.png'),
             petList: updatedPetList,
             petCount: updatedPetList.length, // ✅ 펫 카운트 자동 업데이트
             recentPosts: updatedRecentPosts,

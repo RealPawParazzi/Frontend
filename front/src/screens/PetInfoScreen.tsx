@@ -4,14 +4,6 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
 import petStore from '../context/petStore';
 
-// ✅ Pet 인터페이스
-interface Pet {
-    id: string;
-    name: string;
-    species: string;
-    image: any;
-}
-
 // ✅ 기본 이미지 상수
 const DEFAULT_PET_IMAGE = require('../assets/images/pets-1.jpg');
 

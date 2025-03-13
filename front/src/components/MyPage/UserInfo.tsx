@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Modal, FlatList } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'; // ✅ CLI 환경용 아이콘 패키지
 import userStore from '../../context/userStore';
 import petStore from '../../context/petStore';
