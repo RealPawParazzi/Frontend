@@ -1,4 +1,4 @@
-// followStore.ts - 팔로우 관련 상태 관리 스토어
+// userFollowStore.ts - 팔로우 관련 상태 관리 스토어
 import { create } from 'zustand';
 import { followUser, unfollowUser, getFollowers, getFollowing } from '../services/followService';
 import userStore from './userStore';
@@ -121,7 +121,7 @@ export interface UnfollowResponse {
  * @property {Function} followUser - 사용자 팔로우 액션
  * @property {Function} unfollowUser - 사용자 언팔로우 액션
  */
-interface FollowStore {
+interface UserFollowStore {
     followers: Follower[];
     following: Following[];
     fetchFollowers: (targetId: number) => Promise<void>; // ✅ targetId를 팔로우하는 사람 목록 가져오기
@@ -134,9 +134,9 @@ interface FollowStore {
  * ✅ Zustand 팔로우 상태 관리 스토어 생성
  * 팔로우/언팔로우 및 팔로워/팔로잉 목록 관리 기능 구현
  */
-const followStore = create<FollowStore>((set) => ({
-    followers: [],
-    following: [],
+const followStore = create<UserFollowStore>((set) => ({
+    followers: [], // 이 followers는 현재 로그인 유저의 팔로워임!
+    following: [], // 현재 로그인 유저가 팔로우하는 사람들 목록
 
     /**
      * ✅ targetId를 팔로우하는 사람들의 목록 가져오기
@@ -193,15 +193,8 @@ const followStore = create<FollowStore>((set) => ({
                             followingProfileImageUrl: response.followingProfileImageUrl || null,
                         },
                     ],
-                    followers: [
-                        ...state.followers,
-                        {
-                            followerId: response.followerId, // ✅ B의 팔로워 목록에 A 추가
-                            followerNickName: response.followerNickName,
-                            followerName: response.followerName || null,
-                            followerProfileImageUrl: response.followerProfileImageUrl || null,
-                        },
-                    ],
+                    // 여기서 followers 배열을 변경하면 안됨
+                    // followers는 상대 유저(B)의 followers 이므로 별도 관리 필요
                 }));
                 return response;
             }
@@ -233,12 +226,11 @@ const followStore = create<FollowStore>((set) => ({
 
             console.log('✅ [언팔로우 성공]', response);
 
-            const { userData } = userStore();
-
             // ✅ 언팔로우 성공 시, following & followers에서 제거 + 팔로워/팔로잉 수 업데이트
             set((state) => ({
                 following: state.following.filter(user => user.followingId !== targetId),
-                followers: state.followers.filter(user => user.followerId !== Number(userData.id)),
+                // 팔로워는 이 스토어에서 변경하지 않아야 정확함!
+                // followers 목록은 프로필 주인의 상태에서 업데이트해야 함
             }));
 
             return response;

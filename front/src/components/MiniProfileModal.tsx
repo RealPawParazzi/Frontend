@@ -3,7 +3,8 @@ import {
     View, Text, Image, Modal, StyleSheet, TouchableOpacity,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import followStore from '../context/followStore';
+import userFollowStore from '../context/userFollowStore';        // 현재 로그인 유저의 팔로우 상태 관리
+import profileFollowStore from '../context/profileFollowStore';  // 프로필 유저(B)의 팔로워/팔로잉 관리
 import boardStore from '../context/boardStore';
 import userStore from '../context/userStore'; // ✅ 현재 로그인된 사용자 정보 가져오기
 
@@ -20,15 +21,13 @@ interface MiniProfileModalProps {
 
 const MiniProfileModal = ({ visible, onClose, user }: MiniProfileModalProps) => {
     const navigation = useNavigation();
-    const { followers, following, fetchFollowers, fetchFollowing, followUser, unfollowUser } = followStore();
+    const { following, fetchFollowing, followUser, unfollowUser } = userFollowStore();   // userFollowStore 사용
+    const { followers, following: profileFollowing, fetchProfileFollowers, fetchProfileFollowing, setFollowerCount, setFollowingCount, followerCount, followingCount } = profileFollowStore();  // profileFollowStore 사용
     const { boardList, fetchUserBoards } = boardStore();
-    const { userData } = userStore(); // ✅ 현재 로그인된 사용자 정보 가져오기
+    const { userData } = userStore();
 
     const [isFollowing, setIsFollowing] = useState(false);
     const [postCount, setPostCount] = useState(0);
-    const [followerCount, setFollowerCount] = useState(0); // ✅ B(프로필 유저)의 팔로워 수
-    const [followingCount, setFollowingCount] = useState(0); useState(0); // ✅ B(프로필 유저)의 팔로잉 수 (프로필 주인이 팔로우하는 사람 수)
-
 
 
     /** ✅ 현재 프로필이 로그인한 유저의 프로필인지 확인 */
@@ -38,8 +37,8 @@ const MiniProfileModal = ({ visible, onClose, user }: MiniProfileModalProps) => 
     useEffect(() => {
         if (visible) {
             // B(프로필 유저)의 팔로워 및 팔로잉 목록 가져오기
-            fetchFollowers(user.id); // ✅ B(프로필 유저)를 팔로우하는 사람들의 목록
-            fetchFollowing(user.id); // ✅ B(프로필 유저)가 팔로우하는 사람들의 목록
+            fetchProfileFollowers(user.id); // ✅ B(프로필 유저)를 팔로우하는 사람들의 목록
+            fetchProfileFollowing(user.id); // ✅ B(프로필 유저)가 팔로우하는 사람들의 목록
 
             // A(로그인 유저)가 B(프로필 유저)를 팔로우하는지 확인하기 위해 A의 팔로잉 목록 가져오기
             if (!isOwnProfile) {
@@ -52,7 +51,7 @@ const MiniProfileModal = ({ visible, onClose, user }: MiniProfileModalProps) => 
         console.log('현재 로그인 유저(A) = ', userData.id);
         console.log('프로필의 주인인 유저(B) = ', user.id);
 
-    }, [visible, user.id, fetchFollowers, fetchFollowing, fetchUserBoards, userData.id, isOwnProfile]);
+    }, [visible, user.id, fetchFollowing, fetchUserBoards, userData.id, isOwnProfile, fetchProfileFollowers, fetchProfileFollowing]);
 
     /** ✅ 팔로우 상태 & 게시물 개수 업데이트 */
     useEffect(() => {
@@ -66,10 +65,10 @@ const MiniProfileModal = ({ visible, onClose, user }: MiniProfileModalProps) => 
         setPostCount(boardList.length || 0);
 
         // 팔로워/팔로잉 수 업데이트
-        setFollowerCount(followers.length || 0);
-        setFollowingCount(following.length || 0);
+        setFollowerCount(followers.length);
+        setFollowingCount(profileFollowing.length);
 
-    }, [following, followers, boardList, user.id, isOwnProfile]);
+    }, [following, followers, boardList, user.id, isOwnProfile, setFollowerCount, setFollowingCount, profileFollowing.length]);
 
 
 
@@ -111,7 +110,7 @@ const MiniProfileModal = ({ visible, onClose, user }: MiniProfileModalProps) => 
             }
 
             // ✅ 최신 팔로워/팔로잉 목록을 다시 불러와 UI를 동기화
-            await fetchFollowers(user.id); // B(프로필 유저)의 최신 팔로워 목록
+            await fetchProfileFollowers(user.id); // B(프로필 유저)의 최신 팔로워 목록
             await fetchFollowing(Number(userData.id)); // A(로그인 유저)의 최신 팔로잉 목록
 
         } catch (error) {
