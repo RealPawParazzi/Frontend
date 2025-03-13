@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
-import { loginUser, registerUser, validateToken } from '../services/authService';
+import { RootStackParamList } from '../../navigation/AppNavigator';
+import { loginUser, registerUser, validateToken } from '../../services/authService';
 import { launchImageLibrary } from 'react-native-image-picker'; // 🔵 이미지 선택 라이브러리
 import Icon from 'react-native-vector-icons/MaterialIcons'; // ✅ 아이콘 추가
 
@@ -26,7 +26,7 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
 
     // ✅ 기본 프로필 이미지 설정
     const getProfileImage = () => {
-        return profileImage ? { uri: profileImage.uri } : require('../assets/images/profile-1.png');
+        return profileImage ? { uri: profileImage.uri } : require('../../assets/images/profile-1.png');
     };
 
     // ✅ 앱 실행 시 자동 로그인 검사

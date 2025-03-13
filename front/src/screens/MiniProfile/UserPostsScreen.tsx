@@ -3,9 +3,10 @@ import {
     View, Text, FlatList, Image, StyleSheet, SafeAreaView, TouchableOpacity,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import boardStore from '../context/boardStore';
+import boardStore from '../../context/boardStore';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
+// @ts-ignore
 const UserPostsScreen = () => {
     const navigation = useNavigation();
     const route = useRoute();
@@ -26,6 +27,7 @@ const UserPostsScreen = () => {
 
     /** 게시글 클릭 시 상세화면 이동 */
     const handlePostPress = (postId: number) => {
+        // @ts-ignore
         navigation.navigate('StorybookDetailScreen', { boardId: postId }); // ✅ postId를 boardId로 수정
     };
 

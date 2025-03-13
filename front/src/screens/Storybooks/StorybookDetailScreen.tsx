@@ -4,12 +4,12 @@ import {
     SafeAreaView, ActivityIndicator, ActionSheetIOS, Platform,
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import boardStore from '../context/boardStore';
-import userStore from '../context/userStore';  // ✅ 로그인한 유저 정보 가져오기
-import CommentList from '../components/Comments/CommentList'; // ✅ 댓글 목록 컴포넌트
-import CommentInput from '../components/Comments/CommentInput'; // ✅ 댓글 입력 바 컴포넌트
+import boardStore from '../../context/boardStore';
+import userStore from '../../context/userStore';  // ✅ 로그인한 유저 정보 가져오기
+import CommentList from '../../components/Comments/CommentList'; // ✅ 댓글 목록 컴포넌트
+import CommentInput from '../../components/Comments/CommentInput'; // ✅ 댓글 입력 바 컴포넌트
 import { RouteProp } from '@react-navigation/native';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { RootStackParamList } from '../../navigation/AppNavigator';
 
 /**
  * 📄 스토리북 상세 조회 화면

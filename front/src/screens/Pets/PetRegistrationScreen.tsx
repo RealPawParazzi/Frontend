@@ -5,48 +5,23 @@ import {
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { launchImageLibrary } from 'react-native-image-picker';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
-import petStore from '../context/petStore';
-
-// ✅ 네비게이션 Params 타입 정의
-type RouteParams = {
-    params: {
-        pet: {
-            petId: number;
-            name: string;
-            type: 'CAT' | 'DOG';
-            birthDate: string;
-            petImg?: string;
-        };
-    };
-};
-
+import { registerPet } from '../../services/petService';
+import petStore from '../../context/petStore';
 
 /**
- * 📌 반려동물 정보 수정 화면
- * - 기존 반려동물 정보 로드 후 수정 가능
- * - 수정 후 `petStore` 업데이트하여 반영
+ * 📌 반려동물 추가 화면
+ * - 반려동물의 이름, 종류, 생일 입력 가능
+ * - 프로필 사진 선택 가능
+ * - 등록 후 `petStore` 업데이트하여 반려동물 목록 최신화
  */
-const PetEditScreen = () => {
-    const navigation = useNavigation();
-    const route = useRoute<RouteProp<RouteParams, 'params'>>();
-
-    // 🚀 **params가 undefined일 경우 기본값 제공**
-    const pet = route.params?.pet ?? {
-        petId: 0,
-        name: '',
-        type: 'CAT',
-        birthDate: '',
-        petImg: undefined,
-    };
-    const { editPet } = petStore();
-
-    // ✅ 기존 데이터 불러와서 상태값 세팅
-    const [petName, setPetName] = useState(pet.name);
-    const [petType, setPetType] = useState<'CAT' | 'DOG'>(pet.type);
-    const [petBirthDate, setPetBirthDate] = useState(pet.birthDate);
+const PetRegistrationScreen = ({ navigation }: { navigation: any }) => {
+    // ✅ 입력값 상태 관리
+    const [petName, setPetName] = useState('');
+    const [petType, setPetType] = useState<'CAT' | 'DOG'>('CAT'); // ✅ '고양이' → 'CAT', '강아지' → 'DOG' 변환 적용
+    const [petGender, setPetGender] = useState('암컷'); // 기본값 '암컷'
+    const [petBirthDate, setPetBirthDate] = useState('');
     const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
-    const [petImage, setPetImage] = useState<string | null>(pet.petImg || null);
+    const [petImage, setPetImage] = useState<string | null>(null);
 
     /**
      * 🖼️ 갤러리에서 반려동물 프로필 사진 선택
@@ -81,31 +56,38 @@ const PetEditScreen = () => {
     };
 
     /**
-     * ✅ 반려동물 정보 수정 요청
+     * ✅ 반려동물 등록 요청
+     * - 필수 입력값(이름, 종류, 생일) 확인
+     * - `registerPet()` API 호출
+     * - 등록 성공 시 `petStore` 최신화 및 화면 이동
      */
-    const handleSave = async () => {
+    const handleRegisterPet = async () => {
         if (!petName.trim() || !petType.trim() || !petBirthDate.trim()) {
             Alert.alert('⚠️ 입력 오류', '이름, 종류, 생일은 필수 입력 항목입니다.');
             return;
         }
 
         try {
-            const updatedPet = {
+            const newPet = {
                 name: petName,
-                type: petType,
+                type: petType as 'CAT' | 'DOG',
                 birthDate: petBirthDate,
-                petImg: petImage || undefined,
+                petImg: petImage || undefined, // 이미지가 없으면 undefined
             };
 
-            console.log('✏️ 반려동물 수정 데이터:', updatedPet); // 🚀 전송 데이터 확인
-            await editPet(pet.petId, updatedPet); // ✅ API 호출 (백엔드에 수정 요청)
+            console.log('🐶 API 요청 데이터:', newPet); // 🚀 전송 데이터 확인
 
-            Alert.alert('✅ 수정 완료', `${petName}의 정보가 업데이트되었습니다!`, [
+            await registerPet(newPet); // ✅ API 호출 (백엔드에 등록 요청)
+
+            // ✅ 상태 업데이트 (펫 리스트 최신화)
+            await petStore.getState().fetchPets();
+
+            Alert.alert('✅ 등록 완료', `${petName}가 추가되었습니다!`, [
                 { text: '확인', onPress: () => navigation.goBack() },
             ]);
         } catch (error) {
-            Alert.alert('❌ 수정 실패', '반려동물 수정 중 오류가 발생했습니다.');
-            console.error('✏️❌ 수정 오류:', error);
+            Alert.alert('❌ 등록 실패', '반려동물 등록 중 오류가 발생했습니다.');
+            console.error('🐶❌ 등록 오류:', error);
         }
     };
 
@@ -113,18 +95,18 @@ const PetEditScreen = () => {
         <SafeAreaView style={styles.safeContainer}>
             <ScrollView style={styles.container}>
                 {/* 🔹 헤더 */}
-                <Text style={styles.headerTitle}>반려동물 정보 수정</Text>
+                <Text style={styles.headerTitle}>반려동물 등록</Text>
 
-                {/* 🖼️ 프로필 이미지 선택 */}
+                {/* 🖼️ 프로필 이미지 선택 (크기 증가) */}
                 <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
-                    <Image source={petImage ? { uri: petImage } : require('../assets/images/pets-1.jpg')} style={styles.petImage} />
+                    <Image source={petImage ? { uri: petImage } : require('../../assets/images/pets-1.jpg')} style={styles.petImage} />
                     <View style={styles.addImageIcon}>
-                        <MaterialIcons name="edit" size={24} color="white" />
+                        <MaterialIcons name="add" size={24} color="white" />
                     </View>
                 </TouchableOpacity>
 
                 {/* 📌 종류 선택 */}
-                <Text style={styles.label}>종류</Text>
+                <Text style={styles.label}>종류 (필수)</Text>
                 <View style={styles.buttonGroup}>
                     {[
                         { label: '고양이', value: 'CAT' },
@@ -143,15 +125,30 @@ const PetEditScreen = () => {
                 </View>
 
                 {/* 📌 이름 입력 */}
-                <Text style={styles.label}>이름</Text>
+                <Text style={styles.label}>이름 (필수)</Text>
                 <TextInput
                     style={styles.input}
+                    placeholder="한글, 영문, 숫자 8자 이내 입력"
                     maxLength={8}
                     value={petName}
                     onChangeText={setPetName}
                 />
 
-                <Text style={styles.label}>생년월일</Text>
+                {/* 📌 성별 선택 */}
+                <Text style={styles.label}>성별 (필수)</Text>
+                <View style={styles.buttonGroup}>
+                    {['암컷', '수컷'].map((gender) => (
+                        <TouchableOpacity
+                            key={gender}
+                            style={[styles.typeButton, petGender === gender && styles.selectedTypeButton]}
+                            onPress={() => setPetGender(gender)}
+                        >
+                            <Text style={[styles.typeButtonText, petGender === gender && styles.selectedTypeText]}>{gender}</Text>
+                        </TouchableOpacity>
+                    ))}
+                </View>
+
+                <Text style={styles.label}>생년월일 (필수)</Text>
                 <TouchableOpacity style={styles.input} onPress={showDatePicker}>
                     <Text style={{ color: petBirthDate ? 'black' : '#aaa' }}>
                         {petBirthDate || '생일을 선택하세요'}
@@ -166,25 +163,27 @@ const PetEditScreen = () => {
                     onCancel={() => setDatePickerVisibility(false)}
                 />
 
+
                 {/* ✅ 완료 버튼 */}
-                <TouchableOpacity style={styles.submitButton} onPress={handleSave}>
-                    <Text style={styles.submitText}>저장</Text>
+                <TouchableOpacity style={styles.submitButton} onPress={handleRegisterPet}>
+                    <Text style={styles.submitText}>완료</Text>
                 </TouchableOpacity>
             </ScrollView>
         </SafeAreaView>
     );
 };
 
+
 /** ✅ 스타일 정의 */
 const styles = StyleSheet.create({
     safeContainer: {
         flex: 1,
         backgroundColor: 'white',
-        paddingTop: StatusBar.currentHeight || 20,
+        paddingTop: StatusBar.currentHeight || 20, // ✅ 상태바 높이 고려
     },
     container: {
-        paddingHorizontal: 20,
-        paddingBottom: 50,
+        paddingHorizontal: 20, // ✅ 전체적인 좌우 패딩 조정
+        paddingBottom: 50, // ✅ 스크롤 시 여백 유지
         backgroundColor: 'white',
     },
     headerTitle: {
@@ -196,11 +195,11 @@ const styles = StyleSheet.create({
     },
     imagePicker: {
         alignSelf: 'center',
-        marginBottom: 30,
+        marginBottom: 30, // ✅ 이미지 아래 여백 추가
         position: 'relative',
     },
     petImage: {
-        width: 160,
+        width: 160, // ✅ 크기 증가
         height: 160,
         borderRadius: 80,
         backgroundColor: '#EAEAEA',
@@ -217,7 +216,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         marginTop: 20,
-        marginBottom: 5,
+        marginBottom: 5, // ✅ 입력 필드와 균형 맞추기 위해 추가
     },
     input: {
         borderWidth: 1,
@@ -226,9 +225,9 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         borderRadius: 12,
         marginTop: 8,
-        height: 50,
+        height: 50, // ✅ 높이 통일
         fontSize: 16,
-        backgroundColor: '#F9F9F9',
+        backgroundColor: '#F9F9F9', // ✅ 약간의 배경색 추가로 가독성 향상
     },
     buttonGroup: {
         flexDirection: 'row',
@@ -237,7 +236,7 @@ const styles = StyleSheet.create({
     },
     typeButton: {
         flex: 1,
-        paddingVertical: 12,
+        paddingVertical: 12, // ✅ 버튼 내부 높이 조정
         alignItems: 'center',
         borderWidth: 1,
         borderColor: '#ddd',
@@ -256,9 +255,24 @@ const styles = StyleSheet.create({
         color: 'white',
         fontWeight: 'bold',
     },
+    datePickerButton: {
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 12,
+        paddingHorizontal: 15,
+        paddingVertical: 14, // ✅ 버튼 스타일 통일
+        marginTop: 8,
+        height: 50,
+        justifyContent: 'center',
+        backgroundColor: '#F9F9F9', // ✅ 일반 입력 필드와 동일한 스타일로 통일
+    },
+    datePickerText: {
+        fontSize: 16,
+        color: '#333',
+    },
     submitButton: {
         backgroundColor: '#FF6F00',
-        paddingVertical: 18,
+        paddingVertical: 18, // ✅ 높이 증가
         borderRadius: 12,
         alignItems: 'center',
         marginTop: 40,
@@ -270,4 +284,6 @@ const styles = StyleSheet.create({
     },
 });
 
-export default PetEditScreen;
+
+
+export default PetRegistrationScreen;
