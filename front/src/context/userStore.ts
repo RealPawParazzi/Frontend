@@ -1,3 +1,5 @@
+// userStore.ts
+
 import { create } from 'zustand';
 import { fetchAllUsers, fetchUserData } from '../services/userService';
 import petStore, { loadPetData } from './petStore'; // ✅ 펫 데이터 가져오기
@@ -53,10 +55,10 @@ interface StoryBook {
 
 /** ✅ 기본 더미 데이터 */
 const defaultUserData: UserData = {
-    id: 'dummy-user',
-    email: 'default@example.com', // 기본 이메일 추가
-    nickName: '초기 닉네임', // 기본 닉네임 추가
-    name: '초기 사용자',
+    id: '99999999',
+    email: 'dummy-user@example.com', // 기본 이메일 추가
+    nickName: '더미 닉네임', // 기본 닉네임 추가
+    name: '더미 사용자',
     profileImage: require('../assets/images/profile-1.png'), //  require 유지
     petCount: 2,
     petList: [
@@ -207,6 +209,8 @@ export const loadUserData = async () => {
         // ✅ 펫 데이터 및 게시물 데이터 불러오기
         await loadPetData(); // ✅ userId 제거 후 호출
         await loadBoardData(Number(userInfo.id)); // 게시물 리스트는 기존대로 userId 필요
+
+        console.log('✅ 불러온 사용자 ID:', userInfo.id);
 
         // ✅ 최신 펫 데이터와 게시물 데이터 변환
         const { updatedPetList, updatedRecentPosts } = transformData();
