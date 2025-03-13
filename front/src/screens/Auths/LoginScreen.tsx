@@ -39,7 +39,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     const handleLogin = async () => {
         // 입력 유효성 검사 (이메일, 비밀번호 모두 입력됐는지)
         if (!email || !password) {
-            Alert.alert('오류', '이메일과 비밀번호를 모두 입력해주세요.');
+            Alert.alert('경고', '이메일과 비밀번호를 모두 입력해주세요.');
             return;
         }
 

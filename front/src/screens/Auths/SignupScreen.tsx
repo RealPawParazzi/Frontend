@@ -30,7 +30,7 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
 
     const handleSignup = async () => {
         if (!email || !password || !name || !nickName) {
-            Alert.alert('입력 오류', '모든 정보를 입력해주세요.');
+            Alert.alert('경고', '모든 정보를 입력해주세요.');
             return;
         }
 
