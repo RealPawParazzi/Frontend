@@ -12,16 +12,21 @@ const UserPostsScreen = () => {
     const { userId, userName } = route.params as { userId: number; userName: string };
 
     const { boardList, fetchUserBoards } = boardStore();
-    const [posts, setPosts] = useState([]);
+    const [posts, setPosts] = useState(boardList);  // ✅ 초기 상태를 store로 설정
 
+    // ✅ userId 바뀔 때 게시글 데이터 로딩
     useEffect(() => {
         fetchUserBoards(userId);
-        setPosts(boardStore.getState().boardList);
     }, [fetchUserBoards, userId]);
 
-    /** ✅ 게시글 클릭 시 상세화면 이동 */
-    const handlePostPress = (postId: string) => {
-        navigation.navigate('StorybookDetailScreen', { postId });
+    // ✅ boardList가 변경될 때 posts 업데이트
+    useEffect(() => {
+        setPosts(boardList);
+    }, [boardList]);
+
+    /** 게시글 클릭 시 상세화면 이동 */
+    const handlePostPress = (postId: number) => {
+        navigation.navigate('StorybookDetailScreen', { boardId: postId }); // ✅ postId를 boardId로 수정
     };
 
     return (
@@ -32,11 +37,12 @@ const UserPostsScreen = () => {
                     <Icon name="arrow-back-ios" size={20} color="#000" />
                 </TouchableOpacity>
                 <Text style={styles.username}>{userName}님의 게시글</Text>
-                <View style={styles.placeholder} /> {/* 중앙 정렬을 위한 빈 뷰 */}
+                <View style={styles.placeholder} />
             </View>
 
             {/* 📌 게시글 개수 출력 */}
             <Text style={styles.postCount}>총 {posts.length}개</Text>
+
 
             {/* 📝 게시글 리스트 */}
             <FlatList
@@ -52,7 +58,6 @@ const UserPostsScreen = () => {
                                 <Text style={styles.metaText}>좋아요 {item.favoriteCount} ・ 댓글 {item.commentCount}</Text>
                             </View>
                         </View>
-                        {/* 썸네일 이미지 */}
                         {item.titleImage && (
                             <Image source={{ uri: item.titleImage }} style={styles.postImage} />
                         )}
@@ -85,7 +90,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#4A90E2',
         paddingHorizontal: 20,
-        marginTop: 5,
+        marginTop: 30,
     },
 
     /** 📝 게시글 카드 */
