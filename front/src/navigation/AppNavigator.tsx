@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import SplashScreen from '../screens/Auths/SplashScreen';
 import AuthScreen from '../screens/Auths/AuthScreen';
+import TutorialScreen from '../screens/Auths/TutorialScreen';
 import BottomTabNavigator from './BottomTabNavigator'; // 홈 화면
 import StorybookScreen from '../screens/Storybooks/StorybookScreen';
 import StorybookDetailScreen from '../screens/Storybooks/StorybookDetailScreen';
@@ -18,6 +19,7 @@ import { ActivityIndicator, View } from 'react-native';
 
 export type RootStackParamList = {
     Splash: undefined;
+    Tutorial: undefined;
     Auth: undefined;
     Home: undefined;
     StorybookScreen: undefined;
@@ -60,6 +62,7 @@ const AppNavigator = () => {
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="Splash" component={SplashScreen} />
+            <Stack.Screen name="Tutorial" component={TutorialScreen} />
             <Stack.Screen name="Auth" component={AuthScreen} />
             <Stack.Screen name="Home" component={BottomTabNavigator} />
             <Stack.Screen name="StorybookScreen" component={StorybookScreen} />

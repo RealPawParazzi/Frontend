@@ -117,6 +117,7 @@ const MiniProfileModal = ({ visible, onClose, user }: MiniProfileModalProps) => 
             console.error('❌ [팔로우/언팔로우 오류]:', error);
         }
     };
+
     return (
         <Modal visible={visible} animationType="slide" transparent>
             <View style={styles.overlay}>
@@ -140,6 +141,7 @@ const MiniProfileModal = ({ visible, onClose, user }: MiniProfileModalProps) => 
                     <View style={styles.statsContainer}>
                         <TouchableOpacity
                             style={styles.statBox}
+                            // @ts-ignore
                             onPress={() => navigation.navigate('UserPostsScreen', { userId: user.id, userName: user.name })}
                         >
                             <Text style={styles.statNumber}>{postCount}</Text>
@@ -147,6 +149,7 @@ const MiniProfileModal = ({ visible, onClose, user }: MiniProfileModalProps) => 
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.statBox}
+                            // @ts-ignore
                             onPress={() => navigation.navigate('FollowListScreen', { type: 'followers', userId: user.id, userName: user.name })}
                         >
                             <Text style={styles.statNumber}>{followerCount}</Text>
@@ -154,6 +157,7 @@ const MiniProfileModal = ({ visible, onClose, user }: MiniProfileModalProps) => 
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.statBox}
+                            // @ts-ignore
                             onPress={() => navigation.navigate('FollowListScreen', { type: 'following', userId: user.id, userName: user.name })}
                         >
                             <Text style={styles.statNumber}>{followingCount}</Text>
