@@ -1,26 +1,44 @@
+// authService.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_BASE_URL = 'http://localhost:8080/api/auth'; // 🟢 백엔드 API 주소
 
 /**
- * ✅ 회원가입 API
- * @param data 회원가입 요청 데이터 (이메일, 비밀번호, 닉네임, 이름, 프로필 이미지 URL)
+ * ✅ 회원가입 API (multipart/form-data)
+ * @param data 회원가입 요청 데이터 (이메일, 비밀번호, 닉네임, 이름)
+ * @param profileImage 프로필 이미지 파일 (선택 사항)
  * @throws 회원가입 실패 시 오류 발생
  */
-export const registerUser = async (data: {
-    email: string;
-    password: string;
-    nickName: string;
-    name: string;
-    profileImageUrl?: string; // 선택적 필드
-}) => {
+export const registerUser = async (
+    data: {
+        email: string;
+        password: string;
+        nickName: string;
+        name: string;
+    },
+    profileImage?: { uri: string; name: string; type: string } // 🔵 변경된 타입
+) => {
     try {
         console.log('📤 회원가입 요청:', data);
 
+        const formData = new FormData();
+        formData.append('userData', JSON.stringify(data)); // ✅ JSON 데이터를 문자열로 변환하여 추가
+
+        // ✅ 프로필 이미지가 있다면 추가
+        if (profileImage) {
+            formData.append('profileImage', {
+                uri: profileImage.uri,
+                name: profileImage.name,
+                type: profileImage.type,
+            } as any);
+        }
+
         const response = await fetch(`${API_BASE_URL}/signup`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
+            headers: {
+                Authorization: `Bearer ${await AsyncStorage.getItem('userToken')}`, // 🔵 토큰 추가
+            },
+            body: formData, // ✅ multipart/form-data 요청
         });
 
         if (!response.ok) {
@@ -42,7 +60,7 @@ export const deleteUser = async () => {
         console.log('📤 회원 탈퇴 요청');
 
         const token = await AsyncStorage.getItem('userToken');
-        if (!token) {throw new Error('토큰이 없습니다.');}
+        if (!token) { throw new Error('토큰이 없습니다.'); }
 
         const response = await fetch(`${API_BASE_URL}/delete`, {
             method: 'DELETE', // 탈퇴 요청은 DELETE

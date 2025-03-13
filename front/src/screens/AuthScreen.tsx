@@ -4,6 +4,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { loginUser, registerUser, validateToken } from '../services/authService';
+import { launchImageLibrary } from 'react-native-image-picker'; // 🔵 이미지 선택 라이브러리
+import Icon from 'react-native-vector-icons/MaterialIcons'; // ✅ 아이콘 추가
+
 
 // ✅ 네비게이션 타입 지정
 type AuthScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Auth'>;
@@ -18,14 +21,12 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
     const [password, setPassword] = useState('');
     const [nickName, setNickName] = useState('');
     const [name, setName] = useState('');
-    const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null); // 프로필 이미지 상태 추가
-    const [loading, setLoading] = useState(false); // 로딩 상태
+    const [profileImage, setProfileImage] = useState<{ uri: string; name: string; type: string } | null>(null);
+    const [loading, setLoading] = useState(false);
 
-    // ✅ 기본 프로필 이미지 설정 함수
+    // ✅ 기본 프로필 이미지 설정
     const getProfileImage = () => {
-        return profileImageUrl && profileImageUrl.trim() !== ''
-            ? { uri: profileImageUrl }
-            : require('../assets/images/profile-1.png'); //  기본 프로필 이미지 설정
+        return profileImage ? { uri: profileImage.uri } : require('../assets/images/profile-1.png');
     };
 
     // ✅ 앱 실행 시 자동 로그인 검사
@@ -53,15 +54,12 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
         try {
             if (isSignup) {
                 // 🟠 회원가입 요청
-                await registerUser({
-                    email,
-                    password,
-                    nickName,
-                    name,
-                    profileImageUrl: profileImageUrl || '', // 기본 프로필 이미지 사용 시 빈 문자열 전달
-                });
+                await registerUser(
+                    { email, password, nickName, name },
+                    profileImage ?? undefined // 🔵 선택한 이미지 포함
+                );
                 Alert.alert('회원가입 성공!', '이제 로그인하세요.');
-                setIsSignup(false); // 로그인 화면으로 전환
+                setIsSignup(false);
             } else {
                 // 🔵 로그인 요청
                 const token = await loginUser({ email, password });
@@ -75,12 +73,50 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
         }
     };
 
+    // ✅ 프로필 이미지 선택 핸들러 (파일 선택)
+    const handleImagePick = async () => {
+        launchImageLibrary(
+            {
+                mediaType: 'photo',
+                quality: 1,
+                maxWidth: 800,
+                maxHeight: 800,
+            },
+            (response) => {
+                if (response.didCancel) {
+                    console.log('❌ 이미지 선택 취소');
+                } else if (response.errorMessage) {
+                    console.error('❌ 이미지 선택 오류:', response.errorMessage);
+                    Alert.alert('이미지 선택 오류', response.errorMessage);
+                } else if (response.assets && response.assets.length > 0) {
+                    const asset = response.assets[0];
+                    setProfileImage({
+                        uri: asset.uri!,
+                        name: asset.fileName || 'profile.jpg',
+                        type: asset.type || 'image/jpeg',
+                    });
+                }
+            }
+        );
+    };
+
     return (
         <View style={styles.container}>
-            {/* 🟢 프로필 이미지 표시 */}
-            <Image source={getProfileImage()} style={styles.logo} />
-
-            <Text style={styles.title}>{isSignup ? '회원가입' : '로그인'}</Text>
+            {/* 🟢 로그인 & 회원가입 모드에 따라 화면 다르게 표시 */}
+            {isSignup ? (
+                // 회원가입 시 프로필 이미지 미리보기
+                <TouchableOpacity onPress={handleImagePick} style={styles.imageContainer}>
+                    <Image source={getProfileImage()} style={styles.profileImage} />
+                    <View style={styles.iconContainer}>
+                        <Icon name="add-circle" size={28} color="orange" />
+                    </View>
+                </TouchableOpacity>
+            ) : (
+                // 로그인 시 강아지 발바닥 아이콘 표시
+                <View style={styles.pawIconContainer}>
+                    <Icon name="pets" size={80} color="orange" />
+                </View>
+            )}
 
             <TextInput
                 placeholder="이메일"
@@ -101,12 +137,6 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
                 <>
                     <TextInput placeholder="닉네임" style={styles.input} value={nickName} onChangeText={setNickName} />
                     <TextInput placeholder="이름" style={styles.input} value={name} onChangeText={setName} />
-                    <TextInput
-                        placeholder="프로필 이미지 URL (선택)"
-                        style={styles.input}
-                        value={profileImageUrl || ''}
-                        onChangeText={setProfileImageUrl}
-                    />
                 </>
             )}
 
@@ -124,7 +154,24 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
 // ✅ 스타일 정의
 const styles = StyleSheet.create({
     container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF3E0' },
-    logo: { width: 150, height: 150, marginBottom: 20, borderRadius: 75 }, // $$$$$$$$$ 동그란 프로필 이미지
+
+    // ✅ 프로필 이미지 컨테이너
+    imageContainer: { position: 'relative', marginBottom: 20 },
+    profileImage: { width: 120, height: 120, borderRadius: 60, backgroundColor: '#ddd' }, // 원형 이미지
+
+    // ✅ 로그인 - 강아지 발바닥 아이콘 컨테이너
+    pawIconContainer: { marginBottom: 50 },
+
+    // ✅ + 아이콘
+    iconContainer: {
+        position: 'absolute',
+        bottom: 0,
+        right: 0,
+        backgroundColor: 'white',
+        borderRadius: 14,
+        padding: 2,
+    },
+
     title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
     input: { width: '80%', padding: 10, borderWidth: 1, borderRadius: 10, marginBottom: 10, backgroundColor: 'white' },
     button: { backgroundColor: 'orange', padding: 12, borderRadius: 10, marginTop: 10, width: '80%', alignItems: 'center' },
