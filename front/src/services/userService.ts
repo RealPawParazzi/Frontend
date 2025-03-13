@@ -1,5 +1,6 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+// userService.ts
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_BASE_URL = 'http://localhost:8080/api/auth'; // 🟢 백엔드 API 주소
 
@@ -54,8 +55,15 @@ export const fetchUserData = async (): Promise<UserData> => {
             headers: { Authorization: `Bearer ${token}` },
         });
 
-        if (!response.ok) { throw new Error('사용자 정보를 불러오지 못했습니다.'); }
-        return await response.json();
+        if (!response.ok) {
+            console.error('❌ 사용자 정보를 불러오지 못했습니다.', response.status);
+            throw new Error('사용자 정보를 불러오지 못했습니다.');
+        }
+
+        const userData = await response.json();
+        console.log('✅ 불러온 사용자 데이터:', userData); // ✅ 유저 데이터 확인
+
+        return userData;
     } catch (error) {
         console.error('❌ 사용자 데이터 로드 실패:', error);
         throw error;
@@ -63,30 +71,45 @@ export const fetchUserData = async (): Promise<UserData> => {
 };
 
 /**
- * ✅ 사용자 정보 수정 API
- * @param updateData 변경할 사용자 정보 객체
+ * ✅ 사용자 정보 수정 API (multipart/form-data)
+ * @param updateData 변경할 사용자 정보 객체 (닉네임, 이름)
+ * @param profileImage 프로필 이미지 파일 (선택 사항)
  * @returns 수정된 사용자 정보
  */
-export const updateUser = async (updateData: {
-    name?: string;
-    nickName?: string;
-    profileImage?: string;
-}) => {
+export const updateUser = async (
+    updateData: {
+        nickName?: string;
+        name?: string;
+    },
+    profileImage?: { uri: string; name: string; type: string } // 🔵 변경된 타입
+) => {
     try {
         console.log('📤 사용자 정보 수정 요청:', updateData);
 
         const token = await AsyncStorage.getItem('userToken');
         if (!token) throw new Error('토큰이 없습니다.');
 
+        const formData = new FormData();
+
+        // ✅ JSON 데이터를 문자열로 변환하여 form-data에 추가
+        formData.append('userData', JSON.stringify(updateData));
+
+        // ✅ 프로필 이미지가 있다면 추가
+        if (profileImage) {
+            formData.append('profileImage', {
+                uri: profileImage.uri,
+                name: profileImage.name || 'profile.jpg',
+                type: profileImage.type || 'image/jpeg',
+            } as any);
+        }
+
         const response = await fetch(`${API_BASE_URL}/me`, {
-            method: 'PATCH', // PATCH 요청 (수정)
+            method: 'PATCH',
             headers: {
-                'Content-Type': 'application/json',
                 Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify(updateData),
+            body: formData, // ✅ multipart/form-data 요청
         });
-
 
         if (!response.ok) {
             const errorData = await response.json();
