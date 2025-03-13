@@ -24,7 +24,7 @@ const MyPageScreen = () => {
         try {
             await logoutUser(); // ✅ 인증 정보 삭제
             Alert.alert('✅ 로그아웃 성공', '다시 로그인 해주세요.');
-            navigation.navigate('Auth' as never); // ✅ 로그인 화면으로 이동 (타입 문제 방지)
+            navigation.navigate('Login' as never); // ✅ 로그인 화면으로 이동 (타입 문제 방지)
         } catch (error: any) {
             Alert.alert('⚠️ 로그아웃 실패', error.message || '로그아웃 중 오류가 발생했습니다.');
         }

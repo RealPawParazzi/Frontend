@@ -35,7 +35,7 @@ const TutorialScreen: React.FC<Props> = ({ navigation }) => {
         if (page < tutorialData.length - 1) {
             setPage(page + 1);
         } else {
-            navigation.replace('Auth'); // ✅ 로그인 화면으로 이동
+            navigation.replace('Login'); // ✅ 로그인 화면으로 이동
         }
     };
 

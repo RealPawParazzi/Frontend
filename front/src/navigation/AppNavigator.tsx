@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import SplashScreen from '../screens/Auths/SplashScreen';
-import AuthScreen from '../screens/Auths/AuthScreen';
+import LoginScreen from '../screens/Auths/LoginScreen';
+import SignupScreen from '../screens/Auths/SignupScreen';
 import TutorialScreen from '../screens/Auths/TutorialScreen';
 import BottomTabNavigator from './BottomTabNavigator'; // 홈 화면
 import StorybookScreen from '../screens/Storybooks/StorybookScreen';
@@ -20,7 +21,8 @@ import { ActivityIndicator, View } from 'react-native';
 export type RootStackParamList = {
     Splash: undefined;
     Tutorial: undefined;
-    Auth: undefined;
+    Login : undefined;
+    Signup : undefined;
     Home: undefined;
     StorybookScreen: undefined;
     StorybookDetailScreen: { boardId: number }; // ✅ 상세 페이지에서 boardId를 받음
@@ -63,7 +65,8 @@ const AppNavigator = () => {
         <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="Splash" component={SplashScreen} />
             <Stack.Screen name="Tutorial" component={TutorialScreen} />
-            <Stack.Screen name="Auth" component={AuthScreen} />
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Signup" component={SignupScreen} />
             <Stack.Screen name="Home" component={BottomTabNavigator} />
             <Stack.Screen name="StorybookScreen" component={StorybookScreen} />
             <Stack.Screen name="StorybookDetailScreen" component={StorybookDetailScreen} />
