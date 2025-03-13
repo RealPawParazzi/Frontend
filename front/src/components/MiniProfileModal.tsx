@@ -147,14 +147,14 @@ const MiniProfileModal = ({ visible, onClose, user }: MiniProfileModalProps) => 
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.statBox}
-                            onPress={() => navigation.navigate('FollowListScreen', { type: 'followers', userId: user.id })}
+                            onPress={() => navigation.navigate('FollowListScreen', { type: 'followers', userId: user.id, userName: user.name })}
                         >
                             <Text style={styles.statNumber}>{followerCount}</Text>
                             <Text style={styles.statText}>팔로워</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.statBox}
-                            onPress={() => navigation.navigate('FollowListScreen', { type: 'following', userId: user.id })}
+                            onPress={() => navigation.navigate('FollowListScreen', { type: 'following', userId: user.id, userName: user.name })}
                         >
                             <Text style={styles.statNumber}>{followingCount}</Text>
                             <Text style={styles.statText}>팔로잉</Text>
