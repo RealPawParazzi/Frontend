@@ -5,8 +5,13 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import SegmentedControl from '@react-native-segmented-control/segmented-control';
-import followStore from '../context/followStore';
+import userStore from '../context/userStore';
+import userFollowStore, { Follower, Following } from '../context/userFollowStore';
+import profileFollowStore from '../context/profileFollowStore';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+
+// FlatList 항목을 위한 유니온 타입 정의
+type FollowListItem = Follower | Following;
 
 const FollowListScreen = () => {
     const navigation = useNavigation();
@@ -16,20 +21,103 @@ const FollowListScreen = () => {
         userId: number;
         userName: string;
     };
-    const { followers, following, fetchFollowers, fetchFollowing } = followStore();
+
+    const {
+        fetchFollowers: fetchUserFollowers,
+        fetchFollowing: fetchUserFollowing,
+        followers: userFollowers,
+        following: userFollowing,
+    } = userFollowStore();
+
+    const {
+        followers,
+        following,
+        fetchProfileFollowers,
+        fetchProfileFollowing,
+    } = profileFollowStore();
+
+    const { userData } = userStore();
+
     const [selectedSegment, setSelectedSegment] = useState(type === 'followers' ? 0 : 1);
-    const [followList, setFollowList] = useState([]);
+
+    const [followerList, setFollowerList] = useState<Follower[]>([]);
+    const [followingList, setFollowingList] = useState<Following[]>([]);
+
 
     useEffect(() => {
-        if (selectedSegment === 0) {
-            fetchFollowers(userId);
-            setFollowList(followStore.getState().followers);
-        } else {
-            fetchFollowing(userId);
-            setFollowList(followStore.getState().following);
-        }
-    }, [selectedSegment, fetchFollowers, fetchFollowing, userId]);
+        const fetchData = async () => {
+            if (selectedSegment === 0) {
+                if (userId === Number(userData.id)) {
+                    await fetchUserFollowers(userId);
+                    setFollowerList(userFollowStore.getState().followers);
+                } else {
+                    await fetchProfileFollowers(userId);
+                    setFollowerList(profileFollowStore.getState().followers);
+                }
+            } else {
+                if (userId === Number(userData.id)) {
+                    await fetchUserFollowing(userId);
+                    setFollowingList(userFollowStore.getState().following);
+                } else {
+                    await fetchProfileFollowing(userId);
+                    setFollowingList(profileFollowStore.getState().following);
+                }
+            }
+        };
+        fetchData();
+    }, [selectedSegment, userId, userData.id, fetchUserFollowers, fetchProfileFollowers, fetchUserFollowing, fetchProfileFollowing]);
 
+    // 리스트가 비어있는지 확인하는 함수
+    const isListEmpty = selectedSegment === 0
+        ? followerList.length === 0
+        : followingList.length === 0;
+
+    // 각 항목에 대한 고유 키를 생성하는 함수
+    const getItemKey = (item: FollowListItem): string => {
+        if ('followerId' in item) {
+            return `follower-${item.followerId}`;
+        } else {
+            return `following-${item.followingId}`;
+        }
+    };
+
+    // 특정 항목을 렌더링하는 함수
+    const renderItem = ({ item }: { item: FollowListItem }) => {
+        if ('followerId' in item) {
+            // 팔로워인 경우
+            return (
+                <View style={styles.userItem}>
+                    <Image
+                        source={{ uri: item.followerProfileImageUrl || 'https://via.placeholder.com/50' }}
+                        style={styles.profileImage}
+                    />
+                    <Text style={styles.usernameText}>
+                        {item.followerNickName}
+                    </Text>
+                </View>
+            );
+        } else {
+            // 팔로잉인 경우
+            return (
+                <View style={styles.userItem}>
+                    <Image
+                        source={{ uri: item.followingProfileImageUrl || 'https://via.placeholder.com/50' }}
+                        style={styles.profileImage}
+                    />
+                    <Text style={styles.usernameText}>
+                        {item.followingNickName}
+                    </Text>
+                </View>
+            );
+        }
+    };
+
+    // 헤더 타이틀 생성
+    const getHeaderTitle = () => {
+        return selectedSegment === 0
+            ? `${userName}님의 팔로워`
+            : `${userName}님의 팔로잉`;
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -38,8 +126,8 @@ const FollowListScreen = () => {
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                     <Icon name="arrow-back-ios" size={20} color="#000" />
                 </TouchableOpacity>
-                <Text style={styles.username}>{userName}</Text>
-                <View style={styles.placeholder} /> {/* 중앙 정렬을 위한 빈 뷰 */}
+                <Text style={styles.username}>{getHeaderTitle()}</Text>
+                <View style={styles.placeholder} />
             </View>
 
             {/* 📌 세그먼트 컨트롤 (팔로워 / 팔로잉) */}
@@ -51,30 +139,16 @@ const FollowListScreen = () => {
             />
 
             {/* 📋 팔로워/팔로잉 리스트 */}
-            {followList.length > 0 ? (
+            {!isListEmpty ? (
                 <FlatList
-                    data={followList}
-                    keyExtractor={(item) => selectedSegment === 0 ? item.followerNickName : item.followingNickName}
-                    renderItem={({ item }) => (
-                        <View style={styles.userItem}>
-                            <Image
-                                source={{
-                                    uri: selectedSegment === 0
-                                        ? item.followerProfileImageUrl || 'https://via.placeholder.com/50'
-                                        : item.followingProfileImageUrl || 'https://via.placeholder.com/50',
-                                }}
-                                style={styles.profileImage}
-                            />
-                            <Text style={styles.usernameText}>
-                                {selectedSegment === 0 ? item.followerNickName : item.followingNickName}
-                            </Text>
-                        </View>
-                    )}
+                    data={selectedSegment === 0 ? followerList : followingList}
+                    keyExtractor={getItemKey}
+                    renderItem={renderItem}
                 />
             ) : (
                 <View style={styles.emptyContainer}>
                     <Image
-                        source={require('../assets/images/profile-1.png')} // 빈 상태 아이콘 (적절한 이미지 추가)
+                        source={require('../assets/images/profile-1.png')}
                         style={styles.emptyImage}
                     />
                     <Text style={styles.emptyText}>
@@ -104,7 +178,7 @@ const styles = StyleSheet.create({
     },
     backButton: { padding: 5 },
     username: { fontSize: 18, fontWeight: 'bold', textAlign: 'center', flex: 1 },
-    placeholder: { width: 30 }, // 중앙 정렬 유지용 빈 뷰
+    placeholder: { width: 30 },
 
     /** 📌 세그먼트 컨트롤 */
     segmentedControl: {
@@ -141,4 +215,3 @@ const styles = StyleSheet.create({
 });
 
 export default FollowListScreen;
-
