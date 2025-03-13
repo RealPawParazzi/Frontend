@@ -2,10 +2,10 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, FlatList, Alert, SafeAreaView } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
-import petStore from '../context/petStore';
+import petStore from '../../context/petStore';
 
 // ✅ 기본 이미지 상수
-const DEFAULT_PET_IMAGE = require('../assets/images/pets-1.jpg');
+const DEFAULT_PET_IMAGE = require('../../assets/images/pets-1.jpg');
 
 const PetInfoScreen = () => {
     const navigation = useNavigation();
@@ -20,6 +20,7 @@ const PetInfoScreen = () => {
             { text: '삭제', onPress: async () => await removePet(petId) }, // ✅ 비동기 삭제 처리
         ]);
     };
+
 
 
     return (
@@ -37,6 +38,7 @@ const PetInfoScreen = () => {
                         {/* ✏️ 수정 버튼 */}
                         <TouchableOpacity
                             style={styles.editButton}
+                            // @ts-ignore
                             onPress={() => navigation.navigate('PetEditScreen', { pet: item })}
                         >
                             <MaterialIcons name="edit" size={24} color="#FF6F00" />

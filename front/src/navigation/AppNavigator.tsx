@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import SplashScreen from '../screens/SplashScreen';
-import AuthScreen from '../screens/AuthScreen';
+import SplashScreen from '../screens/Auths/SplashScreen';
+import AuthScreen from '../screens/Auths/AuthScreen';
 import BottomTabNavigator from './BottomTabNavigator'; // 홈 화면
-import StorybookScreen from '../screens/StorybookScreen';
-import StorybookDetailScreen from '../screens/StorybookDetailScreen';
-import EditStorybookScreen from '../screens/EditStorybookScreen'; // ✨ 수정 페이지 추가
-import VideoEditorScreen from '../screens/VideoEditorScreen';
-import ImageEditorScreen from '../screens/ImageEditorScreen';
-import PetRegistrationScreen from '../screens/PetRegistrationScreen';
-import PetInfoScreen from '../screens/PetInfoScreen';
-import PetEditScreen from '../screens/PetEditScreen';
-import FollowListScreen from '../screens/FollowListScreen'; // 🆕 팔로워/팔로잉 목록 화면 추가
-import UserPostsScreen from '../screens/UserPostsScreen'; // 🆕 특정 유저 게시글 목록 추가
+import StorybookScreen from '../screens/Storybooks/StorybookScreen';
+import StorybookDetailScreen from '../screens/Storybooks/StorybookDetailScreen';
+import EditStorybookScreen from '../screens/Storybooks/EditStorybookScreen'; // ✨ 수정 페이지 추가
+import VideoEditorScreen from '../screens/Storybooks/VideoEditorScreen';
+import ImageEditorScreen from '../screens/Storybooks/ImageEditorScreen';
+import PetRegistrationScreen from '../screens/Pets/PetRegistrationScreen';
+import PetInfoScreen from '../screens/Pets/PetInfoScreen';
+import PetEditScreen from '../screens/Pets/PetEditScreen';
+import FollowListScreen from '../screens/MiniProfile/FollowListScreen'; // 🆕 팔로워/팔로잉 목록 화면 추가
+import UserPostsScreen from '../screens/MiniProfile/UserPostsScreen'; // 🆕 특정 유저 게시글 목록 추가
 import { loadUserData }  from '../context/userStore';
 import { ActivityIndicator, View } from 'react-native';
 

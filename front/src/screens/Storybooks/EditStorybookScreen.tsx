@@ -5,9 +5,9 @@ import {
 } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import boardStore from '../context/boardStore';
+import boardStore from '../../context/boardStore';
 import { RouteProp } from '@react-navigation/native';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { RootStackParamList } from '../../navigation/AppNavigator';
 
 /**
  * 📄 스토리북 게시글 수정 페이지

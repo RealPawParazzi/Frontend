@@ -5,9 +5,9 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import SegmentedControl from '@react-native-segmented-control/segmented-control';
-import userStore from '../context/userStore';
-import userFollowStore, { Follower, Following } from '../context/userFollowStore';
-import profileFollowStore from '../context/profileFollowStore';
+import userStore from '../../context/userStore';
+import userFollowStore, { Follower, Following } from '../../context/userFollowStore';
+import profileFollowStore from '../../context/profileFollowStore';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 // FlatList 항목을 위한 유니온 타입 정의
@@ -148,7 +148,7 @@ const FollowListScreen = () => {
             ) : (
                 <View style={styles.emptyContainer}>
                     <Image
-                        source={require('../assets/images/profile-1.png')}
+                        source={require('../../assets/images/profile-1.png')}
                         style={styles.emptyImage}
                     />
                     <Text style={styles.emptyText}>

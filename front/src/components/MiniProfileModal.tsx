@@ -140,7 +140,7 @@ const MiniProfileModal = ({ visible, onClose, user }: MiniProfileModalProps) => 
                     <View style={styles.statsContainer}>
                         <TouchableOpacity
                             style={styles.statBox}
-                            onPress={() => navigation.navigate('UserPostsScreen', { userId: user.id })}
+                            onPress={() => navigation.navigate('UserPostsScreen', { userId: user.id, userName: user.name })}
                         >
                             <Text style={styles.statNumber}>{postCount}</Text>
                             <Text style={styles.statText}>게시물</Text>

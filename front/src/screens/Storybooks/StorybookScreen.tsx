@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import boardStore from '../context/boardStore';
+import boardStore from '../../context/boardStore';
 
 /**
  * 📝 네이버 블로그 스타일 게시물 작성 화면
