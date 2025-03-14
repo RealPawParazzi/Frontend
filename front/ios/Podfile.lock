@@ -28,7 +28,7 @@ PODS:
   - libwebp/webp (1.5.0):
     - libwebp/sharpyuv
   - lottie-ios (3.4.0)
-  - lottie-react-native (5.1.4):
+  - lottie-react-native (5.1.6):
     - lottie-ios (~> 3.4.0)
     - React-Core
   - RCT-Folly (2024.11.18.00):
@@ -2245,7 +2245,7 @@ SPEC CHECKSUMS:
   hermes-engine: 1f783c3d53940aed0d2c84586f0b7a85ab7827ef
   libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
   lottie-ios: 69495122151a378fdc7d1bb4c5930347e37baf1f
-  lottie-react-native: 61e02fe80b8873ae42c45df06b5941d158b46776
+  lottie-react-native: 5d89c05930d4180a1e39b1757d46e6c0eec90255
   RCT-Folly: e78785aa9ba2ed998ea4151e314036f6c49e6d82
   RCTDeprecation: f5c19ebdb8804b53ed029123eb69914356192fc8
   RCTRequired: 6ae6cebe470486e0e0ce89c1c0eabb998e7c51f4
