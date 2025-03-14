@@ -120,6 +120,18 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
             <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
                 <Text style={styles.signupText}>Don't have an account? <Text style={styles.signupLink}>Signup</Text></Text>
             </TouchableOpacity>
+
+            {/* Signup 버튼 아래 추가되는 튜토리얼 다시보기 버튼 */}
+            <View style={styles.tutorialContainer}>
+                <Text style={styles.tutorialText}>
+                    Need a refresher?{' '}
+                    {/* 강조 텍스트만 터치 가능하게 구성 */}
+                    <Text style={styles.tutorialLink} onPress={() => navigation.navigate('Tutorial')}>
+                        View Tutorial
+                    </Text>
+                </Text>
+            </View>
+
         </View>
     );
 };
@@ -149,6 +161,20 @@ const styles = StyleSheet.create({
 
     signupText: { color: '#888' , marginTop: 2},
     signupLink: { color: '#6A4BBC', fontWeight: 'bold' },
+
+    tutorialContainer: {
+        marginTop: 15,
+    },
+
+    tutorialText: {
+        color: '#888',
+        fontSize: 14,
+    },
+
+    tutorialLink: {
+        color: '#6A4BBC',
+        fontWeight: 'bold',
+    },
 });
 
 export default LoginScreen;
