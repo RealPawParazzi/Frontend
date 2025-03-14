@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import SplashScreen from '../screens/Auths/SplashScreen';
 import LoginScreen from '../screens/Auths/LoginScreen';
+import KakaoLoginWebView from '../screens/Auths/KakaoLoginWebView';
 import SignupScreen from '../screens/Auths/SignupScreen';
 import TutorialScreen from '../screens/Auths/TutorialScreen';
 import BottomTabNavigator from './BottomTabNavigator'; // 홈 화면
@@ -22,6 +23,7 @@ export type RootStackParamList = {
     Splash: undefined;
     Tutorial: undefined;
     Login : undefined;
+    KakaoLoginWebView: undefined;
     Signup : undefined;
     Home: undefined;
     StorybookScreen: undefined;
@@ -66,6 +68,7 @@ const AppNavigator = () => {
             <Stack.Screen name="Splash" component={SplashScreen} />
             <Stack.Screen name="Tutorial" component={TutorialScreen} />
             <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="KakaoLoginWebView" component={KakaoLoginWebView} />
             <Stack.Screen name="Signup" component={SignupScreen} />
             <Stack.Screen name="Home" component={BottomTabNavigator} />
             <Stack.Screen name="StorybookScreen" component={StorybookScreen} />

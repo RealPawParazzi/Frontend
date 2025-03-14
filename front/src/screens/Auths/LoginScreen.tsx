@@ -5,6 +5,7 @@ import { loginUser, validateToken } from '../../services/authService';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
+import { kakaoLogin } from '../../services/kakaoService';
 
 // ✅ 네비게이션 타입 지정
 type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
@@ -60,6 +61,11 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         }
     };
 
+    // ✅ 카카오 로그인 실행 로직 추가
+    const handleKakaoLogin = async () => {
+        await kakaoLogin();
+    };
+
     return (
         <View style={styles.container}>
             {/* 앱 로고 */}
@@ -105,7 +111,10 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={styles.continueText}>Or continue with</Text>
 
             <View style={styles.socialContainer}>
-                <TouchableOpacity><Image source={require('../../assets/images/kakao-talk_64.png')} style={styles.socialIcon} /></TouchableOpacity>
+                {/* 카카오 로그인 버튼 추가 및 클릭 연동 완료 */}
+                <TouchableOpacity onPress={() => navigation.navigate('KakaoLoginWebView')}>
+                    <Image source={require('../../assets/images/kakao-talk_64.png')} style={styles.socialIcon} />
+                </TouchableOpacity>
             </View>
 
             <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
