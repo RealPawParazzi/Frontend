@@ -19,7 +19,7 @@ const KakaoLoginWebView: React.FC<Props> = ({ navigation }) => {
         const { url } = request;
 
         // 백엔드가 제공한 성공 URL 감지
-        if (url.includes('/auth/success')) {
+        if (url.includes('/auth/success?token=')) {
             const tokenMatch = url.match(/[?&]token=([^&]+)/);
 
             if (tokenMatch) {
