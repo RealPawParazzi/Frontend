@@ -90,17 +90,24 @@ const PetEditScreen = () => {
         }
 
         try {
-            const updatedPet = {
+            const petData = {
                 name: petName,
                 type: petType,
                 birthDate: petBirthDate,
-                petImg: petImage || undefined,
             };
 
-            console.log('✏️ 반려동물 수정 데이터:', updatedPet); // 🚀 전송 데이터 확인
-            await editPet(pet.petId, updatedPet); // ✅ API 호출 (백엔드에 수정 요청)
+            const petImageData = petImage
+                ? {
+                    uri: petImage,
+                    name: 'updated_pet.jpg', // 이름은 임의로 지정하거나 원본 파일 이름
+                    type: 'image/jpeg',       // 타입 명시 필수
+                }
+                : undefined;
 
-            Alert.alert('✅ 수정 완료', `${petName}의 정보가 업데이트되었습니다!`, [
+            console.log('✏️ 반려동물 수정 데이터:', petData, petImageData); // 🚀 전송 데이터 확인
+            await editPet(pet.petId, petData, petImageData); // ✅ API 호출 (백엔드에 수정 요청)
+
+            Alert.alert('✅ 수정 완료', `${petData.name}의 정보가 업데이트되었습니다!`, [
                 { text: '확인', onPress: () => navigation.goBack() },
             ]);
         } catch (error) {

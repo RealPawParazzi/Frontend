@@ -68,21 +68,24 @@ const PetRegistrationScreen = ({ navigation }: { navigation: any }) => {
         }
 
         try {
-            const newPet = {
+            const petData = {
                 name: petName,
-                type: petType as 'CAT' | 'DOG',
+                type: petType,
                 birthDate: petBirthDate,
-                petImg: petImage || undefined, // 이미지가 없으면 undefined
             };
 
-            console.log('🐶 API 요청 데이터:', newPet); // 🚀 전송 데이터 확인
+            const petImageData = petImage
+                ? { uri: petImage, name: 'petProfile.jpg', type: 'image/jpeg' } // $$$$$$$$ 이미지 타입 명확히 정의
+                : undefined;
 
-            await registerPet(newPet); // ✅ API 호출 (백엔드에 등록 요청)
+            console.log('🐶 API 요청 데이터:', petData, petImageData); // 🚀 전송 데이터 확인
+
+            await registerPet(petData, petImageData); // ✅ formData로 전달 처리됨
 
             // ✅ 상태 업데이트 (펫 리스트 최신화)
             await petStore.getState().fetchPets();
 
-            Alert.alert('✅ 등록 완료', `${petName}가 추가되었습니다!`, [
+            Alert.alert('✅ 등록 완료', `${petData.name}가 추가되었습니다!`, [
                 { text: '확인', onPress: () => navigation.goBack() },
             ]);
         } catch (error) {
