@@ -124,7 +124,7 @@ const UserInfo = ({ selectedTab }: UserInfoProps) => {
                                         ]}
                                         onPress={() => setSelectedPetId(item.id)} // ✅ 펫 선택 시 ID 변경
                                     >
-                                        <Image source={item.image} style={styles.petImage} />
+                                        <Image source={item.image ? { uri: item.image } : DEFAULT_PET_IMAGE} style={styles.petImage} />
                                         <Text style={styles.petName}>{item.name}</Text>
                                     </TouchableOpacity>
                                 )}
@@ -133,6 +133,7 @@ const UserInfo = ({ selectedTab }: UserInfoProps) => {
                             {/* ➡️ 아이콘 (반려동물 정보 화면 이동) */}
                             <TouchableOpacity
                                 style={styles.viewMoreButton}
+                                // @ts-ignore
                                 onPress={() => navigation.navigate('PetInfoScreen')}
                             >
                                 <MaterialIcons name="arrow-forward-ios" size={24} color="#888" />
@@ -142,6 +143,7 @@ const UserInfo = ({ selectedTab }: UserInfoProps) => {
                         {/* ➕ 반려동물 추가 버튼 */}
                         <TouchableOpacity
                             style={styles.addPetButton}
+                            // @ts-ignore
                             onPress={() => navigation.navigate('PetRegistrationScreen')}
                         >
                             <MaterialIcons name="add" size={30} color="gray" />
