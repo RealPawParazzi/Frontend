@@ -9,7 +9,7 @@
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "moduleResolution": "nodenext",
+    "moduleResolution": "node",
     "baseUrl": "./",
     "paths": {
       "@react-navigation/*": ["node_modules/@react-navigation/*"]

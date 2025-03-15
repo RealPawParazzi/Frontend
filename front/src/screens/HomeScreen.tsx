@@ -12,7 +12,7 @@ import userStore from '../context/userStore';
  * - "오늘의 추억 영상", "스토리 릴", "팔로우 추천", "StoryBooks for Today" 섹션 포함
  */
 const HomeScreen = () => {
-    const { memoryVideos, followRecommendations, storyBooks, storyReels } = userStore(); // ✅ Zustand 데이터 가져오기
+    const { memoryVideos, storyBooks, storyReels } = userStore(); // ✅ Zustand 데이터 가져오기
 
     return (
         <View style={styles.container}>
@@ -29,7 +29,7 @@ const HomeScreen = () => {
 
                 {/* 👥 팔로우 추천 */}
                 <Text style={styles.sectionTitle}>팔로우 추천 →</Text>
-                <FollowRecommendations recommendations={followRecommendations} />
+                <FollowRecommendations />
 
                 {/* 📖 StoryBooks for Today */}
                 <Text style={styles.sectionTitle}>StoryBooks for Today →</Text>

@@ -5,11 +5,8 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import CalendarScreen from '../screens/CalendarScreen';
 import MapScreen from '../screens/MapScreen';
 import MyPageScreen from '../screens/MyPageScreen';
-import StorybookScreen from '../screens/StorybookScreen';
-import VideoEditorScreen from '../screens/VideoEditorScreen';
-import ImageEditorScreen from '../screens/ImageEditorScreen';
 import HomeScreen from '../screens/HomeScreen';
-import Header from "../components/Header";
+import Header from '../components/Header';
 
 
 const Tab = createBottomTabNavigator();

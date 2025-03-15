@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { RootStackParamList } from '../../navigation/AppNavigator';
+import LottieView from 'lottie-react-native';
 
 type SplashScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Splash'>;
 
@@ -12,29 +13,43 @@ interface Props {
 
 const SplashScreen: React.FC<Props> = ({ navigation }) => {
     useEffect(() => {
-        const checkLoginStatus = async () => {
+        const checkAppStatus = async () => {
+            const isFirstLaunch = await AsyncStorage.getItem('isFirstLaunch');
             const token = await AsyncStorage.getItem('userToken');
+
             setTimeout(() => {
-                if (token) {
-                    navigation.replace('Home'); // ✅ 로그인 되어 있으면 홈으로 이동
+                if (isFirstLaunch === null) {
+                    // ✅ 처음 설치한 경우 튜토리얼 화면으로 이동
+                    AsyncStorage.setItem('isFirstLaunch', 'false');
+                    navigation.replace('Tutorial');
+                } else if (token) {
+                    // ✅ 로그인 상태라면 홈으로 이동
+                    navigation.replace('Home');
                 } else {
-                    navigation.replace('Auth'); // ✅ 로그인 안 되어 있으면 로그인 화면으로 이동
+                    // ✅ 로그인 안 되어 있으면 로그인 화면으로 이동
+                    navigation.replace('Login');
                 }
-            }, 1500); // 스플래시 화면 1.5초 유지
+            }, 2000); // 2초간 로딩 애니메이션 유지
         };
 
-        checkLoginStatus();
+        checkAppStatus();
     }, [navigation]);
 
     return (
         <View style={styles.container}>
-            <ActivityIndicator size="large" color="#FF5733" />
+            <LottieView
+                source={require('../../assets/animations/paws.json')} // 🔥 Lottie JSON 파일 필요
+                autoPlay
+                loop
+                style={styles.lottie}
+            />
         </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF3E0' },
+    lottie: { width: 150, height: 150 },
 });
 
 export default SplashScreen;
