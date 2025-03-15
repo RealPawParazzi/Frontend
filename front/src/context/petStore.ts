@@ -14,8 +14,8 @@ export interface Pet {
 interface PetStore {
     pets: Pet[]; // 🐾 반려동물 목록
     fetchPets: () => Promise<void>; // 🔄 반려동물 목록 불러오기
-    addPet: (petData: Omit<Pet, 'petId'>) => Promise<void>; // 🆕 반려동물 추가
-    editPet: (petId: number, petData: Partial<Pet>) => Promise<void>; // ✏️ 반려동물 정보 수정
+    addPet: (petData: Omit<Pet, 'petId'>, image?: any) => Promise<void>; // 🆕 반려동물 추가
+    editPet: (petId: number, petData: Partial<Pet>, petImage?: any) => Promise<void>; // ✏️ 반려동물 정보 수정
     removePet: (petId: number) => Promise<void>; // 🗑️ 반려동물 삭제
 }
 
@@ -59,14 +59,15 @@ const petStore = create<PetStore>((set) => ({
      * ✅ 반려동물 추가
      * - API 요청 후 Zustand 상태 업데이트
      */
-    addPet: async (petData) => {
+    addPet: async (petData, petImage) => {
         try {
             const newPet = await registerPet({
                 name: petData.name,
                 type: petData.type,
                 birthDate: petData.birthDate,
-                petImg: petData.petImg || '', // petImg 값이 없을 경우 빈 문자열로 처리
-            });
+                },
+                petImage || '', // petImg 값이 없을 경우 빈 문자열로 처리
+            );
 
             set((state) => ({ pets: [...state.pets, newPet] })); // ✅ 상태 업데이트
         } catch (error) {
@@ -78,14 +79,15 @@ const petStore = create<PetStore>((set) => ({
      * ✅ 반려동물 정보 수정
      * - API 요청 후 상태 업데이트
      */
-    editPet: async (petId, petData) => {
+    editPet: async (petId, petData, petImage) => {
         try {
             const updatedPet = await updatePet(petId, {
                 name: petData.name,
                 type: petData.type, // type을 breed로 변환하지 않도록 수정
                 birthDate: petData.birthDate,
-                petImg: petData.petImg || '',
-            });
+                },
+                petImage || '', // petImg 값이 없을 경우 빈 문자열로 처리
+            );
 
             set((state) => ({
                 pets: state.pets.map((pet) => (pet.petId === petId ? updatedPet : pet)),
@@ -102,7 +104,7 @@ const petStore = create<PetStore>((set) => ({
     removePet: async (petId) => {
         try {
             await deletePet(petId);
-            await petStore.getState().fetchPets(); // $$$$$$$ 삭제 후 상태 최신화 보장
+            await petStore.getState().fetchPets(); // 삭제 후 상태 최신화 보장
         } catch (error) {
             console.error('🐶❌ 반려동물 삭제 실패:', error);
         }
