@@ -15,22 +15,24 @@ interface Walk {
 /** ✅ Zustand Store */
 interface WalkStore {
     walks: { [key: number]: Walk };
-    saveWalk: (petId: number, route: { latitude: number; longitude: number; timestamp: string }[], startTime: string, endTime: string) => Promise<void>;
+    saveWalk: (petId: number, route: { latitude: number; longitude: number; timestamp: string }[], startTime: string, endTime: string) => Promise<number | null>; // 리턴 타입 변경
     fetchWalk: (walkId: number) => Promise<void>; // fetchWalk으로 변경
 }
 
 const walkStore = create<WalkStore>((set) => ({
     walks: {},
 
-    /** ✅ 산책 기록 저장 */
+    /** ✅ 산책 기록 저장 후 walkId 반환 */
     saveWalk: async (petId, route, startTime, endTime) => {
         try {
             const savedWalk = await saveWalkData(petId, route, startTime, endTime);
             set((state) => ({
-                walks: { ...state.walks, [savedWalk.id]: savedWalk }, // $$$$$$$ walkId 기준으로 저장
+                walks: { ...state.walks, [savedWalk.id]: savedWalk }, // walkId 기준으로 저장
             }));
+            return savedWalk.id; // walkId 반환
         } catch (error) {
             console.error('❌ [산책 기록 저장 실패]:', error);
+            return null; // 실패 시 null 반환
         }
     },
 

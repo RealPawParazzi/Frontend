@@ -1,15 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import {View, Text, TouchableOpacity, StyleSheet, FlatList, Image, Alert } from 'react-native';
+import {View, Text, TouchableOpacity, StyleSheet, FlatList, Image, Alert, Platform} from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
+import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions'; // ✅ 권한 요청 추가
 import Geolocation from 'react-native-geolocation-service'; // ✅ 위치 추적
 import DateTimePicker from '@react-native-community/datetimepicker';
 import walkStore from '../context/walkStore';
 import userStore from '../context/userStore';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
+/** ✅ 위치 권한 요청 함수 */
+const requestLocationPermission = async (): Promise<boolean> => {
+    const permission =
+        Platform.OS === 'ios' ? PERMISSIONS.IOS.LOCATION_WHEN_IN_USE : PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION;
+
+    const result = await check(permission);
+    if (result === RESULTS.GRANTED) {
+        return true;
+    }
+
+    const requestResult = await request(permission);
+    return requestResult === RESULTS.GRANTED;
+};
+
 const MapScreen = () => {
     const { userData } = userStore();
-    const { saveWalk, fetchWalks, walks } = walkStore();
+    const { saveWalk, fetchWalk, walks } = walkStore();
     const [selectedPet, setSelectedPet] = useState(userData.petList[0]);
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
@@ -18,34 +33,60 @@ const MapScreen = () => {
     const [startTime, setStartTime] = useState<string | null>(null);
     const [totalDistance, setTotalDistance] = useState(0);
     const [averageSpeed, setAverageSpeed] = useState(0);
+    const [currentWalkId, setCurrentWalkId] = useState<number | null>(null);
 
-    /** ✅ 날짜별 산책 히스토리 불러오기 */
+    /** ✅ 선택된 펫의 산책 기록 불러오기 */
     useEffect(() => {
-        fetchWalks(Number(selectedPet.id));
-    }, [selectedPet, selectedDate, fetchWalks]);
+        if (selectedPet?.id) {
+            console.log(`📥 [산책 기록 요청] 펫 ID: ${selectedPet.id}`);
+            fetchWalk(Number(selectedPet.id)); // petId 기준으로 변경
+        }
+    }, [selectedPet, selectedDate, fetchWalk]);
 
-    /** ✅ 위치 추적 설정 */
+    /** ✅ 위치 추적 설정 (위치 권한 확인 후 실행) */
     useEffect(() => {
         let watchId: any = null;
-        if (isWalking) {
+
+        const startTracking = async () => {
+            /** 위치 권한 요청 후 결과 확인 */
+            const hasPermission = await requestLocationPermission();
+            if (!hasPermission) {
+                Alert.alert('❌ 위치 권한 거부됨', '산책을 기록하려면 위치 권한이 필요합니다.');
+                setIsWalking(false);
+                return;
+            }
+
+            /** 위치 권한 허용된 경우 위치 추적 시작 */
             setStartTime(new Date().toISOString());
             watchId = Geolocation.watchPosition(
                 (position) => {
                     const { latitude, longitude } = position.coords;
-                    if (walkRoute.length === 0 ||
+                    /** ✅ 위치 중복 저장 방지 */
+                    if (
+                        walkRoute.length === 0 ||
                         (latitude !== walkRoute[walkRoute.length - 1].latitude &&
-                            longitude !== walkRoute[walkRoute.length - 1].longitude)) {
-                        setWalkRoute((prevRoute) => [...prevRoute, { latitude, longitude, timestamp: new Date().toISOString() }]);
+                            longitude !== walkRoute[walkRoute.length - 1].longitude)
+                    ) {
+                        setWalkRoute((prevRoute) => [
+                            ...prevRoute,
+                            { latitude, longitude, timestamp: new Date().toISOString() },
+                        ]);
                     }
                 },
-                (error) => console.error(error),
-                { enableHighAccuracy: true, distanceFilter: 10, interval: 5000 }
+                (error) => console.error('❌ 위치 추적 오류:', error),
+                { enableHighAccuracy: true, distanceFilter: 5, interval: 5000 } // 🔹 5m 이동 시마다 업데이트
             );
+        };
+
+        /** 산책 시작 시 위치 추적 실행 */
+        if (isWalking) {
+            startTracking();
         } else {
-            if (watchId) Geolocation.clearWatch(watchId);
+            if (watchId) { Geolocation.clearWatch(watchId); }
         }
+
         return () => {
-            if (watchId) Geolocation.clearWatch(watchId);
+            if (watchId) { Geolocation.clearWatch(watchId); }
         };
     }, [isWalking, walkRoute]);
 
@@ -77,10 +118,20 @@ const MapScreen = () => {
         setIsWalking(false);
         if (walkRoute.length > 0 && startTime) {
             const endTime = new Date().toISOString();
-            await saveWalk(Number(selectedPet.id), walkRoute, startTime, endTime);
+
+            // saveWalk이 walkId를 반환하도록 변경
+            const savedWalkId = await saveWalk(Number(selectedPet.id), walkRoute, startTime, endTime);
+
+            if (savedWalkId) {
+                setCurrentWalkId(savedWalkId); // walkId 저장
+                fetchWalk(savedWalkId); // 최신 데이터 반영
+                Alert.alert('✅ 산책 기록이 저장되었습니다! 📍');
+            } else {
+                Alert.alert('❌ 산책 기록 저장 실패', '다시 시도해주세요.');
+            }
+
             setWalkRoute([]);
             setStartTime(null);
-            Alert.alert('산책 기록이 저장되었습니다! 📍');
         }
     };
 
