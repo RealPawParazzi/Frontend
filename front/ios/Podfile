@@ -30,7 +30,11 @@ target 'front' do
   # ✅ AirGoogleMaps 추가
   pod 'react-native-google-maps', :path => '../node_modules/react-native-maps', :modular_headers => true
 
-# ✅ react-native-permissions 추가 (권한 요청 관련)
+  # ✅ react-native-permissions 추가 (중복 방지)
+  pod 'RNPermissions', :path => '../node_modules/react-native-permissions'
+
+
+  # ✅ react-native-permissions 추가 (권한 요청 관련)
   rnPermissionsPodspecs = [
     'RNPermissions/PERMISSIONS_LOCATION_WHEN_IN_USE', # 📍 위치 권한
     'RNPermissions/PERMISSIONS_CAMERA',              # 📸 카메라 권한
@@ -38,9 +42,6 @@ target 'front' do
     'RNPermissions/PERMISSIONS_NOTIFICATIONS',       # 🔔 알림 권한
   ]
 
-  rnPermissionsPodspecs.each do |spec|
-      pod spec
-    end
 
   post_install do |installer|
     # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
