@@ -44,6 +44,15 @@
     <key>NSLocationAlwaysUsageDescription</key>
     <string>산책을 기록하려면 항상 위치 권한이 필요합니다.</string>
 
+    <key>NSCameraUsageDescription</key>
+    <string>반려동물 프로필 사진 촬영을 위해 카메라 권한이 필요합니다.</string>
+
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>반려동물 프로필 사진 업로드를 위해 갤러리 접근 권한이 필요합니다.</string>
+
+    <key>NSUserTrackingUsageDescription</key>
+    <string>광고 및 분석을 위해 추적 권한이 필요합니다.</string>
+
 	<key>UIAppFonts</key>
     <array>
         <string>MaterialIcons.ttf</string>
