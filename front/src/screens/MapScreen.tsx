@@ -1,26 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import {View, Text, TouchableOpacity, StyleSheet, FlatList, Image, Alert, Platform} from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
-import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions'; // ✅ 권한 요청 추가
+import { requestNotificationPermission } from '../utils/permissions/notificationPermission'; // ✅ 권한 요청 추가
 import Geolocation from 'react-native-geolocation-service'; // ✅ 위치 추적
 import DateTimePicker from '@react-native-community/datetimepicker';
 import walkStore from '../context/walkStore';
 import userStore from '../context/userStore';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-
-/** ✅ 위치 권한 요청 함수 */
-const requestLocationPermission = async (): Promise<boolean> => {
-    const permission =
-        Platform.OS === 'ios' ? PERMISSIONS.IOS.LOCATION_WHEN_IN_USE : PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION;
-
-    const result = await check(permission);
-    if (result === RESULTS.GRANTED) {
-        return true;
-    }
-
-    const requestResult = await request(permission);
-    return requestResult === RESULTS.GRANTED;
-};
 
 const MapScreen = () => {
     const { userData } = userStore();
@@ -34,6 +20,13 @@ const MapScreen = () => {
     const [totalDistance, setTotalDistance] = useState(0);
     const [averageSpeed, setAverageSpeed] = useState(0);
     const [currentWalkId, setCurrentWalkId] = useState<number | null>(null);
+
+    const checkNotificationPermission = async (): Promise<boolean> => {
+        const granted = await requestNotificationPermission();
+        console.log(granted ? '✅ 알림 권한 허용됨' : '❌ 알림 권한 거부됨');
+        return granted; // ✅ 올바르게 boolean 값 반환
+    };
+
 
     /** ✅ 선택된 펫의 산책 기록 불러오기 */
     useEffect(() => {
@@ -49,7 +42,7 @@ const MapScreen = () => {
 
         const startTracking = async () => {
             /** 위치 권한 요청 후 결과 확인 */
-            const hasPermission = await requestLocationPermission();
+            const hasPermission = await checkNotificationPermission();
             if (!hasPermission) {
                 Alert.alert('❌ 위치 권한 거부됨', '산책을 기록하려면 위치 권한이 필요합니다.');
                 setIsWalking(false);
