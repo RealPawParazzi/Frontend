@@ -41,6 +41,9 @@
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>앱이 실행되는 동안 위치 서비스를 사용하여 반려동물의 산책 경로를 표시합니다.</string>
 
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>산책을 기록하려면 항상 위치 권한이 필요합니다.</string>
+
 	<key>UIAppFonts</key>
     <array>
         <string>MaterialIcons.ttf</string>
