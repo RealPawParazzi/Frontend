@@ -42,9 +42,13 @@ export const saveWalkData = async (petId: number, walkRoute: { latitude: number;
 
         const requestBody = {
             petId,
-            startTime,
+            startTime,  // ✅ 그냥 기존 ISO 형식 그대로 전송 (Z 없어도 됨)
             endTime,
-            route: walkRoute,
+            route: walkRoute.map((point) => ({
+                latitude: point.latitude,
+                longitude: point.longitude,
+                timestamp: point.timestamp, // ✅ 수정 필요 없음
+            })),
             distance,
             averageSpeed,
         };

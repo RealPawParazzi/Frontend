@@ -26,6 +26,9 @@ const MapScreen = () => {
     const checkLocationPermission = async (): Promise<boolean> => {
         const granted = await requestLocationPermission();
         console.log(granted ? '✅ 위치 권한 허용됨' : '❌ 위치 권한 거부됨');
+        if (!granted) {
+            Alert.alert('위치 권한 필요', '산책을 기록하려면 위치 권한을 허용해주세요.');
+        }
         return granted; // ✅ 올바르게 boolean 값 반환
     };
 
@@ -134,6 +137,8 @@ const MapScreen = () => {
 
         /** 산책 시작 시 위치 추적 실행 */
         if (isWalking) {
+            /** ✅ 산책 시작 */
+            console.log('🚶‍♂️ [산책 시작] 버튼 클릭됨');
             startTracking();
         } else {
             if (watchId) { Geolocation.clearWatch(watchId); }
@@ -169,17 +174,25 @@ const MapScreen = () => {
 
     /** ✅ 산책 종료 후 데이터 저장 */
     const handleWalkEnd = async () => {
+        console.log('⏹ [산책 종료] 버튼 클릭됨');
         setIsWalking(false);
         if (walkRoute.length > 0 && startTime) {
             const endTime = new Date().toISOString();
+            console.log(`📍 [산책 경로] 총 ${walkRoute.length}개의 위치 데이터 기록됨`);
 
             // saveWalk이 walkId를 반환하도록 변경
-            const savedWalkId = await saveWalk(Number(selectedPet.id), walkRoute, startTime, endTime);
+            const savedWalkId = await saveWalk(
+                Number(selectedPet.id),
+                walkRoute,
+                startTime,
+                endTime
+            );
 
             if (savedWalkId) {
                 setCurrentWalkId(savedWalkId); // walkId 저장
                 fetchWalk(savedWalkId); // 최신 데이터 반영
                 Alert.alert('✅ 산책 기록이 저장되었습니다! 📍');
+                console.log(`✅ [산책 기록 저장 성공] walkId: ${savedWalkId}`);
             } else {
                 Alert.alert('❌ 산책 기록 저장 실패', '다시 시도해주세요.');
             }
