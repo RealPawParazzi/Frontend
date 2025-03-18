@@ -11,6 +11,8 @@
     "test": "jest"
   },
   "reactNativePermissionsIOS": [
+    "LocationAccuracy",
+    "LocationAlways",
     "LocationWhenInUse",
     "Camera",
     "PhotoLibrary",

@@ -14,6 +14,7 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
+
 target 'front' do
   config = use_native_modules!
 
@@ -32,15 +33,6 @@ target 'front' do
 
   # ✅ react-native-permissions 추가 (중복 방지)
   pod 'RNPermissions', :path => '../node_modules/react-native-permissions'
-
-
-  # ✅ react-native-permissions의 각 권한 모듈 추가
-    permissions_path = '../node_modules/react-native-permissions/ios'
-    pod 'Permission-LocationWhenInUse', :path => "#{permissions_path}/LocationWhenInUse"  # 📍 위치 권한 필수 추가
-    pod 'Permission-Camera', :path => "#{permissions_path}/Camera"                        # 📸 카메라
-    pod 'Permission-PhotoLibrary', :path => "#{permissions_path}/PhotoLibrary"            # 🖼️ 갤러리
-    pod 'Permission-Notifications', :path => "#{permissions_path}/Notifications"          # 🔔 알림
-
 
   post_install do |installer|
     # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202

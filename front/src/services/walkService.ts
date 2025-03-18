@@ -67,8 +67,11 @@ export const getWalkHistory = async (walkId: number) => {
     try {
         console.log(`📥 [산책 기록 요청] -> 산책 ID: ${walkId}`);
 
+        // ✅ 인증 헤더 가져오기
+        const headers = await getAuthHeaders();
+
         // API 경로 수정 (기존: /api/walks/{petId} → 변경: /api/walk/{walkId})
-        const response = await axios.get(`${BASE_URL}/${walkId}`);
+        const response = await axios.get(`${BASE_URL}/${walkId}`, { headers });
 
         console.log('✅ [산책 기록 불러오기 성공]', response.data);
         return response.data;
