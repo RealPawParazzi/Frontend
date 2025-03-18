@@ -10,6 +10,12 @@
     "start": "react-native start --port=8082",
     "test": "jest"
   },
+  "reactNativePermissionsIOS": [
+    "LocationWhenInUse",
+    "Camera",
+    "PhotoLibrary",
+    "Notifications"
+  ],
   "dependencies": {
     "@expo/vector-icons": "^14.0.4",
     "@react-native-async-storage/async-storage": "^2.1.2",

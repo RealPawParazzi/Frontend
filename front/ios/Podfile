@@ -34,13 +34,12 @@ target 'front' do
   pod 'RNPermissions', :path => '../node_modules/react-native-permissions'
 
 
-  # ✅ react-native-permissions 추가 (권한 요청 관련)
-  rnPermissionsPodspecs = [
-    'RNPermissions/PERMISSIONS_LOCATION_WHEN_IN_USE', # 📍 위치 권한
-    'RNPermissions/PERMISSIONS_CAMERA',              # 📸 카메라 권한
-    'RNPermissions/PERMISSIONS_PHOTO_LIBRARY',       # 🖼️ 갤러리 권한
-    'RNPermissions/PERMISSIONS_NOTIFICATIONS',       # 🔔 알림 권한
-  ]
+  # ✅ react-native-permissions의 각 권한 모듈 추가
+    permissions_path = '../node_modules/react-native-permissions/ios'
+    pod 'Permission-LocationWhenInUse', :path => "#{permissions_path}/LocationWhenInUse"  # 📍 위치 권한 필수 추가
+    pod 'Permission-Camera', :path => "#{permissions_path}/Camera"                        # 📸 카메라
+    pod 'Permission-PhotoLibrary', :path => "#{permissions_path}/PhotoLibrary"            # 🖼️ 갤러리
+    pod 'Permission-Notifications', :path => "#{permissions_path}/Notifications"          # 🔔 알림
 
 
   post_install do |installer|
