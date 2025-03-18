@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import {View, Text, TouchableOpacity, StyleSheet, FlatList, Image, Alert, Platform} from 'react-native';
+import React, {useState, useEffect, useRef} from 'react';
+import {View, Text, TouchableOpacity, StyleSheet, FlatList, Image, Alert } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
-import { requestNotificationPermission } from '../utils/permissions/notificationPermission'; // ✅ 권한 요청 추가
+import { requestLocationPermission } from '../utils/permissions/locationPermission'; // ✅ 권한 요청 추가
 import Geolocation from 'react-native-geolocation-service'; // ✅ 위치 추적
 import DateTimePicker from '@react-native-community/datetimepicker';
 import walkStore from '../context/walkStore';
@@ -10,7 +10,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const MapScreen = () => {
     const { userData } = userStore();
-    const { saveWalk, fetchWalk, walks } = walkStore();
+    const { saveWalk, fetchWalk } = walkStore();
     const [selectedPet, setSelectedPet] = useState(userData.petList[0]);
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
@@ -20,13 +20,58 @@ const MapScreen = () => {
     const [totalDistance, setTotalDistance] = useState(0);
     const [averageSpeed, setAverageSpeed] = useState(0);
     const [currentWalkId, setCurrentWalkId] = useState<number | null>(null);
+    const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+    const mapRef = useRef<MapView | null>(null); // ✅ 지도 참조 객체 추가
 
-    const checkNotificationPermission = async (): Promise<boolean> => {
-        const granted = await requestNotificationPermission();
-        console.log(granted ? '✅ 알림 권한 허용됨' : '❌ 알림 권한 거부됨');
+    const checkLocationPermission = async (): Promise<boolean> => {
+        const granted = await requestLocationPermission();
+        console.log(granted ? '✅ 위치 권한 허용됨' : '❌ 위치 권한 거부됨');
         return granted; // ✅ 올바르게 boolean 값 반환
     };
 
+    /** ✅ 현재 위치 가져오기 함수 */
+    const getCurrentLocation = async () => {
+        const hasPermission = await requestLocationPermission();
+        if (!hasPermission) {
+            Alert.alert('❌ 위치 권한 거부됨', '현재 위치를 가져올 수 없습니다.');
+            return;
+        }
+
+        Geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                setCurrentLocation({ latitude, longitude });
+
+                // ✅ 현재 위치를 지도 중심으로 이동
+                mapRef.current?.animateToRegion({
+                    latitude,
+                    longitude,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                }, 1000);
+            },
+            (error) => {
+                console.error('❌ 위치 가져오기 실패:', error);
+
+                let errorMessage = '위치 정보를 가져올 수 없습니다.';
+                if (error.code === 1) {
+                    errorMessage = '위치 서비스가 비활성화되어 있습니다. 설정에서 활성화해주세요.';
+                } else if (error.code === 2) {
+                    errorMessage = 'GPS 신호를 찾을 수 없습니다.';
+                } else if (error.code === 3) {
+                    errorMessage = '위치 요청 시간이 초과되었습니다.';
+                }
+
+                Alert.alert('위치 오류', errorMessage);
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 }
+        );
+    };
+
+    /** ✅ 최초 앱 실행 시 현재 위치 가져오기 */
+    useEffect(() => {
+        getCurrentLocation();
+    }, []);
 
     /** ✅ 선택된 펫의 산책 기록 불러오기 */
     useEffect(() => {
@@ -42,7 +87,7 @@ const MapScreen = () => {
 
         const startTracking = async () => {
             /** 위치 권한 요청 후 결과 확인 */
-            const hasPermission = await checkNotificationPermission();
+            const hasPermission = await checkLocationPermission();
             if (!hasPermission) {
                 Alert.alert('❌ 위치 권한 거부됨', '산책을 기록하려면 위치 권한이 필요합니다.');
                 setIsWalking(false);
@@ -51,9 +96,25 @@ const MapScreen = () => {
 
             /** 위치 권한 허용된 경우 위치 추적 시작 */
             setStartTime(new Date().toISOString());
+
+
             watchId = Geolocation.watchPosition(
                 (position) => {
                     const { latitude, longitude } = position.coords;
+
+                    // ✅ 현재 위치 상태 업데이트
+                    setCurrentLocation({ latitude, longitude });
+
+                    // ✅ 현재 위치에 따라 지도 이동 (산책 중만 이동)
+                    if (isWalking) {
+                        mapRef.current?.animateToRegion({
+                            latitude,
+                            longitude,
+                            latitudeDelta: 0.01,
+                            longitudeDelta: 0.01,
+                        }, 500);
+                    }
+
                     /** ✅ 위치 중복 저장 방지 */
                     if (
                         walkRoute.length === 0 ||
@@ -153,6 +214,7 @@ const MapScreen = () => {
             {/* 🗺️ Google Maps 적용 */}
             <View style={styles.mapContainer}>
                 <MapView
+                    ref={mapRef} // ✅ 지도 참조 연결
                     style={styles.map}
                     provider={PROVIDER_GOOGLE}
                     initialRegion={{
@@ -162,6 +224,15 @@ const MapScreen = () => {
                         longitudeDelta: 0.01,
                     }}
                 >
+                    {/* ✅ 현재 위치 마커 */}
+                    {currentLocation && (
+                        <Marker
+                            coordinate={currentLocation}
+                            title="현재 위치"
+                            pinColor="blue"
+                        />
+                    )}
+
                     {/* ✅ 현재 산책 경로 마커 */}
                     {walkRoute.length > 0 && walkRoute.map((coord, index) => (
                         <Marker
@@ -177,6 +248,11 @@ const MapScreen = () => {
                     )}
                 </MapView>
             </View>
+
+            {/* 🐾 현재 위치 갱신 버튼 */}
+            <TouchableOpacity style={styles.locationButton} onPress={getCurrentLocation}>
+                <Icon name="my-location" size={24} color="white" />
+            </TouchableOpacity>
 
             {/* ✅ 실시간 거리 & 속도 표시 */}
             <View style={styles.statsContainer}>
@@ -225,6 +301,7 @@ const MapScreen = () => {
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F9F9F9' },
 
+
     /** 📅 날짜 선택 */
     datePickerContainer: {
         flexDirection: 'row',
@@ -251,6 +328,17 @@ const styles = StyleSheet.create({
 
     statsContainer: { alignItems: 'center', padding: 10 },
     statsText: { fontSize: 16, fontWeight: 'bold' },
+
+    /** 📍 현재 위치 버튼 */
+    locationButton: {
+        position: 'absolute',
+        bottom: 140,
+        right: 20,
+        backgroundColor: '#007AFF',
+        padding: 12,
+        borderRadius: 50,
+        elevation: 3,
+    },
 
     /** 🐾 산책 버튼 */
     walkControl: {
