@@ -10,6 +10,14 @@
     "start": "react-native start --port=8082",
     "test": "jest"
   },
+  "reactNativePermissionsIOS": [
+    "LocationAccuracy",
+    "LocationAlways",
+    "LocationWhenInUse",
+    "Camera",
+    "PhotoLibrary",
+    "Notifications"
+  ],
   "dependencies": {
     "@expo/vector-icons": "^14.0.4",
     "@react-native-async-storage/async-storage": "^2.1.2",
@@ -21,8 +29,9 @@
     "@react-navigation/stack": "^7.1.1",
     "axios": "^1.7.9",
     "expo-font": "^13.0.3",
-    "lottie-ios": "^3.4.0",
-    "lottie-react-native": "^5.1.6",
+    "lottie-ios": "^4.5.0",
+    "lottie-react-native": "^7.2.2",
+    "moment-timezone": "^0.5.47",
     "react": "18.3.1",
     "react-native": "0.77.0",
     "react-native-calendars": "^1.1309.1",
@@ -32,6 +41,7 @@
     "react-native-image-picker": "^8.1.0",
     "react-native-maps": "^1.20.1",
     "react-native-modal-datetime-picker": "^18.0.0",
+    "react-native-permissions": "^5.2.6",
     "react-native-reanimated": "^3.16.7",
     "react-native-safe-area-context": "^5.2.0",
     "react-native-screens": "^4.9.0",

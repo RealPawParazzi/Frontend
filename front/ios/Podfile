@@ -14,6 +14,7 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
+
 target 'front' do
   config = use_native_modules!
 
@@ -29,6 +30,9 @@ target 'front' do
 
   # ✅ AirGoogleMaps 추가
   pod 'react-native-google-maps', :path => '../node_modules/react-native-maps', :modular_headers => true
+
+  # ✅ react-native-permissions 추가 (중복 방지)
+  pod 'RNPermissions', :path => '../node_modules/react-native-permissions'
 
   post_install do |installer|
     # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202

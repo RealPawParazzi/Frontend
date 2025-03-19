@@ -30,7 +30,6 @@ const TutorialScreen: React.FC<Props> = ({ navigation }) => {
     return (
         <View style={styles.container}>
             <CurrentAnimation />
-            <Paws/>
             <Text style={styles.text}>{tutorialData[page].text}</Text>
             <TouchableOpacity style={styles.button} onPress={handleNext}>
                 <Text style={styles.buttonText}>{page === tutorialData.length - 1 ? 'Get Started' : 'Next'}</Text>
