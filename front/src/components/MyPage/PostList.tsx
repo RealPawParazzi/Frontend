@@ -1,10 +1,11 @@
 import React, { useEffect } from 'react';
-import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator'; // ✅ 스택 네비게이션 타입 가져오기
 import boardStore from '../../context/boardStore';
 import userStore from '../../context/userStore';
+import PostCard from './PostCard'; // ✅ 분리한 PostCard 컴포넌트 추가
 
 /** ✅ 게시글 데이터 타입 */
 interface Post {
@@ -40,18 +41,7 @@ const PostList = () => {
             {boardList.length > 0 ? (
                 <FlatList
                     data={boardList}
-                    renderItem={({ item }) => (
-                        <TouchableOpacity
-                            style={styles.postContainer}
-                            onPress={() => navigation.navigate('StorybookDetailScreen', { boardId: item.id })} // 🔵 클릭 시 상세 페이지 이동
-                        >
-                            <Image source={{ uri: item.titleImage }} style={styles.image} />
-                            <View style={styles.textContainer}>
-                                <Text style={styles.title}>{item.title}</Text>
-                                <Text style={styles.date}>{item.writeDatetime.split('T')[0]}</Text>
-                            </View>
-                        </TouchableOpacity>
-                    )}
+                    renderItem={({ item }) => <PostCard post={item} />} // ✅ PostCard 컴포넌트 적용
                     keyExtractor={(item) => String(item.id)}
                 />
             ) : (
@@ -61,15 +51,10 @@ const PostList = () => {
     );
 };
 
-/** ✅ 스타일 정의 */
+/** ✅ 스타일 */
 const styles = StyleSheet.create({
     container: { padding: 10 },
     header: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
-    postContainer: { flexDirection: 'row', alignItems: 'center', padding: 10, borderBottomWidth: 1, borderBottomColor: '#ddd' },
-    image: { width: 60, height: 60, borderRadius: 8, marginRight: 10 },
-    textContainer: { flex: 1 },
-    title: { fontSize: 16, fontWeight: 'bold' },
-    date: { fontSize: 14, color: 'gray' },
     noPosts: { textAlign: 'center', fontSize: 16, color: 'gray', marginTop: 20 },
 });
 
