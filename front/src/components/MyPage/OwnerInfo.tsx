@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import userStore from '../../context/userStore';
 import boardStore from '../../context/boardStore';
+import userFollowStore from '../../context/userFollowStore';        // 현재 로그인 유저의 팔로우 상태 관리
 import { useNavigation } from '@react-navigation/native';
 import PostList from './PostList';
 
@@ -9,28 +10,45 @@ import PostList from './PostList';
 const DEFAULT_PROFILE_IMAGE = require('../../assets/images/user-2.png');
 
 const OwnerInfo = () => {
+    const navigation = useNavigation();
     const { userData } = userStore();
     const { boardList, fetchUserBoards } = boardStore();
     const [selectedTab, setSelectedTab] = useState<'posts' | 'photos' | 'videos'>('posts');
+    const { following, followers, fetchFollowing } = userFollowStore(); // ✅ 현재 로그인 유저의 팔로우 정보
 
+
+    // ✅ 게시글, 팔로워, 팔로잉 수 상태 관리
     const [postCount, setPostCount] = useState(0);
-    const [followerCount, setFollowerCount] = useState(0); // TODO: 팔로워 API 연결
-    const [followingCount, setFollowingCount] = useState(0); // TODO: 팔로잉 API 연결
-    const [memories, setMemories] = useState<string[]>([]); // TODO: 유저의 메모리 (스토리) 리스트
-
+    const [followerCount, setFollowerCount] = useState(0);
+    const [followingCount, setFollowingCount] = useState(0);
+    const [memories, setMemories] = useState<string[]>([]);
     const [latestPostTime, setLatestPostTime] = useState('없음');
 
+    // ✅ 게시글 데이터 가져오기
     useEffect(() => {
         fetchUserBoards(Number(userData.id));
     }, [fetchUserBoards, userData.id]);
 
+    // ✅ 게시글 개수 및 최신 게시물 시간 업데이트
     useEffect(() => {
         const userPosts = boardList
             .filter((post) => post.author.id === userData.id)
             .sort((a, b) => new Date(b.writeDatetime).getTime() - new Date(a.writeDatetime).getTime());
 
         setLatestPostTime(userPosts.length > 0 ? getRelativeTime(userPosts[0].writeDatetime) : '없음');
+        setPostCount(userPosts.length || 0);
     }, [boardList, userData.id]);
+
+    // ✅ 팔로잉 & 팔로워 목록 가져오기
+    useEffect(() => {
+        fetchFollowing(Number(userData.id)); // ✅ 로그인한 유저의 팔로잉 목록 불러오기
+    }, [fetchFollowing, userData.id]);
+
+    // ✅ 팔로워 및 팔로잉 수 업데이트
+    useEffect(() => {
+        setFollowerCount(followers.length);
+        setFollowingCount(following.length);
+    }, [followers, following]);
 
     useEffect(() => {
         setPostCount(boardList.length || 0);
@@ -43,6 +61,7 @@ const OwnerInfo = () => {
         ]);
     }, [boardList]);
 
+    // ✅ 상대적인 시간 계산 함수
     const getRelativeTime = (dateString: string) => {
         const postDate = new Date(dateString);
         const now = new Date();
@@ -73,15 +92,15 @@ const OwnerInfo = () => {
 
             {/* ✅ 게시글, 팔로워, 팔로잉 */}
             <View style={styles.statsContainer}>
-                <TouchableOpacity style={styles.statBox}>
+                <TouchableOpacity style={styles.statBox} onPress={() => navigation.navigate('UserPostsScreen', { userId: userData.id, userName: userData.name })}>
                     <Text style={styles.statNumber}>{postCount}</Text>
                     <Text style={styles.statText}>게시물</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.statBox}>
+                <TouchableOpacity style={styles.statBox} onPress={() => navigation.navigate('FollowListScreen', { type: 'followers', userId: userData.id, userName: userData.name })}>
                     <Text style={styles.statNumber}>{followerCount}</Text>
                     <Text style={styles.statText}>팔로워</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.statBox}>
+                <TouchableOpacity style={styles.statBox} onPress={() => navigation.navigate('FollowListScreen', { type: 'following', userId: userData.id, userName: userData.name})}>
                     <Text style={styles.statNumber}>{followingCount}</Text>
                     <Text style={styles.statText}>팔로잉</Text>
                 </TouchableOpacity>

@@ -3,7 +3,7 @@ import { Text, TouchableOpacity, StyleSheet, FlatList, View, Alert } from 'react
 import SegmentedControl from '@react-native-segmented-control/segmented-control';
 
 import UserInfo from '../components/MyPage/UserInfo';
-import { logoutUser } from '../services/authService'; // ✅ 로그아웃 서비스 추가
+import authStore from '../context/authStore'; // ✅ 로그아웃 서비스 추가
 import { useNavigation } from '@react-navigation/native';
 /**
  * 📌 MyPageScreen (마이페이지 화면)
@@ -12,6 +12,7 @@ import { useNavigation } from '@react-navigation/native';
  * - 유저 프로필 및 반려동물 게시물 리스트 표시
  */
 const MyPageScreen = () => {
+    const { logout } = authStore();
 
 
     // 🟢 현재 선택된 탭 ("펫" = 0, "집사" = 1)
@@ -21,7 +22,7 @@ const MyPageScreen = () => {
     // ✅ 로그아웃 함수
     const handleLogout = async () => {
         try {
-            await logoutUser(); // ✅ 인증 정보 삭제
+            await logout(); // ✅ 인증 정보 삭제
             Alert.alert('✅ 로그아웃 성공', '다시 로그인 해주세요.');
             navigation.navigate('Login' as never); // ✅ 로그인 화면으로 이동 (타입 문제 방지)
         } catch (error: any) {
