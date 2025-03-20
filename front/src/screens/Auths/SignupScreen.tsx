@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert, Acti
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
-import { registerUser } from '../../services/authService';
+import authStore from '../../context/authStore';
 import { launchImageLibrary } from 'react-native-image-picker';
 
 type SignupScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Signup'>;
@@ -13,14 +13,16 @@ interface Props {
 }
 
 const SignupScreen: React.FC<Props> = ({ navigation }) => {
+    const { register } = authStore(); // ✅ authStore에서 register 함수 가져오기
+
     // ✅ 회원가입 입력 필드 상태 관리
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
     const [nickName, setNickName] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [profileImage, setProfileImage] = useState<any>(null);
     const [loading, setLoading] = useState(false);
-    const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
 
     // ✅ 기본 프로필 이미지 설정
@@ -33,19 +35,24 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
             Alert.alert('경고', '모든 정보를 입력해주세요.');
             return;
         }
+        if (password !== confirmPassword) {
+            Alert.alert('경고', '비밀번호가 일치하지 않습니다.');
+            return;
+        }
 
         setLoading(true); // 회원가입 요청 시작 (로딩 표시 ON)
 
         try {
-            // ✅ 회원가입 API 호출 (이미지 포함)
-            await registerUser(
-                { email, password, nickName, name },
-                profileImage ?? undefined
-            );
-            Alert.alert('성공!', '회원가입 성공! 로그인해주세요.');
-            navigation.navigate('Login');
+            const success = await register(email, password, nickName, name, profileImage);
+            if (success) {
+                Alert.alert('성공!', '회원가입 성공! 로그인해주세요.');
+                navigation.navigate('Login');
+                //navigation.replace('Home'); // ✅ 회원가입 성공 후 바로 Home 이동
+            } else {
+                Alert.alert('회원가입 실패', '다시 시도해주세요.');
+            }
         } catch (error: any) {
-            Alert.alert('회원가입 실패', error.message || '회원가입 중 문제가 발생했습니다.');
+            Alert.alert('회원가입 실패', error.message || '문제가 발생했습니다.');
         } finally {
             setLoading(false);
         }

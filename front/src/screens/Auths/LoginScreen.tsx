@@ -1,7 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert, ActivityIndicator} from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { loginUser, validateToken } from '../../services/authService';
+import authStore from '../../context/authStore';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
@@ -15,6 +14,8 @@ interface Props {
 }
 
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
+    const { login, checkAuthStatus } = authStore(); // ✅ authStore에서 login 함수 가져오기
+
     // ✅ 이메일 상태 관리
     const [email, setEmail] = useState('');
     // ✅ 비밀번호 상태 관리
@@ -26,15 +27,12 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
     // ✅ 화면 로딩 시 자동 로그인 여부 검사
     useEffect(() => {
-        const checkAuth = async () => {
-            const token = await AsyncStorage.getItem('userToken');
-            if (token && await validateToken()) {
-                // 자동 로그인 성공 시 홈 화면으로 바로 이동
-                navigation.replace('Home');
+        checkAuthStatus().then((isLoggedIn) => {
+            if (isLoggedIn) {
+                navigation.replace('Home'); // ✅ 자동 로그인 처리
             }
-        };
-        checkAuth();
-    }, [navigation]);
+        });
+    }, [checkAuthStatus, navigation]);
 
     // ✅ 로그인 버튼 눌렀을 때 실행되는 함수
     const handleLogin = async () => {
@@ -47,17 +45,16 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         setLoading(true); // 로그인 처리 시작 (로딩 표시 ON)
 
         try {
-            // ✅ 로그인 API 호출 후 토큰 받아오기
-            const token = await loginUser({ email, password });
-            // ✅ 받은 토큰 AsyncStorage에 저장 (자동로그인 용도)
-            await AsyncStorage.setItem('userToken', token);
-            // ✅ 홈 화면으로 이동
-            navigation.replace('Home');
+            const success = await login(email, password);
+            if (success) {
+                navigation.replace('Home'); // ✅ 로그인 성공 후 Home 이동
+            } else {
+                Alert.alert('로그인 실패', '다시 시도해주세요.');
+            }
         } catch (error: any) {
-            // 로그인 실패 시 에러 메시지 표시
-            Alert.alert('로그인 실패', error.message || '로그인 중 문제가 발생했습니다.');
+            Alert.alert('로그인 실패', error.message || '로그안 중 문제가 발생했습니다.');
         } finally {
-            setLoading(false); // 로그인 처리 완료 (로딩 표시 OFF)
+            setLoading(false);
         }
     };
 

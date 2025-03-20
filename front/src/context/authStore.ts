@@ -16,7 +16,7 @@ interface AuthState {
     ) => Promise<boolean>;
     login: (email: string, password: string) => Promise<boolean>;
     logout: () => Promise<void>;
-    checkAuthStatus: () => Promise<void>;
+    checkAuthStatus: () => Promise<boolean>;
 }
 
 /** ✅ Zustand 전역 상태 */
@@ -83,14 +83,17 @@ const authStore = create<AuthState>((set) => ({
                 console.log('🟢 유효한 로그인 상태');
                 await loadUserData(); // ✅ 로그인 유지 시 유저 정보 갱신
                 set({ isLoggedIn: true });
+                return true;
             } else {
                 console.log('🔴 로그인 만료');
                 set({ isLoggedIn: false });
                 await AsyncStorage.removeItem('userToken'); // 만료된 토큰 삭제
+                return false;
             }
         } catch (error) {
             console.error('❌ 로그인 상태 확인 실패:', error);
             set({ isLoggedIn: false });
+            return false; // ✅ 반드시 false 반환
         }
     },
 }));
