@@ -3,6 +3,7 @@ import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity, Dimensions }
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import petStore, { Pet } from '../../context/petStore';
 import { useNavigation } from '@react-navigation/native';
+import PetInfoMiniModal from '../PetInfoMiniModal';
 
 // ✅ 기본 이미지 설정
 const DEFAULT_PET_IMAGE = require('../../assets/images/pets-1.jpg');
@@ -20,6 +21,8 @@ type PetItem = Pet | AddPetButton;
 const PetInfo = () => {
     const navigation = useNavigation();
     const { pets } = petStore();
+    const [selectedPet, setSelectedPet] = useState<Pet | null>(null); // ✅ 선택한 반려동물 정보 저장
+    const [modalVisible, setModalVisible] = useState(false); // ✅ 모달 상태 관리
     const [isAddButton, setIsAddButton] = useState(true); // ✅ 추가 버튼 상태 관리
 
     // ✅ 동물 타입에 따라 아이콘 표시 (강아지: 🐶, 고양이: 🐱)
@@ -52,7 +55,13 @@ const PetInfo = () => {
                         </TouchableOpacity>
                     ) : (
                         // 🔹 반려동물 카드
-                        <View style={styles.petCard}>
+                        <TouchableOpacity
+                            style={styles.petCard}
+                            onPress={() => {
+                                setSelectedPet(item as Pet);
+                                setModalVisible(true);
+                            }}
+                        >
                             {/* ✅ 반려동물 이미지 */}
                             <Image source={(item as Pet).petImg ? { uri: (item as Pet).petImg } : DEFAULT_PET_IMAGE} style={styles.petImage} />
 
@@ -66,9 +75,18 @@ const PetInfo = () => {
                                 {/* 🔹 동물 아이콘 (강아지/고양이) */}
                                 <Text style={styles.petIcon}>{getAnimalIcon((item as Pet).type)}</Text>
                             </View>
-                        </View>
+                        </TouchableOpacity>
                     )
                 }
+            />
+
+            {/* ✅ 반려동물 상세 모달 */}
+            <PetInfoMiniModal
+                visible={modalVisible}
+                onClose={() => setModalVisible(false)}
+                pet={selectedPet}
+                onEdit={(pet) => console.log('수정 화면으로 이동', pet)}
+                onDelete={(petId) => console.log('반려동물 삭제', petId)}
             />
         </View>
     );
