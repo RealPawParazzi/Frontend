@@ -17,6 +17,7 @@ import PetEditScreen from '../screens/Pets/PetEditScreen';
 import FollowListScreen from '../screens/MiniProfile/FollowListScreen'; // 🆕 팔로워/팔로잉 목록 화면 추가
 import UserPostsScreen from '../screens/MiniProfile/UserPostsScreen'; // 🆕 특정 유저 게시글 목록 추가
 import { loadUserData }  from '../context/userStore';
+import authStore from '../context/authStore'; // ✅ authStore 추가
 import { ActivityIndicator, View } from 'react-native';
 
 export type RootStackParamList = {
@@ -43,16 +44,23 @@ const Stack = createStackNavigator<RootStackParamList>();
 const AppNavigator = () => {
 
     const [isLoading, setIsLoading] = useState(true);
+    const { isLoggedIn, checkAuthStatus } = authStore(); // ✅ 로그인 상태 확인
 
     useEffect(() => {
         const initializeApp = async () => {
-            console.log('🟢 앱 시작 - loadUserData 실행!');
-            await loadUserData(); // ✅ 유저 데이터 먼저 불러오기
+            console.log('🟢 앱 시작 - 로그인 상태 확인');
+            const isAuthenticated = await checkAuthStatus(); // ✅ 로그인 확인
+
+            if (isAuthenticated) {
+                console.log('🟢 로그인 상태 유지됨, 유저 데이터 불러옴');
+                await loadUserData(); // ✅ 로그인 상태일 때만 유저 데이터 로드
+            }
+
             setIsLoading(false);
         };
 
         initializeApp();
-    }, []);
+    }, [checkAuthStatus]);
 
     if (isLoading) {
         return (
@@ -65,12 +73,17 @@ const AppNavigator = () => {
 
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="Splash" component={SplashScreen} />
-            <Stack.Screen name="Tutorial" component={TutorialScreen} />
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="KakaoLoginWebView" component={KakaoLoginWebView} />
-            <Stack.Screen name="Signup" component={SignupScreen} />
-            <Stack.Screen name="Home" component={BottomTabNavigator} />
+            {isLoggedIn ? (
+                <Stack.Screen name="Home" component={BottomTabNavigator} />
+            ) : (
+                <>
+                    <Stack.Screen name="Splash" component={SplashScreen} />
+                    <Stack.Screen name="Tutorial" component={TutorialScreen} />
+                    <Stack.Screen name="Login" component={LoginScreen} />
+                    <Stack.Screen name="KakaoLoginWebView" component={KakaoLoginWebView} />
+                    <Stack.Screen name="Signup" component={SignupScreen} />
+                </>
+            )}
             <Stack.Screen name="StorybookScreen" component={StorybookScreen} />
             <Stack.Screen name="StorybookDetailScreen" component={StorybookDetailScreen} />
             <Stack.Screen name="VideoEditorScreen" component={VideoEditorScreen} />

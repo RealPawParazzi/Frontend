@@ -52,6 +52,7 @@ const authStore = create<AuthState>((set) => ({
         try {
             console.log('🟢 로그인 시도:', email);
             const token = await loginUser({ email, password });
+            await AsyncStorage.setItem('userToken', token);
 
             console.log('🔄 유저 데이터 불러오기');
             await loadUserData(); // ✅ 로그인 후 유저 정보 갱신
@@ -69,6 +70,7 @@ const authStore = create<AuthState>((set) => ({
     logout: async () => {
         console.log('🔴 로그아웃 진행 중...');
         await logoutUser(); // ✅ 로그아웃 API 호출 (토큰 삭제)
+        await AsyncStorage.removeItem('userToken');
         set({ isLoggedIn: false });
         console.log('🔴 로그아웃 완료');
     },
