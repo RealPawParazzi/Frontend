@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import {View, Text, Image, StyleSheet, FlatList, TouchableOpacity, Alert, Modal} from 'react-native';
 import userStore from '../../context/userStore';
 import boardStore from '../../context/boardStore';
 import userFollowStore from '../../context/userFollowStore'; // 현재 로그인 유저의 팔로우 상태 관리
 import { useNavigation } from '@react-navigation/native';
 import PostList from './PostList';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import authStore from '../../context/authStore'; // ✅ 아이콘 추가
 
 // ✅ 기본 프로필 이미지
 const DEFAULT_PROFILE_IMAGE = require('../../assets/images/user-2.png');
@@ -13,7 +15,9 @@ const OwnerInfo = () => {
     const navigation = useNavigation();
     const { userData } = userStore();
     const { boardList, fetchUserBoards } = boardStore();
+    const { logout } = authStore(); // ✅ 로그아웃 함수 가져오기
     const [selectedTab, setSelectedTab] = useState<'posts' | 'photos' | 'videos'>('posts');
+    const [menuVisible, setMenuVisible] = useState(false); // ✅ 햄버거 메뉴 모달 상태
     const { following, followers, fetchFollowing, fetchFollowers } = userFollowStore(); // ✅ 현재 로그인 유저의 팔로우 정보
 
 
@@ -77,19 +81,60 @@ const OwnerInfo = () => {
         return `${diffDays}일 전`;
     };
 
+    const handleLogout = async () => {
+        Alert.alert('로그아웃', '정말 로그아웃 하시겠습니까?', [
+            { text: '취소', style: 'cancel' },
+            { text: '로그아웃', onPress: async () => {
+                    await logout(); // ✅ 로그아웃 처리
+                    navigation.reset({ index: 0, routes: [{ name: 'Login' }] }); // ✅ 로그인 화면으로 이동
+                }},
+        ]);
+    };
+
     return (
         <View style={styles.container}>
             {/* ✅ 상단 프로필 영역 */}
             <View style={styles.profileContainer}>
-                <Image
-                    source={userData.profileImage ? { uri: userData.profileImage } : DEFAULT_PROFILE_IMAGE}
-                    style={styles.profileImage}
-                />
-                <View style={styles.userInfo}>
-                    <Text style={styles.username}>{userData.nickName || userData.name}</Text>
-                    <Text style={styles.petCount}>{userData.petCount}마리</Text>
+                {/* ✅ 프로필 이미지 + 사용자 정보 */}
+                <View style={styles.profileInfo}>
+                    <Image
+                        source={userData.profileImage ? { uri: userData.profileImage } : DEFAULT_PROFILE_IMAGE}
+                        style={styles.profileImage}
+                    />
+                    <View style={styles.userInfo}>
+                        <Text style={styles.username}>{userData.nickName || userData.name}</Text>
+                        <Text style={styles.petCount}>{userData.petCount}마리</Text>
+                    </View>
                 </View>
+
+                {/* ✅ 점 3개(더보기) 아이콘 버튼 */}
+                <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.menuButton}>
+                    <Icon name="more-vert" size={24} color="#555" />
+                </TouchableOpacity>
             </View>
+
+            {/* ✅ 메뉴 모달 */}
+            <Modal visible={menuVisible} animationType="slide" transparent>
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContainer}>
+                        <TouchableOpacity style={styles.modalOption} onPress={() => {
+                            setMenuVisible(false);
+                            // @ts-ignore
+                            navigation.navigate('ProfileEditScreen'); // ✅ 프로필 수정 화면으로 이동
+                        }}>
+                            <Text style={styles.modalText}>프로필 수정</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={styles.modalOption} onPress={handleLogout}>
+                            <Text style={[styles.modalText, { color: 'red' }]}>로그아웃</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={styles.modalCancel} onPress={() => setMenuVisible(false)}>
+                            <Text style={styles.modalCancelText}>취소</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
 
             {/* ✅ 게시글, 팔로워, 팔로잉 */}
             <View style={styles.statsContainer}>
@@ -175,11 +220,19 @@ const OwnerInfo = () => {
 const styles = StyleSheet.create({
     container: { paddingHorizontal: 15, paddingVertical: 10 },
 
+    /** ✅ 상단 프로필 영역 */
     profileContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between', // ✅ 점 세 개 아이콘을 우측 끝으로 정렬
         marginBottom: 15,
     },
+
+    profileInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+
     profileImage: {
         width: 70,
         height: 70,
@@ -196,6 +249,48 @@ const styles = StyleSheet.create({
     petCount: {
         fontSize: 14,
         color: 'gray',
+    },
+
+    /** ✅ 점 세 개(더보기) 버튼 */
+    menuButton: {
+        padding: 8,
+    },
+
+    /** ✅ 메뉴 모달 */
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.4)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContainer: {
+        backgroundColor: '#FFF',
+        width: 250,
+        padding: 15,
+        borderRadius: 10,
+        alignItems: 'center',
+    },
+    modalOption: {
+        width: '100%',
+        paddingVertical: 12,
+        alignItems: 'center',
+        borderBottomWidth: 1,
+        borderBottomColor: '#DDD',
+    },
+    modalText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#333',
+    },
+    modalCancel: {
+        marginTop: 10,
+        paddingVertical: 10,
+        width: '100%',
+        alignItems: 'center',
+    },
+    modalCancelText: {
+        fontSize: 16,
+        color: '#555',
     },
 
     statsContainer: {

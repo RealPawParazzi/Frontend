@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
-import { Text, TouchableOpacity, StyleSheet, FlatList, View, Alert } from 'react-native';
+import { StyleSheet, FlatList } from 'react-native';
 import SegmentedControl from '@react-native-segmented-control/segmented-control';
 
 import UserInfo from '../components/MyPage/UserInfo';
-import authStore from '../context/authStore'; // ✅ 로그아웃 서비스 추가
-import { useNavigation } from '@react-navigation/native';
 /**
  * 📌 MyPageScreen (마이페이지 화면)
  * - "펫" / "집사" 탭을 선택할 수 있는 Segmented Control 포함
@@ -12,23 +10,8 @@ import { useNavigation } from '@react-navigation/native';
  * - 유저 프로필 및 반려동물 게시물 리스트 표시
  */
 const MyPageScreen = () => {
-    const { logout } = authStore();
-
-
     // 🟢 현재 선택된 탭 ("펫" = 0, "집사" = 1)
     const [selectedTab, setSelectedTab] = useState(0);
-    const navigation = useNavigation(); // ✅ 네비게이션 객체 가져오기
-
-    // ✅ 로그아웃 함수
-    const handleLogout = async () => {
-        try {
-            await logout(); // ✅ 인증 정보 삭제
-            Alert.alert('✅ 로그아웃 성공', '다시 로그인 해주세요.');
-            navigation.navigate('Login' as never); // ✅ 로그인 화면으로 이동 (타입 문제 방지)
-        } catch (error: any) {
-            Alert.alert('⚠️ 로그아웃 실패', error.message || '로그아웃 중 오류가 발생했습니다.');
-        }
-    };
 
     return (
         <FlatList
@@ -47,14 +30,6 @@ const MyPageScreen = () => {
             )}
             data={[]} // ✅ 빈 배열 전달 (게시글 데이터는 `OwnerInfo` 내부에서 관리)
             renderItem={null}
-            ListFooterComponent={(
-                <View style={styles.footer}>
-                    {/* 🔵 로그아웃 버튼 */}
-                    <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                        <Text style={styles.logoutText}>로그아웃</Text>
-                    </TouchableOpacity>
-                </View>
-            )}
         />
     );
 };
