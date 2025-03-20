@@ -1,5 +1,4 @@
 // 📄 kakaoService.ts - 카카오 로그인 서비스 로직 구현
-import axios from 'axios';
 import { Linking } from 'react-native';
 
 const BASE_URL = 'http://localhost:8080/api/auth';

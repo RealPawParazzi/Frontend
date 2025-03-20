@@ -1,17 +1,18 @@
 import React from 'react';
 import { View, ActivityIndicator, StyleSheet, SafeAreaView } from 'react-native';
 import { WebView } from 'react-native-webview';
+import { useNavigation } from '@react-navigation/native'; // ✅ useNavigation 사용
+import { useKakaoStore } from '../../context/kakaoStore';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
-import { useKakaoStore } from '../../context/kakaoStore';
+import authStore from '../../context/authStore';
 
-type KakaoLoginNavigationProp = StackNavigationProp<RootStackParamList, 'KakaoLoginWebView'>;
+// ✅ 네비게이션 타입 정의
+type NavigationProp = StackNavigationProp<RootStackParamList, 'KakaoLoginWebView'>;
 
-interface Props {
-    navigation: KakaoLoginNavigationProp;
-}
 
-const KakaoLoginWebView: React.FC<Props> = ({ navigation }) => {
+const KakaoLoginWebView: React.FC = () => {
+    const navigation = useNavigation<NavigationProp>(); // ✅ useNavigation 사용
     const { setToken } = useKakaoStore();
 
     // URL 요청 전에 매번 호출되는 함수 (즉각적인 URL 감지)
@@ -26,7 +27,16 @@ const KakaoLoginWebView: React.FC<Props> = ({ navigation }) => {
                 const jwtToken = decodeURIComponent(tokenMatch[1]);
 
                 setToken(jwtToken); // 토큰 저장 처리
-                navigation.replace('Home'); // 로그인 성공 후 홈으로 이동
+
+                // ✅ `isLoggedIn` 상태를 업데이트
+                authStore.setState({ isLoggedIn: true }); // 🔹 `setAuthStatus` 대신 사용
+
+
+                // ✅ 네비게이션 스택 초기화 후 Home으로 이동
+                navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'Home' }],
+                });
 
                 return false; // 이 URL을 로딩하지 않음 (WebView 종료)
             }
