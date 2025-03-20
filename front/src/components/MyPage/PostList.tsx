@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator'; // ✅ 스택 네비게이션 타입 가져오기
@@ -34,28 +34,61 @@ const PostList = () => {
         }
     }, [fetchUserBoards, userData, userData.id]);
 
+    /** ✅ 게시글이 없는 경우 처리 */
+    const hasNoPosts = boardList.length === 1 && boardList[0].id === 0;
+
     return (
         <View style={styles.container}>
             <Text style={styles.header}>📌 내 게시글 목록</Text>
 
-            {boardList.length > 0 ? (
+            {hasNoPosts ? (
+                <View style={styles.emptyContainer}>
+                    <Text style={styles.noPosts}>📭 게시글이 아직 없습니다!</Text>
+                    <Text style={styles.suggestion}>첫 게시글을 업로드 해볼까요?</Text>
+
+                    {/* 🔹 게시글 작성 화면으로 이동 */}
+                    <TouchableOpacity style={styles.uploadButton} onPress={() => navigation.navigate('StorybookScreen')}>
+                        <Text style={styles.uploadButtonText}>+ 새 게시글 작성</Text>
+                    </TouchableOpacity>
+                </View>
+            ) : (
                 <FlatList
                     data={boardList}
-                    renderItem={({ item }) => <PostCard post={item} />} // ✅ PostCard 컴포넌트 적용
+                    renderItem={({ item }) => <PostCard post={item} />}
                     keyExtractor={(item) => String(item.id)}
                 />
-            ) : (
-                <Text style={styles.noPosts}>📭 게시글이 없습니다.</Text>
             )}
         </View>
     );
 };
 
+
 /** ✅ 스타일 */
 const styles = StyleSheet.create({
     container: { padding: 10 },
     header: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
-    noPosts: { textAlign: 'center', fontSize: 16, color: 'gray', marginTop: 20 },
+
+    emptyContainer: {
+        alignItems: 'center',
+        padding: 20,
+        backgroundColor: '#f9f9f9',
+        borderRadius: 10,
+    },
+    noPosts: { fontSize: 18, fontWeight: 'bold', color: '#444', marginBottom: 5 },
+    suggestion: { fontSize: 14, color: 'gray', marginBottom: 15 },
+
+    uploadButton: {
+        backgroundColor: '#6A4BBC',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 8,
+    },
+    uploadButtonText: {
+        color: 'white',
+        fontSize: 14,
+        fontWeight: 'bold',
+    },
 });
+
 
 export default PostList;
