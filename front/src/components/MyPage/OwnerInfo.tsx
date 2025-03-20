@@ -218,7 +218,7 @@ const OwnerInfo = () => {
 };
 
 const styles = StyleSheet.create({
-    container: { paddingHorizontal: 15, paddingVertical: 10 },
+    container: { paddingHorizontal: 15, paddingVertical: 10, backgroundColor: '#fff' },
 
     /** ✅ 상단 프로필 영역 */
     profileContainer: {

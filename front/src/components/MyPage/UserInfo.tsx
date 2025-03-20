@@ -1,5 +1,5 @@
 import React from 'react';
-import { View } from 'react-native';
+import {StyleSheet, View} from 'react-native';
 import PetInfo from './PetInfo';
 import OwnerInfo from './OwnerInfo';
 
@@ -15,10 +15,20 @@ interface UserInfoProps {
 
 const UserInfo = ({ selectedTab }: UserInfoProps) => {
     return (
-        <View>
+        <View style={styles.container}>
             {selectedTab === 1 ? <OwnerInfo /> : <PetInfo />}
         </View>
     );
 };
 
+const styles = StyleSheet.create({
+    container: {
+        backgroundColor: '#ffffff', // ✅ 배경색 적용
+        flex: 1, // ✅ 화면 전체를 차지하도록 설정
+    },
+});
+
 export default UserInfo;
+
+
+

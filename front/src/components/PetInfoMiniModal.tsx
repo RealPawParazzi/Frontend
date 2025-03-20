@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-    View, Text, Image, StyleSheet, TouchableOpacity, Alert, Modal
+    View, Text, Image, StyleSheet, TouchableOpacity, Alert, Modal,
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import petStore, { Pet } from '../context/petStore';
@@ -71,30 +71,22 @@ const PetInfoMiniModal: React.FC<PetInfoMiniModalProps> = ({ visible, onClose, p
                     {/* 🔹 반려동물 기본 정보 */}
                     <View style={styles.petInfoCard}>
                         <Text style={styles.petName}>{pet.name}</Text>
-                        <Text style={styles.petType}>{pet.type === 'CAT' ? 'Persian Cat' : 'Golden Retriever'}</Text>
+                        <Text style={styles.petType}>{pet.type === 'DOG' ? 'DOG' : 'CAT'}</Text>
                         <View style={styles.petAgeRow}>
                             <MaterialIcons name="calendar-today" size={18} color="#777" />
                             <Text style={styles.petAge}>{calculateAge(pet.birthDate)}</Text>
                         </View>
                     </View>
 
-                    {/* 🔹 상세 정보 (Weight, Height, Color, Blood Type) */}
+                    {/* 🔹 보호자 정보 */}
                     <View style={styles.petDetails}>
                         <View style={[styles.detailBox, { backgroundColor: '#EDE7F6' }]}>
-                            <Text style={styles.detailLabel}>Weight</Text>
-                            <Text style={styles.detailValue}>{pet.weight}kg</Text>
+                            <Text style={styles.detailLabel}>Owner</Text>
+                            <Text style={styles.detailValue}>{pet.member.name}</Text>
                         </View>
                         <View style={[styles.detailBox, { backgroundColor: '#FFF9C4' }]}>
-                            <Text style={styles.detailLabel}>Height</Text>
-                            <Text style={styles.detailValue}>{pet.height}cm</Text>
-                        </View>
-                        <View style={[styles.detailBox, { backgroundColor: '#FFEBEE' }]}>
-                            <Text style={styles.detailLabel}>Color</Text>
-                            <Text style={styles.detailValue}>{pet.color}</Text>
-                        </View>
-                        <View style={[styles.detailBox, { backgroundColor: '#FFCCBC' }]}>
-                            <Text style={styles.detailLabel}>Blood</Text>
-                            <Text style={styles.detailValue}>{pet.bloodType}</Text>
+                            <Text style={styles.detailLabel}>Email</Text>
+                            <Text style={styles.detailValue}>{pet.member.email}</Text>
                         </View>
                     </View>
 
@@ -113,14 +105,12 @@ const PetInfoMiniModal: React.FC<PetInfoMiniModalProps> = ({ visible, onClose, p
 
 /** ✅ 스타일 정의 */
 const styles = StyleSheet.create({
-    /** 🔹 모달 오버레이 */
     overlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'flex-end',
     },
 
-    /** 🔹 모달 컨테이너 */
     modalContainer: {
         backgroundColor: 'white',
         borderTopLeftRadius: 20,
@@ -129,13 +119,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
 
-    /** 🔹 모달 닫기 버튼 */
     closeButton: {
         alignSelf: 'flex-end',
         padding: 5,
     },
 
-    /** 🔹 반려동물 이미지 */
     petImage: {
         width: '100%',
         height: 200,
@@ -143,7 +131,6 @@ const styles = StyleSheet.create({
         marginBottom: 15,
     },
 
-    /** 🔹 수정/삭제 버튼 */
     headerButtons: {
         flexDirection: 'row',
         justifyContent: 'center',
@@ -157,7 +144,6 @@ const styles = StyleSheet.create({
         borderRadius: 20,
     },
 
-    /** 🔹 반려동물 기본 정보 카드 */
     petInfoCard: {
         backgroundColor: '#E0F2F1',
         borderRadius: 20,
@@ -190,7 +176,6 @@ const styles = StyleSheet.create({
         marginLeft: 5,
     },
 
-    /** 🔹 반려동물 상세 정보 */
     petDetails: {
         flexDirection: 'row',
         justifyContent: 'space-around',
@@ -199,7 +184,7 @@ const styles = StyleSheet.create({
     },
 
     detailBox: {
-        width: '22%',
+        width: '48%',
         paddingVertical: 10,
         borderRadius: 10,
         alignItems: 'center',
@@ -216,7 +201,6 @@ const styles = StyleSheet.create({
         marginTop: 5,
     },
 
-    /** 🔹 반려동물 설명 */
     petBio: {
         width: '100%',
         marginTop: 20,

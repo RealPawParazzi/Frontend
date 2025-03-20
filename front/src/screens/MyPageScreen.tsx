@@ -36,7 +36,7 @@ const MyPageScreen = () => {
 
 /** ✅ 스타일 정의 */
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: 'white' },
+    container: { flex: 1, backgroundColor: '#ffffff' },
     segmentControl: { marginHorizontal: 20, marginVertical: 15 },
     footer: { alignItems: 'center', marginTop: 20, marginBottom: 30 },
     logoutButton: { backgroundColor: '#6A5ACD', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 5 },

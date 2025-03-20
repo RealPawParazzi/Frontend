@@ -61,7 +61,7 @@ const CalendarScreen = () => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: 'white', padding: 15 },
+    container: { flex: 1, backgroundColor: '#ffffff', padding: 15 },
     title: { fontSize: 24, fontWeight: 'bold', marginBottom: 10 },
     searchContainer: { flexDirection: 'row', alignItems: 'center', marginVertical: 10 },
     searchInput: { flex: 1, borderWidth: 1, borderColor: '#ccc', padding: 10, borderRadius: 8 },
