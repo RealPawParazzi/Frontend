@@ -7,14 +7,6 @@ import boardStore from '../../context/boardStore';
 import userStore from '../../context/userStore';
 import PostCard from './PostCard'; // ✅ 분리한 PostCard 컴포넌트 추가
 
-/** ✅ 게시글 데이터 타입 */
-interface Post {
-    id: number;
-    title: string;
-    titleImage: string;
-    writeDatetime: string;
-}
-
 /** ✅ 네비게이션 타입 정의 */
 type NavigationProp = StackNavigationProp<RootStackParamList, 'StorybookDetailScreen'>;
 

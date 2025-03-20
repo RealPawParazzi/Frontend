@@ -22,7 +22,7 @@ interface PetStore {
 /** ✅ 기본 더미 데이터 (오류 방지) */
 const defaultPets: Pet[] = [
     {
-        petId: 999,
+        petId: 0,
         name: '스토어 더미데이터 반려동물',
         type: 'DOG',
         birthDate: '2020-01-01',
