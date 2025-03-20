@@ -3,7 +3,6 @@ import { Text, TouchableOpacity, StyleSheet, FlatList, View, Alert } from 'react
 import SegmentedControl from '@react-native-segmented-control/segmented-control';
 
 import UserInfo from '../components/MyPage/UserInfo';
-import PostList from '../components/MyPage/PostList';
 import { logoutUser } from '../services/authService'; // ✅ 로그아웃 서비스 추가
 import { useNavigation } from '@react-navigation/native';
 /**
@@ -45,20 +44,15 @@ const MyPageScreen = () => {
                     <UserInfo selectedTab={selectedTab} />
                 </>
             )}
-            data={[]} // ✅ 빈 배열 전달 (게시글 데이터는 `PostList` 내부에서 관리)
-            renderItem={null} // ✅ 게시글 목록은 `PostList`에서 직접 관리
+            data={[]} // ✅ 빈 배열 전달 (게시글 데이터는 `OwnerInfo` 내부에서 관리)
+            renderItem={null}
             ListFooterComponent={(
-                <>
-                    {/* ✅ 게시글 목록 (`PostList`에서 상태 관리) */}
-                    <PostList />
-
-                    <View style={styles.footer}>
-                        {/* 🔵 로그아웃 버튼 */}
-                        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                            <Text style={styles.logoutText}>로그아웃</Text>
-                        </TouchableOpacity>
-                    </View>
-                </>
+                <View style={styles.footer}>
+                    {/* 🔵 로그아웃 버튼 */}
+                    <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+                        <Text style={styles.logoutText}>로그아웃</Text>
+                    </TouchableOpacity>
+                </View>
             )}
         />
     );
