@@ -55,7 +55,7 @@ interface StoryBook {
 
 /** ✅ 기본 더미 데이터 */
 const defaultUserData: UserData = {
-    id: '99999999',
+    id: '0',
     email: 'dummy-user@example.com', // 기본 이메일 추가
     nickName: '더미 닉네임', // 기본 닉네임 추가
     name: '더미 사용자',

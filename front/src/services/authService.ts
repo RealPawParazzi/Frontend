@@ -131,7 +131,8 @@ export const validateToken = async (): Promise<boolean> => {
         const userData = await fetchUserData();
 
 
-        return !!userData?.id; // 🔹 유저 데이터가 존재하면 로그인 상태 유지
+        // 🔹 유저 데이터가 존재하고, 아이디가 0이 아닐 경우 유효한 로그인 상태로 판단
+        return !!(userData?.id && userData.id !== '0');
     } catch {
         return false;
     }
