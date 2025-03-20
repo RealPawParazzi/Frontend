@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import userStore from '../../context/userStore';
 import boardStore from '../../context/boardStore';
-import userFollowStore from '../../context/userFollowStore';        // 현재 로그인 유저의 팔로우 상태 관리
+import userFollowStore from '../../context/userFollowStore'; // 현재 로그인 유저의 팔로우 상태 관리
 import { useNavigation } from '@react-navigation/native';
 import PostList from './PostList';
 
@@ -14,7 +14,7 @@ const OwnerInfo = () => {
     const { userData } = userStore();
     const { boardList, fetchUserBoards } = boardStore();
     const [selectedTab, setSelectedTab] = useState<'posts' | 'photos' | 'videos'>('posts');
-    const { following, followers, fetchFollowing } = userFollowStore(); // ✅ 현재 로그인 유저의 팔로우 정보
+    const { following, followers, fetchFollowing, fetchFollowers } = userFollowStore(); // ✅ 현재 로그인 유저의 팔로우 정보
 
 
     // ✅ 게시글, 팔로워, 팔로잉 수 상태 관리
@@ -42,7 +42,8 @@ const OwnerInfo = () => {
     // ✅ 팔로잉 & 팔로워 목록 가져오기
     useEffect(() => {
         fetchFollowing(Number(userData.id)); // ✅ 로그인한 유저의 팔로잉 목록 불러오기
-    }, [fetchFollowing, userData.id]);
+        fetchFollowers(Number(userData.id)); // ✅ 로그인한 유저를 팔로우하는 목록 불러오기
+    }, [fetchFollowing, fetchFollowers, userData.id]);
 
     // ✅ 팔로워 및 팔로잉 수 업데이트
     useEffect(() => {
@@ -92,15 +93,21 @@ const OwnerInfo = () => {
 
             {/* ✅ 게시글, 팔로워, 팔로잉 */}
             <View style={styles.statsContainer}>
-                <TouchableOpacity style={styles.statBox} onPress={() => navigation.navigate('UserPostsScreen', { userId: userData.id, userName: userData.name })}>
+                <TouchableOpacity style={styles.statBox} onPress={() =>
+                    //@ts-ignore
+                    navigation.navigate('UserPostsScreen', { userId: userData.id, userName: userData.name })}>
                     <Text style={styles.statNumber}>{postCount}</Text>
                     <Text style={styles.statText}>게시물</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.statBox} onPress={() => navigation.navigate('FollowListScreen', { type: 'followers', userId: userData.id, userName: userData.name })}>
+                <TouchableOpacity style={styles.statBox} onPress={() =>
+                    //@ts-ignore
+                    navigation.navigate('FollowListScreen', { type: 'followers', userId: userData.id, userName: userData.name })}>
                     <Text style={styles.statNumber}>{followerCount}</Text>
                     <Text style={styles.statText}>팔로워</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.statBox} onPress={() => navigation.navigate('FollowListScreen', { type: 'following', userId: userData.id, userName: userData.name})}>
+                <TouchableOpacity style={styles.statBox} onPress={() =>
+                    //@ts-ignore
+                    navigation.navigate('FollowListScreen', { type: 'following', userId: userData.id, userName: userData.name})}>
                     <Text style={styles.statNumber}>{followingCount}</Text>
                     <Text style={styles.statText}>팔로잉</Text>
                 </TouchableOpacity>
