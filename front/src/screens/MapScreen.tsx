@@ -98,7 +98,8 @@ const MapScreen = () => {
             }
 
             /** 위치 권한 허용된 경우 위치 추적 시작 */
-            setStartTime(new Date().toISOString());
+            setStartTime(new Date().toISOString().replace('Z', '').split('.')[0]);
+            console.log(`[산책 시작시간] : ${startTime}`);
 
 
             watchId = Geolocation.watchPosition(
@@ -126,7 +127,7 @@ const MapScreen = () => {
                     ) {
                         setWalkRoute((prevRoute) => [
                             ...prevRoute,
-                            { latitude, longitude, timestamp: new Date().toISOString() },
+                            { latitude, longitude, timestamp: new Date().toISOString().replace('Z', '').split('.')[0] },
                         ]);
                     }
                 },
@@ -147,7 +148,7 @@ const MapScreen = () => {
         return () => {
             if (watchId) { Geolocation.clearWatch(watchId); }
         };
-    }, [isWalking, walkRoute]);
+    }, [isWalking, startTime, walkRoute]);
 
     /** ✅ 실시간 거리 및 평균 속도 업데이트 */
     useEffect(() => {
@@ -176,15 +177,19 @@ const MapScreen = () => {
     const handleWalkEnd = async () => {
         console.log('⏹ [산책 종료] 버튼 클릭됨');
         setIsWalking(false);
+
+
         if (walkRoute.length > 0 && startTime) {
-            const endTime = new Date().toISOString();
+
+            const endTime = new Date().toISOString().replace('Z', '').split('.')[0];
+            console.log(`[산책 종료시간] : ${endTime}`);
             console.log(`📍 [산책 경로] 총 ${walkRoute.length}개의 위치 데이터 기록됨`);
 
             // saveWalk이 walkId를 반환하도록 변경
             const savedWalkId = await saveWalk(
                 Number(selectedPet.id),
                 walkRoute,
-                startTime,
+                startTime,  // ✅ 변환된 시간 사용
                 endTime
             );
 

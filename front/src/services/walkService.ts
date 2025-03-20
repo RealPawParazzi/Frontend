@@ -37,21 +37,33 @@ export const saveWalkData = async (petId: number, walkRoute: { latitude: number;
 
         const headers = await getAuthHeaders();
         const distance = calculateDistance(walkRoute);
-        const durationInHours = (new Date(endTime).getTime() - new Date(startTime).getTime()) / (1000 * 60 * 60);
+
+        // ✅ new Date() 대신 Date.parse() 사용하여 안전한 변환
+        const startMillis = Date.parse(startTime);
+        const endMillis = Date.parse(endTime);
+
+        if (isNaN(startMillis) || isNaN(endMillis)) {
+            console.error('❌ [에러] startTime 또는 endTime이 올바른 날짜 형식이 아님:', { startTime, endTime });
+        }
+
+        const durationInHours = (endMillis - startMillis) / (1000 * 60 * 60);
         const averageSpeed = durationInHours > 0 ? parseFloat((distance / durationInHours).toFixed(2)) : 0;
 
         const requestBody = {
             petId,
-            startTime,  // ✅ 그냥 기존 ISO 형식 그대로 전송 (Z 없어도 됨)
+            startTime,
             endTime,
             route: walkRoute.map((point) => ({
                 latitude: point.latitude,
                 longitude: point.longitude,
-                timestamp: point.timestamp, // ✅ 수정 필요 없음
+                timestamp: point.timestamp,
             })),
             distance,
             averageSpeed,
         };
+
+        console.log('📤 [보내는 JSON 데이터]:', JSON.stringify(requestBody, null, 2));
+
 
         // API 경로 수정 (기존: /api/walks/save → 변경: /api/walk)
         const response = await axios.post(`${BASE_URL}`, requestBody, { headers });
