@@ -44,7 +44,7 @@ interface LikeResponse {
     likedMember: LikedMember[];
 }
 
-/** ✅ 기본 더미 데이터 */
+/** ✅ 기본 더미 데이터 (게시글이 없을 때만 표시) */
 const defaultBoard: Board = {
     id: 0,
     title: '게시글이 없습니다.',
@@ -107,7 +107,9 @@ const boardStore = create<{
     createNewBoard: async (data) => {
         try {
             const newBoard = await createBoard(data);
-            set((state) => ({ boardList: [newBoard, ...state.boardList] }));
+            set((state) => ({
+                boardList: [newBoard, ...state.boardList.filter((board) => board.id !== 0)], // ✅ 더미 데이터 제거
+            }));
         } catch (error) {
             console.error('❌ createNewBoard 오류:', error);
         }
@@ -147,7 +149,7 @@ const boardStore = create<{
 
             const data = await getBoardsByMember(memberId);
             if (data.length > 0) {
-                set({ boardList: data }); // ✅ 정상적인 데이터가 있을 경우 업데이트
+                set({ boardList: data.length > 0 ? data : [defaultBoard] });
             } else {
                 console.warn('⚠️ 게시글이 없어서 기본 데이터 설정됨.');
                 set({ boardList: [defaultBoard] }); // ✅ 게시글이 없을 경우 기본 데이터 설정

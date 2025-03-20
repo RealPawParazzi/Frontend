@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, {useEffect, useState} from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -24,6 +24,8 @@ const PostList = () => {
     const navigation = useNavigation<NavigationProp>(); // 🔵 네비게이션 훅 추가
     const { boardList, fetchUserBoards } = boardStore(); // 🟢 Zustand에서 게시글 목록 가져오기
     const { userData } = userStore(); // 🟢 현재 로그인한 유저 데이터 가져오기
+    const [hasNoPosts, setHasNoPosts] = useState(false); // ✅ 게시글 상태 추적
+
 
     /** ✅ 컴포넌트 마운트 시 게시글 불러오기 */
     useEffect(() => {
@@ -34,8 +36,16 @@ const PostList = () => {
         }
     }, [fetchUserBoards, userData, userData.id]);
 
-    /** ✅ 게시글이 없는 경우 처리 */
-    const hasNoPosts = boardList.length === 1 && boardList[0].id === 0;
+    /** ✅ boardList 변경 감지 후 상태 업데이트 */
+    useEffect(() => {
+        setHasNoPosts(boardList.length === 1 && boardList[0].id === 0);
+
+        // ✅ 게시글이 하나 남아있다가 삭제되면 즉시 상태 업데이트
+        if (boardList.length === 0) {
+            setTimeout(() => setHasNoPosts(true), 100);
+        }
+    }, [boardList]);
+
 
     return (
         <View style={styles.container}>
