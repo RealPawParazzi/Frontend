@@ -1,8 +1,11 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
-/** ✅ API 기본 URL */
-const BASE_URL = 'http://localhost:8080/api/walk';
+// 🔹 백엔드 API 기본 URL
+const API_BASE_URL = Platform.OS === 'android'
+    ? 'http://10.0.2.2:8080/api/walk'  // 안드로이드용
+    : 'http://localhost:8080/api/walk'; // iOS용
 
 /** ✅ 인증 헤더 가져오기 */
 const getAuthHeaders = async () => {
@@ -66,7 +69,7 @@ export const saveWalkData = async (petId: number, walkRoute: { latitude: number;
 
 
         // API 경로 수정 (기존: /api/walks/save → 변경: /api/walk)
-        const response = await axios.post(`${BASE_URL}`, requestBody, { headers });
+        const response = await axios.post(`${API_BASE_URL}`, requestBody, { headers });
         console.log('✅ [산책 기록 저장 성공]', response.data);
         return response.data;
     } catch (error) {
@@ -87,7 +90,7 @@ export const getWalkHistory = async (walkId: number) => {
         const headers = await getAuthHeaders();
 
         // API 경로 수정 (기존: /api/walks/{petId} → 변경: /api/walk/{walkId})
-        const response = await axios.get(`${BASE_URL}/${walkId}`, { headers });
+        const response = await axios.get(`${API_BASE_URL}/${walkId}`, { headers });
 
         console.log('✅ [산책 기록 불러오기 성공]', response.data);
         return response.data;

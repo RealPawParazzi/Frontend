@@ -1,9 +1,12 @@
 // followService.ts - API 통신 관련 서비스
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
-/** 📌 API 기본 URL - 팔로우 기능의 기본 엔드포인트 정의 */
-const BASE_URL = 'http://localhost:8080/api/follow';
+// 🔹 백엔드 API 기본 URL
+const API_BASE_URL = Platform.OS === 'android'
+    ? 'http://10.0.2.2:8080/api/follow'  // 안드로이드용
+    : 'http://localhost:8080/api/follow'; // iOS용
 
 /**
  * ✅ JWT 토큰 가져오기
@@ -50,7 +53,7 @@ export const followUser = async (targetId: number) => {
     try {
         console.log(`📤 [팔로우 요청] -> ${targetId}`);
         const headers = await getAuthHeaders();
-        const response = await axios.post(`${BASE_URL}/${targetId}`, {}, { headers });
+        const response = await axios.post(`${API_BASE_URL}/${targetId}`, {}, { headers });
 
         if (!response.data) {
             throw new Error('❌ [팔로우 실패] 응답 데이터가 없습니다.');
@@ -74,7 +77,7 @@ export const unfollowUser = async (targetId: number) => {
     try {
         console.log(`📤 [언팔로우 요청] -> ${targetId}`);
         const headers = await getAuthHeaders();
-        const response = await axios.delete(`${BASE_URL}/${targetId}`, { headers });
+        const response = await axios.delete(`${API_BASE_URL}/${targetId}`, { headers });
 
         if (!response.data) {
             throw new Error('❌ [언팔로우 실패] 응답 데이터가 없습니다.');
@@ -98,7 +101,7 @@ export const unfollowUser = async (targetId: number) => {
 export const getFollowers = async (targetId: number) => {
     try {
         console.log(`📥 [팔로워 목록 요청] -> ${targetId}`);
-        const response = await axios.get(`${BASE_URL}/followers/${targetId}`);
+        const response = await axios.get(`${API_BASE_URL}/followers/${targetId}`);
 
         if (!response.data || !Array.isArray(response.data)) {
             console.warn('⚠️ [팔로워 목록 경고] 데이터가 비어있거나 올바른 형식이 아닙니다.');
@@ -123,7 +126,7 @@ export const getFollowers = async (targetId: number) => {
 export const getFollowing = async (targetId: number) => {
     try {
         console.log(`📥 [팔로잉 목록 요청] -> ${targetId}`);
-        const response = await axios.get(`${BASE_URL}/following/${targetId}`);
+        const response = await axios.get(`${API_BASE_URL}/following/${targetId}`);
 
         if (!response.data || !Array.isArray(response.data)) {
             console.warn('⚠️ [팔로잉 목록 경고] 데이터가 비어있거나 올바른 형식이 아닙니다.');
