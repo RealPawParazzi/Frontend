@@ -18,7 +18,7 @@ const CalendarScreen = () => {
 
             {/* 🗓️ 캘린더 */}
             <Calendar
-                onDayPress={(day) => setSelectedDate(day.dateString)}
+                onDayPress={(day: { dateString: React.SetStateAction<string>; }) => setSelectedDate(day.dateString)}
                 markedDates={{
                     [selectedDate]: { selected: true, selectedColor: '#6A5ACD' },
                 }}

@@ -86,6 +86,7 @@ const OwnerInfo = () => {
             { text: '취소', style: 'cancel' },
             { text: '로그아웃', onPress: async () => {
                     await logout(); // ✅ 로그아웃 처리
+                    //@ts-ignore
                     navigation.reset({ index: 0, routes: [{ name: 'Login' }] }); // ✅ 로그인 화면으로 이동
                 }},
         ]);
