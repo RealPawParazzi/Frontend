@@ -1,7 +1,11 @@
 // authService.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { fetchUserData } from './userService';
+import { Platform } from 'react-native';
 
-const API_BASE_URL = 'http://localhost:8080/api/auth'; // 🟢 백엔드 API 주소
+const API_BASE_URL = Platform.OS === 'android'
+    ? 'http://10.0.2.2:8080/api/auth'  // 안드로이드용
+    : 'http://localhost:8080/api/auth'; // iOS용
 
 /**
  * ✅ 회원가입 API (multipart/form-data)
@@ -126,11 +130,12 @@ export const validateToken = async (): Promise<boolean> => {
         const token = await AsyncStorage.getItem('userToken');
         if (!token) {return false;}
 
-        const response = await fetch(`${API_BASE_URL}/validate`, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
+        // 🔹 백엔드에 `/auth/validate` 없으므로 대신 유저 데이터를 가져와 확인
+        const userData = await fetchUserData();
 
-        return response.ok;
+
+        // 🔹 유저 데이터가 존재하고, 아이디가 0이 아닐 경우 유효한 로그인 상태로 판단
+        return !!(userData?.id && userData.id !== '0');
     } catch {
         return false;
     }

@@ -55,11 +55,11 @@ interface StoryBook {
 
 /** ✅ 기본 더미 데이터 */
 const defaultUserData: UserData = {
-    id: '99999999',
+    id: '0',
     email: 'dummy-user@example.com', // 기본 이메일 추가
     nickName: '더미 닉네임', // 기본 닉네임 추가
     name: '더미 사용자',
-    profileImage: require('../assets/images/profile-1.png'), //  require 유지
+    profileImage: require('../assets/images/user-2.png'), //  require 유지
     petCount: 2,
     petList: [
         { id: '1', name: '김초코', species: '강아지', image: require('../assets/images/pets-3.gif') },
@@ -101,6 +101,7 @@ const userStore = create<{
     storyReels: { id: string; image: any; video?: any }[];
     activityLog: { [key: string]: Post[] };
     updateUserData: (newUserData: UserData) => void;
+    resetUserData: () => void;
 }>((set) => ({
     /** ✅ 사용자 데이터 (초기값: 기본 더미 데이터) */
     userData: defaultUserData,
@@ -194,6 +195,8 @@ const userStore = create<{
             },
         });
     },
+
+    resetUserData: () => set({ userData: defaultUserData }),
 }));
 
 

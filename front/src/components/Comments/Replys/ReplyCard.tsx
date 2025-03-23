@@ -20,7 +20,7 @@ interface ReplyCardProps {
         replyId: number;
         content: string;
         replyLiked: boolean;
-        repliesLikeCount: number;
+        replyLikeCount: number;
         createdAt: string;
         replyMember: {
             memberId: number;
@@ -50,7 +50,7 @@ const ReplyCard = ({ reply, commentId }: ReplyCardProps) => {
 
     // 좋아요 상태 & 좋아요 개수 상태 추가
     const [isLiked, setIsLiked] = useState(reply.replyLiked);
-    const [likeCount, setLikeCount] = useState(reply.repliesLikeCount);
+    const [likeCount, setLikeCount] = useState(reply.replyLikeCount);
 
     // ✅ 로그인한 사용자 정보 가져오기
     const { userData } = userStore();
@@ -122,7 +122,7 @@ const ReplyCard = ({ reply, commentId }: ReplyCardProps) => {
 
     // ✅ 좋아요 상세 목록 표시 핸들러
     const handleShowLikes = async () => {
-        if (reply.repliesLikeCount > 0) {
+        if (reply.replyLikeCount > 0) {
             try {
                 await fetchReplyLikes(reply.replyId);
                 setShowLikes(!showLikes);

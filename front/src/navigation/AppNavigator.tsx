@@ -12,11 +12,11 @@ import EditStorybookScreen from '../screens/Storybooks/EditStorybookScreen'; // 
 import VideoEditorScreen from '../screens/Storybooks/VideoEditorScreen';
 import ImageEditorScreen from '../screens/Storybooks/ImageEditorScreen';
 import PetRegistrationScreen from '../screens/Pets/PetRegistrationScreen';
-import PetInfoScreen from '../screens/Pets/PetInfoScreen';
 import PetEditScreen from '../screens/Pets/PetEditScreen';
 import FollowListScreen from '../screens/MiniProfile/FollowListScreen'; // 🆕 팔로워/팔로잉 목록 화면 추가
 import UserPostsScreen from '../screens/MiniProfile/UserPostsScreen'; // 🆕 특정 유저 게시글 목록 추가
 import { loadUserData }  from '../context/userStore';
+import authStore from '../context/authStore'; // ✅ authStore 추가
 import { ActivityIndicator, View } from 'react-native';
 
 export type RootStackParamList = {
@@ -32,7 +32,6 @@ export type RootStackParamList = {
     VideoEditorScreen: undefined;
     ImageEditorScreen: undefined;
     PetRegistrationScreen: undefined;
-    PetInfoScreen: undefined;
     PetEditScreen: { pet: object };
     FollowListScreen: { type: 'followers' | 'following' }; // 🆕 팔로워/팔로잉 목록 네비게이션 추가
     UserPostsScreen: { userId: number; userName: string }; // 🆕 특정 유저 게시글 목록 추가
@@ -43,16 +42,23 @@ const Stack = createStackNavigator<RootStackParamList>();
 const AppNavigator = () => {
 
     const [isLoading, setIsLoading] = useState(true);
+    const { isLoggedIn, checkAuthStatus } = authStore(); // ✅ 로그인 상태 확인
 
     useEffect(() => {
         const initializeApp = async () => {
-            console.log('🟢 앱 시작 - loadUserData 실행!');
-            await loadUserData(); // ✅ 유저 데이터 먼저 불러오기
+            console.log('🟢 앱 시작 - 로그인 상태 확인');
+            const isAuthenticated = await checkAuthStatus(); // ✅ 로그인 확인
+
+            if (isAuthenticated) {
+                console.log('🟢 로그인 상태 유지됨, 유저 데이터 불러옴');
+                await loadUserData(); // ✅ 로그인 상태일 때만 유저 데이터 로드
+            }
+
             setIsLoading(false);
         };
 
         initializeApp();
-    }, []);
+    }, [checkAuthStatus]);
 
     if (isLoading) {
         return (
@@ -65,19 +71,23 @@ const AppNavigator = () => {
 
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="Splash" component={SplashScreen} />
-            <Stack.Screen name="Tutorial" component={TutorialScreen} />
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="KakaoLoginWebView" component={KakaoLoginWebView} />
-            <Stack.Screen name="Signup" component={SignupScreen} />
-            <Stack.Screen name="Home" component={BottomTabNavigator} />
+            {isLoggedIn ? (
+                <Stack.Screen name="Home" component={BottomTabNavigator} />
+            ) : (
+                <>
+                    <Stack.Screen name="Login" component={LoginScreen} />
+                    <Stack.Screen name="Splash" component={SplashScreen} />
+                    <Stack.Screen name="Tutorial" component={TutorialScreen} />
+                    <Stack.Screen name="KakaoLoginWebView" component={KakaoLoginWebView} />
+                    <Stack.Screen name="Signup" component={SignupScreen} />
+                </>
+            )}
             <Stack.Screen name="StorybookScreen" component={StorybookScreen} />
             <Stack.Screen name="StorybookDetailScreen" component={StorybookDetailScreen} />
             <Stack.Screen name="VideoEditorScreen" component={VideoEditorScreen} />
             <Stack.Screen name="ImageEditorScreen" component={ImageEditorScreen} />
             <Stack.Screen name="EditStorybookScreen" component={EditStorybookScreen} />
             <Stack.Screen name="PetRegistrationScreen" component={PetRegistrationScreen} />
-            <Stack.Screen name="PetInfoScreen" component={PetInfoScreen} />
             <Stack.Screen name="PetEditScreen" component={PetEditScreen} />
             <Stack.Screen name="FollowListScreen" component={FollowListScreen} />
             <Stack.Screen name="UserPostsScreen" component={UserPostsScreen} />

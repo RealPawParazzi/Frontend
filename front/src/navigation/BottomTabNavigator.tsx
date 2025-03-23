@@ -111,7 +111,7 @@ const BottomTabNavigator = ({ navigation }: any) => {
 const styles = StyleSheet.create({
     safeContainer: {
         flex: 1,
-        backgroundColor: 'white',
+        backgroundColor: '#ffffff',
     },
     tabBarButton: {
         justifyContent: 'center',

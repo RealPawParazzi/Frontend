@@ -1,8 +1,11 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
-/** ✅ API 기본 URL */
-const BASE_URL = 'http://localhost:8080/api/walk';
+// 🔹 백엔드 API 기본 URL
+const API_BASE_URL = Platform.OS === 'android'
+    ? 'http://10.0.2.2:8080/api/walk'  // 안드로이드용
+    : 'http://localhost:8080/api/walk'; // iOS용
 
 /** ✅ 인증 헤더 가져오기 */
 const getAuthHeaders = async () => {
@@ -37,24 +40,36 @@ export const saveWalkData = async (petId: number, walkRoute: { latitude: number;
 
         const headers = await getAuthHeaders();
         const distance = calculateDistance(walkRoute);
-        const durationInHours = (new Date(endTime).getTime() - new Date(startTime).getTime()) / (1000 * 60 * 60);
+
+        // ✅ new Date() 대신 Date.parse() 사용하여 안전한 변환
+        const startMillis = Date.parse(startTime);
+        const endMillis = Date.parse(endTime);
+
+        if (isNaN(startMillis) || isNaN(endMillis)) {
+            console.error('❌ [에러] startTime 또는 endTime이 올바른 날짜 형식이 아님:', { startTime, endTime });
+        }
+
+        const durationInHours = (endMillis - startMillis) / (1000 * 60 * 60);
         const averageSpeed = durationInHours > 0 ? parseFloat((distance / durationInHours).toFixed(2)) : 0;
 
         const requestBody = {
             petId,
-            startTime,  // ✅ 그냥 기존 ISO 형식 그대로 전송 (Z 없어도 됨)
+            startTime,
             endTime,
             route: walkRoute.map((point) => ({
                 latitude: point.latitude,
                 longitude: point.longitude,
-                timestamp: point.timestamp, // ✅ 수정 필요 없음
+                timestamp: point.timestamp,
             })),
             distance,
             averageSpeed,
         };
 
+        console.log('📤 [보내는 JSON 데이터]:', JSON.stringify(requestBody, null, 2));
+
+
         // API 경로 수정 (기존: /api/walks/save → 변경: /api/walk)
-        const response = await axios.post(`${BASE_URL}`, requestBody, { headers });
+        const response = await axios.post(`${API_BASE_URL}`, requestBody, { headers });
         console.log('✅ [산책 기록 저장 성공]', response.data);
         return response.data;
     } catch (error) {
@@ -75,7 +90,7 @@ export const getWalkHistory = async (walkId: number) => {
         const headers = await getAuthHeaders();
 
         // API 경로 수정 (기존: /api/walks/{petId} → 변경: /api/walk/{walkId})
-        const response = await axios.get(`${BASE_URL}/${walkId}`, { headers });
+        const response = await axios.get(`${API_BASE_URL}/${walkId}`, { headers });
 
         console.log('✅ [산책 기록 불러오기 성공]', response.data);
         return response.data;
