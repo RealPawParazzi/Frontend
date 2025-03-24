@@ -1,7 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-    View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView,
-    Image, Alert, SafeAreaView, ActivityIndicator, Switch,
+    View,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    StyleSheet,
+    Image,
+    Alert,
+    SafeAreaView,
+    ActivityIndicator,
+    Switch,
+    ScrollView,
+    KeyboardAvoidingView,
+    Platform,
 } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -9,34 +20,43 @@ import boardStore from '../../context/boardStore';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 
+
 /**
- * 📄 스토리북 게시글 수정 페이지
+ * 📄 스토리북 게시글 수정 화면
  * ✅ 사용자는 제목, 본문 내용을 편집하고, 이미지를 추가/삭제할 수 있음
  * ✅ 저장 버튼을 누르면 기존 데이터를 업데이트하고, 업데이트된 내용을 `fetchBoardDetail`을 통해 다시 불러옴
+ * ✅ 네이버 블로그 스타일 with 드래그 앤 드롭, 대표 이미지 설정
  */
+
+// ✅ 블록 타입 정의 (텍스트 또는 이미지)
+interface BlockItem {
+    type: 'text' | 'image';
+    value: string;
+}
 
 // 📌 네비게이션 라우트 타입 지정
 type EditStorybookScreenRouteProp = RouteProp<RootStackParamList, 'EditStorybookScreen'>;
 
 const EditStorybookScreen = ({ route, navigation }: { route: EditStorybookScreenRouteProp, navigation: any }) => {
-    const { boardId } = route.params; // ✅ 네비게이션에서 전달받은 boardId
-    const fetchBoardDetail = boardStore((state) => state.fetchBoardDetail); // ✅ 게시글 데이터 불러오기
-    const updateExistingBoard = boardStore((state) => state.updateExistingBoard); // ✅ 게시글 업데이트
+    const { boardId } = route.params; // 🔹 전달받은 게시글 ID
+    const fetchBoardDetail = boardStore((state) => state.fetchBoardDetail);
+    const updateExistingBoard = boardStore((state) => state.updateExistingBoard);
     const selectedBoard = boardStore((state) => state.selectedBoard); // ✅ 현재 선택된 게시글 정보
 
-    // ✅ 컴포넌트 상태
+    // ✅ 상태 정의
     const [title, setTitle] = useState('');
-    const [story, setStory] = useState('');
-    const [selectedImages, setSelectedImages] = useState<string[]>([]);
-    const [isPublic, setIsPublic] = useState(true);
+    const [blocks, setBlocks] = useState<BlockItem[]>([]);
+    const [titleImage, setTitleImage] = useState<string | null>(null); // 대표 이미지 URI
+    const [isPublic, setIsPublic] = useState(true); // 공개 여부
     const [loading, setLoading] = useState(true);
+    const scrollRef = useRef<ScrollView>(null);
 
-    // ✅ 게시글 상세 데이터 불러오기
+    // ✅ 게시글 상세 불러오기 (초기 진입 시)
     useEffect(() => {
         const loadPost = async () => {
             setLoading(true); // 🔄 로딩 시작
             try {
-                await fetchBoardDetail(boardId); // 🟢 게시글 데이터 가져오기
+                await fetchBoardDetail(boardId); // 🟢 서버에서 게시글 데이터 가져오기
             } catch (error) {
                 Alert.alert('❌ 오류', '게시글을 불러오는 중 문제가 발생했습니다.');
                 navigation.goBack();
@@ -48,19 +68,25 @@ const EditStorybookScreen = ({ route, navigation }: { route: EditStorybookScreen
         loadPost();
     }, [boardId, fetchBoardDetail, navigation]);
 
-    // ✅ `selectedBoard`가 변경될 때마다 상태 업데이트
+    // ✅ selectedBoard가 변경되면 입력 필드 상태에 반영
     useEffect(() => {
         if (selectedBoard && selectedBoard.id === boardId) {
             setTitle(selectedBoard.title);
-            setStory(selectedBoard.contents.find((c: any) => c.type === 'text')?.value || '');
-            setSelectedImages(selectedBoard.contents.filter((c: any) => c.type === 'image').map((c: any) => c.value));
+            setBlocks(selectedBoard.contents || [{ type: 'text', value: '' }]);
+            setTitleImage(selectedBoard.titleImage || null);
             setIsPublic(selectedBoard.visibility === 'PUBLIC');
         }
     }, [selectedBoard, boardId]);
 
-    // ✅ 이미지 선택 기능 (이미지 라이브러리에서 선택)
+    // ✅ 텍스트 블록 업데이트
+    const updateTextBlock = (index: number, text: string) => {
+        setBlocks((prev) => prev.map((b, i) => (i === index ? { ...b, value: text } : b)));
+    };
+
+
+    // ✅ 이미지 선택 시 이미지 블록 추가 (이미지 라이브러리에서 선택)
     const pickImage = async () => {
-        await launchImageLibrary({ mediaType: 'photo' }, (response) => {
+        await launchImageLibrary({ mediaType: 'mixed' }, (response) => {
             if (response.didCancel) {
                 console.log('🚫 사용자가 이미지 선택 취소');
             } else if (response.errorMessage) {
@@ -68,20 +94,53 @@ const EditStorybookScreen = ({ route, navigation }: { route: EditStorybookScreen
             } else if (response.assets && response.assets.length > 0) {
                 const imageUri = response.assets[0].uri;
                 if (imageUri) {
-                    setSelectedImages((prev) => [...prev, imageUri]); // ✅ 선택한 이미지 추가
+                    setBlocks(prev => [...prev, { type: 'image', value: imageUri }, { type: 'text', value: '' }]);
+                    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
                 }
             }
         });
     };
 
-    // ✅ 선택된 이미지 삭제 기능
-    const removeImage = (index: number) => {
-        setSelectedImages(selectedImages.filter((_, i) => i !== index));
+    // ✅ 블록 삭제 함수 (이미지 또는 텍스트)
+    const removeBlock = (index: number) => {
+        Alert.alert(
+            '컨텐츠 삭제',
+            '해당 컨텐츠를 삭제하시겠습니까?',
+            [
+                { text: '취소', style: 'cancel' },
+                {
+                    text: '삭제',
+                    style: 'destructive',
+                    onPress: () => setBlocks(prev => prev.filter((_, i) => i !== index)),
+                },
+            ]
+        );
     };
 
-    // ✅ 게시글 업데이트 함수
+    // ✅ 게시글 수정 요청 처리
     const handleUpdatePost = async () => {
-        if (!title.trim() || !story.trim()) {
+        const validBlocks = blocks.filter(b => b.value.trim() !== ''); // 공백 제거
+        const textBlocks = validBlocks.filter(b => b.type === 'text');
+        const firstText = textBlocks[0]?.value || '내용 없음'; // titleContent 설정용
+        const imageBlocks = validBlocks.filter(b => b.type === 'image');
+        // 🔸 파일 업로드용 mediaFiles
+        const mediaFiles = imageBlocks.map(({ value }) => ({
+            uri: value,
+            name: value.split('/').pop() || `media_${Date.now()}`,
+            type: value.endsWith('.mp4') ? 'video/mp4' : 'image/jpeg',
+        }));
+
+        // 🔸 대표 이미지 coverImage (없으면 undefined)
+        const coverImage = titleImage
+            ? {
+                uri: titleImage,
+                name: titleImage.split('/').pop() || `cover_${Date.now()}`,
+                type: titleImage.endsWith('.mp4') ? 'video/mp4' : 'image/jpeg',
+            }
+            : undefined;
+
+        // 🔸 유효성 검사
+        if (!title.trim() || validBlocks.length === 0 || blocks.every(b => b.value.trim() === '')) {
             Alert.alert('⚠️ 입력 오류', '제목과 내용을 입력해주세요.');
             return;
         }
@@ -89,31 +148,30 @@ const EditStorybookScreen = ({ route, navigation }: { route: EditStorybookScreen
         setLoading(true); // 🔄 업데이트 시작
 
         try {
-            // 📌 업데이트할 데이터 준비
-            const contents = [{ type: 'text', value: story }];
-            selectedImages.forEach((img) => contents.push({ type: 'image', value: img }));
-
-            // ✅ 게시글 업데이트 API 호출
-            await updateExistingBoard(boardId, {
-                title,
-                visibility: isPublic ? 'PUBLIC' : 'FOLLOWERS',
-                contents,
-            });
-
-            // ✅ 업데이트 후 데이터 다시 불러오기
-            await fetchBoardDetail(boardId);
-
+            // 🔸 게시글 업데이트 요청
+            await updateExistingBoard(
+                boardId,
+                {
+                    title,
+                    visibility: isPublic ? 'PUBLIC' : 'FOLLOWERS',
+                    contents: validBlocks,
+                },
+                mediaFiles as any[],
+                coverImage as any,
+                firstText
+            );
+            await fetchBoardDetail(boardId); // 수정 후 다시 데이터 불러오기
             Alert.alert('✅ 수정 완료', '게시글이 성공적으로 수정되었습니다.', [
                 { text: '확인', onPress: () => navigation.goBack() },
             ]);
-        } catch (error) {
+        } catch (e) {
             Alert.alert('❌ 수정 실패', '게시글 수정 중 오류가 발생했습니다.');
         } finally {
-            setLoading(false); // 🔄 업데이트 종료
+            setLoading(false);
         }
     };
 
-    // ✅ 로딩 중일 때 표시할 UI
+    // ✅ 로딩 중
     if (loading) {
         return (
             <View style={styles.loader}>
@@ -150,33 +208,55 @@ const EditStorybookScreen = ({ route, navigation }: { route: EditStorybookScreen
             {/* 제목 입력 */}
             <TextInput
                 style={styles.titleInput}
+                placeholder="제목"
                 value={title}
                 onChangeText={setTitle}
             />
 
             {/* 본문 입력 */}
-            <ScrollView style={styles.storyContainer}>
-                <TextInput
-                    style={styles.storyInput}
-                    multiline
-                    value={story}
-                    onChangeText={setStory}
-                />
-                {/* 선택된 이미지 미리보기 및 삭제 버튼 */}
-                {selectedImages.map((image, index) => (
-                    <View key={index} style={styles.imageContainer}>
-                        <Image source={{ uri: image }} style={styles.imagePreview} />
-                        <TouchableOpacity style={styles.deleteImageButton} onPress={() => removeImage(index)}>
-                            <MaterialIcons name="close" size={20} color="white" />
-                        </TouchableOpacity>
-                    </View>
-                ))}
-            </ScrollView>
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+                <ScrollView ref={scrollRef} contentContainerStyle={styles.storyContainer}>
+                    {blocks.map((block, index) => (
+                        <View key={index} style={{ marginBottom: 16 }}>
+                            {block.type === 'text' ? (
+                                <TextInput
+                                    multiline
+                                    placeholder="내용 입력"
+                                    style={styles.textArea}
+                                    value={block.value}
+                                    onChangeText={(text) => updateTextBlock(index, text)}
+                                />
+                            ) : (
+                                <View>
+                                    <Image source={{ uri: block.value }} style={styles.imagePreview} />
+                                    <TouchableOpacity
+                                        style={styles.representativeTag}
+                                        onPress={() => setTitleImage(block.value)}>
+                                        <Text style={{ color: 'white', fontWeight: 'bold' }}>
+                                            {titleImage === block.value ? '대표 이미지 ✓' : '대표 지정'}
+                                        </Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity style={styles.deleteButton} onPress={() => removeBlock(index)}>
+                                        <MaterialIcons name="close" size={20} color="white" />
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+                        </View>
+                    ))}
+                </ScrollView>
+            </KeyboardAvoidingView>
 
-            {/* 이미지 추가 버튼 */}
-            <TouchableOpacity style={styles.addImageButton} onPress={pickImage}>
-                <Text style={styles.addImageText}>🖼️ 이미지 추가</Text>
-            </TouchableOpacity>
+            <View style={styles.bottomBar}>
+                <TouchableOpacity style={styles.bottomIcon} onPress={() => Alert.alert('😎 준비 중!', '이모티콘 기능은 곧 추가됩니다.')}>
+                    <Text style={styles.iconText}>😊</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.bottomIcon} onPress={pickImage}>
+                    <Text style={styles.iconText}>🖼️</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.bottomIcon} onPress={() => Alert.alert('✨ 준비 중!', 'AI 기능은 곧 추가됩니다.')}>
+                    <Text style={styles.iconText}>✨</Text>
+                </TouchableOpacity>
+            </View>
         </SafeAreaView>
     );
 };
@@ -184,20 +264,27 @@ const EditStorybookScreen = ({ route, navigation }: { route: EditStorybookScreen
 // ✅ 스타일 정의
 const styles = StyleSheet.create({
     safeContainer: { flex: 1, backgroundColor: '#FFF' },
-    navBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15, backgroundColor: '#FFF', borderBottomWidth: 1, borderColor: '#EEE' },
+    navBar: {
+        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+        paddingHorizontal: 15, paddingVertical: 12, borderBottomWidth: 1, borderColor: '#EEE',
+    },
     backButton: { padding: 8 },
-    navTitle: { fontSize: 18, fontWeight: 'bold' },
+    navTitle: { fontSize: 18, fontWeight: 'bold', textAlign: 'center', flex: 1 },
     saveButton: { fontSize: 16, color: '#FF6F00', fontWeight: 'bold' },
-    visibilityContainer: { flexDirection: 'row', justifyContent: 'space-between', padding: 20 },
+    visibilityContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20 },
     visibilityText: { fontSize: 16, fontWeight: 'bold' },
-    titleInput: { fontSize: 24, fontWeight: 'bold', padding: 20, borderBottomWidth: 1, borderColor: '#EEE' },
-    storyContainer: { flex: 1, padding: 20 },
-    storyInput: { fontSize: 16, minHeight: 300 },
-    imageContainer: { position: 'relative' },
-    imagePreview: { width: '100%', height: 200, borderRadius: 10, marginTop: 15 },
-    deleteImageButton: { position: 'absolute', top: 5, right: 5, backgroundColor: 'black', borderRadius: 20, padding: 5 },
-    addImageButton: { padding: 15, backgroundColor: '#FF6F00', alignItems: 'center' },
-    addImageText: { fontSize: 16, color: 'white' },
+    titleInput: {
+        fontSize: 30, fontWeight: 'bold', paddingHorizontal: 20,
+        paddingVertical: 16, borderBottomWidth: 1, borderColor: '#EEE', marginBottom: 8
+    },
+    storyContainer: { paddingHorizontal: 20, paddingBottom: 80 },
+    textArea: { fontSize: 16, color: '#333', minHeight: 40, paddingVertical: 8 },
+    imagePreview: { width: '100%', height: 200, borderRadius: 10, marginTop: 10 },
+    representativeTag: { position: 'absolute', top: 10, left: 10, backgroundColor: '#00C853', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 5 },
+    deleteButton: { position: 'absolute', top: 10, right: 10, backgroundColor: 'rgba(0,0,0,0.3)', padding: 5, borderRadius: 20 },
+    bottomBar: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', paddingVertical: 10, borderTopWidth: 1, borderColor: '#EEE', backgroundColor: '#FFF', position: 'absolute', bottom: 0, width: '100%', zIndex: 99 },
+    bottomIcon: { padding: 10 },
+    iconText: { fontSize: 22 },
     loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 });
 
