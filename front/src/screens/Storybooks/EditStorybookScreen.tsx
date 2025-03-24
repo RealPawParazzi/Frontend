@@ -71,8 +71,13 @@ const EditStorybookScreen = ({ route, navigation }: { route: EditStorybookScreen
     // ✅ selectedBoard가 변경되면 입력 필드 상태에 반영
     useEffect(() => {
         if (selectedBoard && selectedBoard.id === boardId) {
+            const contents = selectedBoard.contents || [];
+            // 첫 텍스트 블록이 비어 있고, 두 번째가 텍스트일 경우 제거
+            const cleaned = (contents[0]?.type === 'text' && contents[0].value.trim() === '' && contents[1]?.type === 'text')
+                ? contents.slice(1)
+                : contents;
             setTitle(selectedBoard.title);
-            setBlocks(selectedBoard.contents || [{ type: 'text', value: '' }]);
+            setBlocks(cleaned.length > 0 ? cleaned : [{ type: 'text', value: '' }]);
             setTitleImage(selectedBoard.titleImage || null);
             setIsPublic(selectedBoard.visibility === 'PUBLIC');
         }
@@ -94,7 +99,11 @@ const EditStorybookScreen = ({ route, navigation }: { route: EditStorybookScreen
             } else if (response.assets && response.assets.length > 0) {
                 const imageUri = response.assets[0].uri;
                 if (imageUri) {
-                    setBlocks(prev => [...prev, { type: 'image', value: imageUri }, { type: 'text', value: '' }]);
+                    setBlocks(prev => {
+                        const newBlocks = [...prev, { type: 'image', value: imageUri }, { type: 'text', value: '' }];
+                        // 이미지 바로 추가 시, 상단 빈 텍스트 제거
+                        return (newBlocks[0].type === 'text' && newBlocks[0].value.trim() === '') ? newBlocks.slice(1) : newBlocks;
+                    });
                     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
                 }
             }
@@ -103,18 +112,24 @@ const EditStorybookScreen = ({ route, navigation }: { route: EditStorybookScreen
 
     // ✅ 블록 삭제 함수 (이미지 또는 텍스트)
     const removeBlock = (index: number) => {
-        Alert.alert(
-            '컨텐츠 삭제',
-            '해당 컨텐츠를 삭제하시겠습니까?',
-            [
-                { text: '취소', style: 'cancel' },
-                {
-                    text: '삭제',
-                    style: 'destructive',
-                    onPress: () => setBlocks(prev => prev.filter((_, i) => i !== index)),
+        Alert.alert('컨텐츠 삭제', '해당 컨텐츠를 삭제하시겠습니까?', [
+            { text: '취소', style: 'cancel' },
+            {
+                text: '삭제',
+                style: 'destructive',
+                onPress: () => {
+                    setBlocks(prev => {
+                        const updated = prev.filter((_, i) => i !== index);
+                        // 삭제 후 연속된 텍스트 병합
+                        if (index > 0 && updated[index - 1]?.type === 'text' && updated[index]?.type === 'text') {
+                            const merged = updated[index - 1].value + updated[index].value;
+                            updated.splice(index - 1, 2, { type: 'text', value: merged });
+                        }
+                        return updated;
+                    });
                 },
-            ]
-        );
+            },
+        ]);
     };
 
     // ✅ 게시글 수정 요청 처리
@@ -221,7 +236,8 @@ const EditStorybookScreen = ({ route, navigation }: { route: EditStorybookScreen
                             {block.type === 'text' ? (
                                 <TextInput
                                     multiline
-                                    placeholder="내용 입력"
+                                    // index === 0일 때만 placeholder 표시
+                                    placeholder={index === 0 ? '내용 입력' : undefined}
                                     style={styles.textArea}
                                     value={block.value}
                                     onChangeText={(text) => updateTextBlock(index, text)}
