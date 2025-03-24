@@ -100,10 +100,15 @@ const EditStorybookScreen = ({ route, navigation }: { route: EditStorybookScreen
                 const imageUri = response.assets[0].uri;
                 if (imageUri) {
                     setBlocks(prev => {
-                        const newBlocks = [...prev, { type: 'image', value: imageUri }, { type: 'text', value: '' }];
+                        const newBlocks: BlockItem[] = [
+                            ...prev,
+                            { type: 'image', value: imageUri },
+                            { type: 'text', value: '' },
+                        ];
                         // 이미지 바로 추가 시, 상단 빈 텍스트 제거
                         return (newBlocks[0].type === 'text' && newBlocks[0].value.trim() === '') ? newBlocks.slice(1) : newBlocks;
                     });
+
                     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
                 }
             }
