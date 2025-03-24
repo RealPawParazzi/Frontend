@@ -58,8 +58,17 @@ const StorybookScreen = ({ navigation }: any) => {
             } else if (response.assets && response.assets.length > 0) {
                 const imageUri = response.assets[0].uri;
                 if (imageUri) {
-                    setBlocks(prev => [...prev, { type: 'image', value: imageUri }, { type: 'text', value: '' }]);
+                    setBlocks((prev) => {
+                        const nextBlocks = [...prev];
 
+                        // 조건 추가: 첫 블록이 비어있는 텍스트일 경우 제거
+                        if (nextBlocks.length === 1 && nextBlocks[0].type === 'text' && nextBlocks[0].value.trim() === '') {
+                            nextBlocks.pop(); // remove the empty first text block
+                        }
+
+                        // 이미지 + 텍스트 블록 삽입
+                        return [...nextBlocks, { type: 'image', value: imageUri }, { type: 'text', value: '' }];
+                    });
                     setTimeout(() => {
                         scrollRef.current?.scrollToEnd({ animated: true });
                     }, 100);
