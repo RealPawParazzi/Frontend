@@ -256,17 +256,24 @@ const StorybookDetailScreen = ({ route, navigation }: { route: StorybookDetailSc
                             <Text style={styles.title}>{selectedBoard.title}</Text>
 
                             {/* 게시글 컨텐츠 */}
-                            {selectedBoard.contents.map((content: { type: string; value: string }, index: number) =>
-                                content.type === 'text' ? (
-                                    <Text key={index} style={styles.postText}>{content.value}</Text>
-                                ) : (
-                                    <Image
-                                        key={index}
-                                        source={{ uri: content.value.startsWith('file://') ? content.value : `file://${content.value}` }}
-                                        style={styles.postImage}
-                                    />
+                            {selectedBoard.contents
+                                ?.filter((c) => c.type !== 'text' || c.value.trim() !== '')
+                                .filter((item, index, self) =>
+                                    item.type !== 'image' ||
+                                    self.findIndex(i => i.type === 'image' && i.value === item.value) === index
                                 )
-                            )}
+                                .map((content, index) =>
+                                    content.type === 'text' ? (
+                                        <Text key={index} style={styles.postText}>{content.value}</Text>
+                                    ) : (
+                                        <Image
+                                            key={index}
+                                            source={{ uri: content.value }}
+                                            style={styles.postImage}
+                                        />
+                                    )
+                                )}
+
 
                             {/* ✅ 좋아요 & 댓글 수 표시 */}
                             <View style={styles.bottomBar}>
