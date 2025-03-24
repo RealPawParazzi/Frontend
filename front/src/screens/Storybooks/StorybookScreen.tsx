@@ -74,12 +74,28 @@ const StorybookScreen = ({ navigation }: any) => {
     };
 
     // ✅ 블록 삭제하기
+    // 수정된 부분: 블록 삭제 및 텍스트 병합 처리
     const removeBlock = (index: number) => {
         Alert.alert('삭제 확인', '해당 컨텐츠를 삭제할까요?', [
             { text: '취소', style: 'cancel' },
             {
                 text: '삭제', style: 'destructive', onPress: () => {
-                    setBlocks((prev) => prev.filter((_, i) => i !== index));
+                    setBlocks((prev) => {
+                        const newBlocks = [...prev];
+                        const removed = newBlocks.splice(index, 1)[0];
+
+                        // 👇 삭제된 블록이 이미지이고, 앞뒤가 모두 텍스트일 경우 병합
+                        if (
+                            removed.type === 'image' &&
+                            newBlocks[index - 1]?.type === 'text' &&
+                            newBlocks[index]?.type === 'text'
+                        ) {
+                            const mergedValue = newBlocks[index - 1].value + '\n' + newBlocks[index].value;
+                            newBlocks.splice(index - 1, 2, { type: 'text', value: mergedValue });
+                        }
+
+                        return newBlocks;
+                    });
                 },
             },
         ]);
