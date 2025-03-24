@@ -116,8 +116,8 @@ const StorybookScreen = ({ navigation }: any) => {
         const textBlocks = validBlocks.filter(b => b.type === 'text');
         const firstText = textBlocks[0]?.value || '내용 없음';
 
-        if (!title.trim() || validBlocks.length === 0 || blocks.every(b => b.value.trim() === '')) {
-            Alert.alert('⚠️ 입력 오류', '제목과 내용을 입력해주세요.');
+        if (!title.trim() && validBlocks.length === 0 && blocks.every(b => b.value.trim() === '')) {
+            Alert.alert('⚠️ 입력 오류', '제목과 내용은 필수 항목입니다.');
             return;
         }
 

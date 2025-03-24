@@ -123,16 +123,26 @@ const boardStore = create<{
     },
 
     /** 🟢 게시글 등록 요청 */
-    createNewBoard: async (userData, mediaFiles, titleImage, titleContent) => {
+    createNewBoard: async (userData, _mediaFiles, titleImage, titleContent) => {
         try {
-            // ✅ titleImage 없으면 mediaFiles 중 첫 이미지 사용
+            const textContents = userData.contents.filter((c: any) => c.type === 'text' && c.value.trim() !== '');
+            const imageBlocks = userData.contents.filter((c: any) => c.type === 'image');
+
+            const mediaFiles = imageBlocks.map(({ value }: any) => ({
+                uri: value,
+                name: value.split('/').pop() || `media_${Date.now()}`,
+                type: value.endsWith('.mp4') ? 'video/mp4' : 'image/jpeg',
+            }));
+
             const fallbackTitleImage = titleImage || mediaFiles?.[0] || null;
+            const fallbackTitleContent = titleContent || textContents.find((c: any) => c.value.trim())?.value || '내용 없음';
 
-            // ✅ titleContent 없으면 첫 번째 텍스트 content에서 가져옴
-            const firstTextContent = userData.contents.find((c: any) => c.type === 'text')?.value;
-            const fallbackTitleContent = titleContent || firstTextContent || '내용 없음';
-
-            const newBoard = await createBoard(userData, mediaFiles, fallbackTitleImage, fallbackTitleContent);
+            const newBoard = await createBoard(
+                { ...userData, contents: textContents },
+                mediaFiles,
+                fallbackTitleImage,
+                fallbackTitleContent
+            );
 
             set((state) => ({
                 boardList: [newBoard, ...state.boardList.filter((b) => b.id !== 0)],
@@ -143,14 +153,27 @@ const boardStore = create<{
     },
 
     /** 🟡 게시글 수정 요청 */
-    updateExistingBoard: async (boardId, userData, mediaFiles, titleImage, titleContent) => {
+    updateExistingBoard: async (boardId, userData, _mediaFiles, titleImage, titleContent) => {
         try {
-            const fallbackTitleImage = titleImage || mediaFiles?.[0] || null;
-            const firstTextContent = userData.contents.find((c: any) => c.type === 'text')?.value;
-            const fallbackTitleContent = titleContent || firstTextContent || '내용 없음';
+            const textContents = userData.contents.filter((c: any) => c.type === 'text' && c.value.trim() !== '');
+            const imageBlocks = userData.contents.filter((c: any) => c.type === 'image');
 
-            // 수정된 부분: FormData는 boardService에서 처리
-            const updatedBoard = await updateBoard(boardId, userData, mediaFiles, fallbackTitleImage, fallbackTitleContent);
+            const mediaFiles = imageBlocks.map(({ value }: any) => ({
+                uri: value,
+                name: value.split('/').pop() || `media_${Date.now()}`,
+                type: value.endsWith('.mp4') ? 'video/mp4' : 'image/jpeg',
+            }));
+
+            const fallbackTitleImage = titleImage || mediaFiles?.[0] || null;
+            const fallbackTitleContent = titleContent || textContents.find((c: any) => c.value.trim())?.value || '내용 없음';
+
+            const updatedBoard = await updateBoard(
+                boardId,
+                { ...userData, contents: textContents },
+                mediaFiles,
+                fallbackTitleImage,
+                fallbackTitleContent
+            );
 
             set((state) => ({
                 boardList: state.boardList.map((b) => (b.id === boardId ? updatedBoard : b)),
