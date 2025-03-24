@@ -13,6 +13,7 @@ export const createBoard = async (
     userData: { title: string; visibility: string; contents: any[] },
     mediaFiles: File[],
     titleImage?: File,
+    titleContent?: string,
 ) => {
     try {
         const token = await AsyncStorage.getItem('userToken');
@@ -22,8 +23,10 @@ export const createBoard = async (
         formData.append('userData', JSON.stringify(userData));
 
         // ✅ 첫 번째 text 값을 titleContent로 설정
-        const titleContent = userData.contents.find(c => c.type === 'text')?.value || '';
-        formData.append('titleContent', titleContent);
+        // titleContent는 보드 스토어에서 받은 값 사용
+        if (titleContent) {
+            formData.append('titleContent', titleContent);
+        }
 
         // ✅ 대표 이미지가 선택된 경우에만 첨부
         if (titleImage) {
@@ -108,16 +111,19 @@ export const updateBoard = async (
     userData: { title: string; visibility: string; contents: any[] },
     mediaFiles: File[],
     titleImage?: File,
+    titleContent?: string
 ) => {
     try {
         const token = await AsyncStorage.getItem('userToken');
-        if (!token) throw new Error('로그인이 필요합니다.');
+        if (!token) { throw new Error('로그인이 필요합니다.'); }
 
         const formData = new FormData();
         formData.append('userData', JSON.stringify(userData));
 
-        const titleContent = userData.contents.find(c => c.type === 'text')?.value || '';
-        formData.append('titleContent', titleContent);
+        // 수정된 부분: titleContent는 외부에서 받은 값 사용
+        if (titleContent) {
+            formData.append('titleContent', titleContent);
+        }
 
         if (titleImage) {
             formData.append('titleImage', titleImage);
