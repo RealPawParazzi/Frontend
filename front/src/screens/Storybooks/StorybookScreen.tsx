@@ -213,7 +213,8 @@ const StorybookScreen = ({ navigation }: any) => {
                                 <TextInput
                                     ref={(ref) => (inputRefs.current[index] = ref)}
                                     multiline
-                                    placeholder="내용 입력"
+                                    // 조건: 첫 번째 텍스트 블록일 경우에만 placeholder 보이기
+                                    placeholder={index === 0 ? '내용 입력' : undefined}
                                     style={styles.textArea}
                                     value={block.value}
                                     onChangeText={(text) => updateTextBlock(index, text)}
