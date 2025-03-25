@@ -4,6 +4,7 @@ import {
     SafeAreaView, ActivityIndicator, ActionSheetIOS, Platform,
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Video from 'react-native-video';  // Video 컴포넌트 추가
 import boardStore from '../../context/boardStore';
 import userStore from '../../context/userStore';  // ✅ 로그인한 유저 정보 가져오기
 import CommentList from '../../components/Comments/CommentList'; // ✅ 댓글 목록 컴포넌트
@@ -256,23 +257,32 @@ const StorybookDetailScreen = ({ route, navigation }: { route: StorybookDetailSc
                             <Text style={styles.title}>{selectedBoard.title}</Text>
 
                             {/* 게시글 컨텐츠 */}
-                            {selectedBoard.contents
-                                ?.filter((c) => c.type !== 'text' || c.value.trim() !== '')
-                                .filter((item, index, self) =>
-                                    item.type !== 'image' ||
-                                    self.findIndex(i => i.type === 'image' && i.value === item.value) === index
+                            {selectedBoard.contents?.map((content: { type: string; value: string }, index: number) =>
+                                content.type === 'text' ? (
+                                    <Text key={index} style={styles.postText}>{content.value}</Text>
+                                ) : (
+                                    <View key={index} style={styles.mediaContainer}>
+                                        {content.value.toLowerCase().endsWith('.mp4') || content.value.toLowerCase().includes('video') ? (
+                                            <Video
+                                                source={{
+                                                    uri: content.value.startsWith('file://') ? content.value : `file://${content.value}`,
+                                                }}
+                                                style={styles.postVideo}
+                                                resizeMode="cover"
+                                                controls={true}
+                                                paused={true}  // 자동 재생 방지
+                                            />
+                                        ) : (
+                                            <Image
+                                                source={{
+                                                    uri: content.value.startsWith('file://') ? content.value : `file://${content.value}`,
+                                                }}
+                                                style={styles.postImage}
+                                            />
+                                        )}
+                                    </View>
                                 )
-                                .map((content, index) =>
-                                    content.type === 'text' ? (
-                                        <Text key={index} style={styles.postText}>{content.value}</Text>
-                                    ) : (
-                                        <Image
-                                            key={index}
-                                            source={{ uri: content.value }}
-                                            style={styles.postImage}
-                                        />
-                                    )
-                                )}
+                            )}
 
 
                             {/* ✅ 좋아요 & 댓글 수 표시 */}
@@ -341,12 +351,22 @@ const styles = StyleSheet.create({
     contentContainer: { flex: 1, paddingHorizontal: 15 },
     title: { fontSize: 22, fontWeight: 'bold', marginBottom: 10 },
     postText: { fontSize: 16, lineHeight: 24, marginBottom: 10 },
+    mediaContainer: {
+        width: '100%',
+        marginBottom: 10,
+    },
+    postVideo: {
+        width: '100%',
+        height: 250,
+        borderRadius: 10,
+        backgroundColor: '#000',
+    },
     postImage: {
         width: '100%',
         height: 250,
         borderRadius: 10,
         marginBottom: 10,
-        backgroundColor: '#f0f0f0', //
+        backgroundColor: '#f0f0f0',
     },
 
     /* 🔺 하단 네비게이션 바 */

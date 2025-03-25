@@ -14,13 +14,14 @@ import {
     KeyboardAvoidingView,
     Platform,
 } from 'react-native';
-import { launchImageLibrary } from 'react-native-image-picker';
+import Video from 'react-native-video';
+import {launchImageLibrary} from 'react-native-image-picker';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import boardStore from '../../context/boardStore';
 
 // 🧩 콘텐츠 블록 타입 정의
 interface BlockItem {
-    type: 'text' | 'image';
+    type: 'text' | 'File';  // File 타입으로 통일
     value: string;
 }
 
@@ -48,26 +49,30 @@ const StorybookScreen = ({ navigation }: any) => {
         });
     };
 
-    // ✅ 갤러리에서 이미지 선택 후 블록 추가
-    const pickImage = async () => {
-        await launchImageLibrary({ mediaType: 'mixed' }, (response) => {
+    // ✅ 갤러리에서 이미지/ 동영상 선택 후 블록 추가
+    const pickMedia = async () => {
+        await launchImageLibrary({
+            mediaType: 'mixed',
+            quality: 1,
+            videoQuality: 'high',
+        }, (response) => {
             if (response.didCancel) {
-                console.log('사용자가 이미지 선택 취소');
+                console.log('사용자가 미디어 선택 취소');
             } else if (response.errorMessage) {
-                console.log('이미지 선택 오류:', response.errorMessage);
+                console.log('미디어 선택 오류:', response.errorMessage);
             } else if (response.assets && response.assets.length > 0) {
-                const imageUri = response.assets[0].uri;
-                if (imageUri) {
-                    setBlocks((prev) => {
+                const mediaUri = response.assets[0].uri;
+
+                if (mediaUri) {
+                    setBlocks((prev: BlockItem[]) => {
                         const nextBlocks = [...prev];
-
-                        // 조건 추가: 첫 블록이 비어있는 텍스트일 경우 제거
                         if (nextBlocks.length === 1 && nextBlocks[0].type === 'text' && nextBlocks[0].value.trim() === '') {
-                            nextBlocks.pop(); // remove the empty first text block
+                            nextBlocks.pop();
                         }
-
-                        // 이미지 + 텍스트 블록 삽입
-                        return [...nextBlocks, { type: 'image', value: imageUri }, { type: 'text', value: '' }];
+                        return [...nextBlocks,
+                            { type: 'File', value: mediaUri },
+                            { type: 'text', value: '' },
+                        ];
                     });
                     setTimeout(() => {
                         scrollRef.current?.scrollToEnd({ animated: true });
@@ -95,7 +100,7 @@ const StorybookScreen = ({ navigation }: any) => {
 
                         // 👇 삭제된 블록이 이미지이고, 앞뒤가 모두 텍스트일 경우 병합
                         if (
-                            removed.type === 'image' &&
+                            removed.type === 'File' &&
                             newBlocks[index - 1]?.type === 'text' &&
                             newBlocks[index]?.type === 'text'
                         ) {
@@ -130,8 +135,8 @@ const StorybookScreen = ({ navigation }: any) => {
         setLoading(true);
 
         try {
-            // 이미지 파일 추출
-            const imageBlocks = validBlocks.filter(b => b.type === 'image');
+            // 컨텐츠 파일 추출
+            const imageBlocks = validBlocks.filter(b => b.type === 'File');
 
             // ✅ imageUris 배열을 변환
             const mediaFiles = imageBlocks.map(({ value }) => ({
@@ -149,16 +154,24 @@ const StorybookScreen = ({ navigation }: any) => {
                 }
                 : undefined;
 
+            const boardPayload = {
+                title,
+                visibility: isPublic ? 'PUBLIC' : 'FOLLOWERS',
+                contents: validBlocks,
+            };
+
             await createNewBoard(
-                {
-                    title,
-                    visibility: isPublic ? 'PUBLIC' : 'FOLLOWERS',
-                    contents: validBlocks,
-                },
+                boardPayload,
                 mediaFiles as any[],
                 coverImage as any,
                 firstText
             );
+
+            console.log('🟡 게시글 등록 요청 데이터:');
+            console.log('📝 boardPayload:', boardPayload);
+            console.log('🖼️ mediaFiles:', mediaFiles);
+            console.log('🏞️ coverImage:', coverImage);
+            console.log('📌 titleContent:', firstText);
 
 
             Alert.alert('✅ 등록 완료', '게시글이 성공적으로 등록되었습니다.', [
@@ -227,12 +240,22 @@ const StorybookScreen = ({ navigation }: any) => {
                                 />
                             ) : (
                                 <View>
-                                    <Image source={{ uri: block.value }} style={styles.imagePreview} />
+                                    {block.value.toLowerCase().endsWith('.mp4') || block.value.toLowerCase().includes('video') ? (
+                                        <Video
+                                            source={{ uri: block.value }}
+                                            style={styles.mediaPreview}
+                                            resizeMode="cover"
+                                            controls={true}
+                                            paused={true}
+                                        />
+                                    ) : (
+                                        <Image source={{ uri: block.value }} style={styles.mediaPreview} />
+                                    )}
                                     <TouchableOpacity
                                         style={styles.representativeTag}
                                         onPress={() => setTitleImage(block.value)}>
                                         <Text style={{ color: 'white', fontWeight: 'bold' }}>
-                                            {titleImage === block.value ? '대표 이미지 ✓' : '대표 지정'}
+                                            {titleImage === block.value ? '대표 미디어 ✓' : '대표 지정'}
                                         </Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
@@ -252,7 +275,7 @@ const StorybookScreen = ({ navigation }: any) => {
                 <TouchableOpacity style={styles.bottomIcon} onPress={() => Alert.alert('😎 준비 중!', '이모티콘 기능은 곧 추가됩니다.')}>
                 <Text style={styles.iconText}>😊</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.bottomIcon} onPress={pickImage}>
+                <TouchableOpacity style={styles.bottomIcon} onPress={pickMedia}>
                     <Text style={styles.iconText}>🖼️</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.bottomIcon} onPress={() => Alert.alert('✨ 준비 중!', 'AI 기능은 곧 추가됩니다.')}>
@@ -282,7 +305,13 @@ const styles = StyleSheet.create({
     storyContainer: { paddingHorizontal: 20, paddingBottom: 80 },
     storyInput: { fontSize: 16, minHeight: 80, borderWidth: 1, borderColor: '#DDD', borderRadius: 10, padding: 10 },
     textArea: { fontSize: 16, color: '#333', minHeight: 40, paddingVertical: 8  },
-    imagePreview: { width: '100%', height: 200, borderRadius: 10, marginTop: 10 },
+    mediaPreview: {
+        width: '100%',
+        height: 200,
+        borderRadius: 10,
+        marginTop: 10,
+        backgroundColor: '#000',
+    },
     representativeTag: { position: 'absolute', top: 10, left: 10, backgroundColor: '#00C853', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 5 },
     deleteButton: { position: 'absolute', top: 10, right: 10, backgroundColor: 'rgba(0,0,0,0.3)', padding: 5, borderRadius: 20 },
     bottomBar: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', paddingVertical: 10, borderTopWidth: 1, borderColor: '#EEE', backgroundColor: '#FFF', position: 'absolute', bottom: 0, width: '100%', zIndex: 99 },

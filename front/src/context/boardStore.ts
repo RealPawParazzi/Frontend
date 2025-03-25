@@ -27,7 +27,7 @@ interface Board {
         nickname: string;
         profileImageUrl: string;
     };
-    contents?: { type: 'text' | 'image'; value: string }[];
+    contents?: { type: 'text' | 'image' | 'File'; value: string; thumbnail?: string }[];
 }
 
 
@@ -126,9 +126,9 @@ const boardStore = create<{
     createNewBoard: async (userData, _mediaFiles, titleImage, titleContent) => {
         try {
             const textContents = userData.contents.filter((c: any) => c.type === 'text' && c.value.trim() !== '');
-            const imageBlocks = userData.contents.filter((c: any) => c.type === 'image');
+            const mediaBlocks = userData.contents.filter((c: any) => c.type === 'File');
 
-            const mediaFiles = imageBlocks.map(({ value }: any) => ({
+            const mediaFiles = mediaBlocks.map(({ value }: any) => ({
                 uri: value,
                 name: value.split('/').pop() || `media_${Date.now()}`,
                 type: value.endsWith('.mp4') ? 'video/mp4' : 'image/jpeg',
@@ -156,9 +156,9 @@ const boardStore = create<{
     updateExistingBoard: async (boardId, userData, _mediaFiles, titleImage, titleContent) => {
         try {
             const textContents = userData.contents.filter((c: any) => c.type === 'text' && c.value.trim() !== '');
-            const imageBlocks = userData.contents.filter((c: any) => c.type === 'image');
+            const mediaBlocks = userData.contents.filter((c: any) => c.type === 'File');
 
-            const mediaFiles = imageBlocks.map(({ value }: any) => ({
+            const mediaFiles = mediaBlocks.map(({ value }: any) => ({
                 uri: value,
                 name: value.split('/').pop() || `media_${Date.now()}`,
                 type: value.endsWith('.mp4') ? 'video/mp4' : 'image/jpeg',
