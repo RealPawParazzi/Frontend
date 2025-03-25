@@ -264,20 +264,17 @@ const StorybookDetailScreen = ({ route, navigation }: { route: StorybookDetailSc
                                     <View key={index} style={styles.mediaContainer}>
                                         {content.value.toLowerCase().endsWith('.mp4') || content.value.toLowerCase().includes('video') ? (
                                             <Video
-                                                source={{
-                                                    uri: content.value.startsWith('file://') ? content.value : `file://${content.value}`,
-                                                }}
+                                                source={{ uri: content.value }}
                                                 style={styles.postVideo}
                                                 resizeMode="cover"
                                                 controls={true}
-                                                paused={true}  // 자동 재생 방지
+                                                paused={true}
                                             />
                                         ) : (
                                             <Image
-                                                source={{
-                                                    uri: content.value.startsWith('file://') ? content.value : `file://${content.value}`,
-                                                }}
+                                                source={{ uri: content.value }}
                                                 style={styles.postImage}
+                                                resizeMode="cover"
                                             />
                                         )}
                                     </View>
