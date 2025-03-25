@@ -41,8 +41,6 @@ const PostList = () => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.header}>📌 내 게시글 목록</Text>
-
             {hasNoPosts ? (
                 <View style={styles.emptyContainer}>
                     <Text style={styles.noPosts}>📭 게시글이 아직 없습니다!</Text>
@@ -68,8 +66,6 @@ const PostList = () => {
 /** ✅ 스타일 */
 const styles = StyleSheet.create({
     container: { padding: 10 },
-    header: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
-
     emptyContainer: {
         alignItems: 'center',
         padding: 20,

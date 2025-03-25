@@ -1349,7 +1349,7 @@ PODS:
     - Yoga
   - react-native-segmented-control (2.5.7):
     - React-Core
-  - react-native-video (6.10.2):
+  - react-native-video (6.11.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1362,7 +1362,7 @@ PODS:
     - React-featureflags
     - React-graphics
     - React-ImageManager
-    - react-native-video/Video (= 6.10.2)
+    - react-native-video/Video (= 6.11.0)
     - React-NativeModulesApple
     - React-RCTFabric
     - React-rendererdebug
@@ -1371,7 +1371,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-video/Fabric (6.10.2):
+  - react-native-video/Fabric (6.11.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1392,7 +1392,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-video/Video (6.10.2):
+  - react-native-video/Video (6.11.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -2324,7 +2324,7 @@ SPEC CHECKSUMS:
   react-native-maps: 9febd31278b35cd21e4fad2cf6fa708993be5dab
   react-native-safe-area-context: 0f14bce545abcdfbff79ce2e3c78c109f0be283e
   react-native-segmented-control: bf6e0032726727498e18dd437ae88afcdbc18e99
-  react-native-video: 80b56ba42f736957ee5865b60a34486c24931fa2
+  react-native-video: ebad7ae64c4d5302fd43ac76821d180adf4febd6
   react-native-webview: 44edb564b5bee25f3cdb4bfa8b45d6ae9d3dedec
   React-nativeconfig: cd0fbb40987a9658c24dab5812c14e5522a64929
   React-NativeModulesApple: 4a9c304aa4fb086af32e8758ba892386d895b4d3

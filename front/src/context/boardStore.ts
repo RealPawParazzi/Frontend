@@ -1,7 +1,13 @@
 import { create } from 'zustand';
-import { createBoard, getBoardList, getBoardDetail,
-    updateBoard, deleteBoard, getBoardsByMember,
-    toggleLike, fetchLikes,
+import {
+    createBoard,
+    getBoardList,
+    getBoardDetail,
+    updateBoard,
+    deleteBoard,
+    getBoardsByMember,
+    toggleLike,
+    fetchLikes,
 } from '../services/boardService';
 
 /** 📌 게시글 데이터 타입 정의 */
@@ -13,7 +19,7 @@ interface Board {
     titleContent: string;
     writeDatetime: string;
     favoriteCount: number;
-    liked: boolean; // ✅ 좋아요 상태 추가
+    liked: boolean;
     commentCount: number;
     viewCount: number;
     author: {
@@ -21,8 +27,9 @@ interface Board {
         nickname: string;
         profileImageUrl: string;
     };
-    contents?: { type: 'text' | 'image'; value: string }[]; // 상세 조회 시 포함됨
+    contents?: { type: 'text' | 'image' | 'File'; value: string; thumbnail?: string }[];
 }
+
 
 // API 응답 타입 정의
 interface LikeToggleResponse {
@@ -66,30 +73,42 @@ const defaultBoard: Board = {
 
 /** 📌 Zustand Store 정의 */
 const boardStore = create<{
-    boardList: any[];
-    selectedBoard: any | null;
+    boardList: Board[];
+    selectedBoard: Board | null;
     fetchBoardList: () => Promise<void>;
     fetchBoardDetail: (boardId: number) => Promise<void>;
-    createNewBoard: (data: any) => Promise<void>;
-    updateExistingBoard: (boardId: number, data: any) => Promise<void>;
+    createNewBoard: (
+        userData: any,
+        mediaFiles: File[],
+        titleImage?: File | null,
+        titleContent?: string
+    ) => Promise<void>;
+    updateExistingBoard: (
+        boardId: number,
+        userData: any,
+        mediaFiles: File[],
+        titleImage?: File | null,
+        titleContent?: string
+    ) => Promise<void>;
     deleteExistingBoard: (boardId: number) => Promise<void>;
     fetchUserBoards: (memberId: number) => Promise<void>;
     toggleBoardLike: (boardId: number) => Promise<LikeToggleResponse | undefined>;
     fetchBoardLikes: (boardId: number) => Promise<LikeResponse | undefined>;
 }>((set) => ({
-    /** ✅ 게시글 리스트 (초기값: 기본 더미 데이터) */
+    /** ✅ 게시글 목록 (기본값: dummy 데이터) */
     boardList: [defaultBoard],
 
-    /** ✅ 선택된 게시글 (초기값: 기본 더미 데이터) */
+
+    /** ✅ 선택된 게시글 */
     selectedBoard: defaultBoard,
 
-    /** 🔵 게시글 목록 가져오기 */
+    /** 🔵 전체 게시글 목록 가져오기 */
     fetchBoardList: async () => {
         try {
             const data = await getBoardList();
             set({ boardList: data });
         } catch (error) {
-            console.error('❌ fetchBoardList 오류:', error);
+            console.error('❌ 전체 게시글 불러오기 실패:', error);
         }
     },
 
@@ -103,28 +122,65 @@ const boardStore = create<{
         }
     },
 
-    /** 🔵 새로운 게시글 생성 */
-    createNewBoard: async (data) => {
+    /** 🟢 게시글 등록 요청 */
+    createNewBoard: async (userData, _mediaFiles, titleImage, titleContent) => {
         try {
-            const newBoard = await createBoard(data);
+            const textContents = userData.contents.filter((c: any) => c.type === 'text' && c.value.trim() !== '');
+            const mediaBlocks = userData.contents.filter((c: any) => c.type === 'File');
+
+            const mediaFiles = mediaBlocks.map(({ value }: any) => ({
+                uri: value,
+                name: value.split('/').pop() || `media_${Date.now()}`,
+                type: value.endsWith('.mp4') ? 'video/mp4' : 'image/jpeg',
+            }));
+
+            const fallbackTitleImage = titleImage || mediaFiles?.[0] || null;
+            const fallbackTitleContent = titleContent || textContents.find((c: any) => c.value.trim())?.value || '내용 없음';
+
+            const newBoard = await createBoard(
+                { ...userData, contents: textContents },
+                mediaFiles,
+                fallbackTitleImage,
+                fallbackTitleContent
+            );
+
             set((state) => ({
-                boardList: [newBoard, ...state.boardList.filter((board) => board.id !== 0)], // ✅ 더미 데이터 제거
+                boardList: [newBoard, ...state.boardList.filter((b) => b.id !== 0)],
             }));
         } catch (error) {
-            console.error('❌ createNewBoard 오류:', error);
+            console.error('❌ 게시글 등록 실패:', error);
         }
     },
 
-    /** 🔵 기존 게시글 수정 */
-    updateExistingBoard: async (boardId, data) => {
+    /** 🟡 게시글 수정 요청 */
+    updateExistingBoard: async (boardId, userData, _mediaFiles, titleImage, titleContent) => {
         try {
-            const updatedBoard = await updateBoard(boardId, data);
+            const textContents = userData.contents.filter((c: any) => c.type === 'text' && c.value.trim() !== '');
+            const mediaBlocks = userData.contents.filter((c: any) => c.type === 'File');
+
+            const mediaFiles = mediaBlocks.map(({ value }: any) => ({
+                uri: value,
+                name: value.split('/').pop() || `media_${Date.now()}`,
+                type: value.endsWith('.mp4') ? 'video/mp4' : 'image/jpeg',
+            }));
+
+            const fallbackTitleImage = titleImage || mediaFiles?.[0] || null;
+            const fallbackTitleContent = titleContent || textContents.find((c: any) => c.value.trim())?.value || '내용 없음';
+
+            const updatedBoard = await updateBoard(
+                boardId,
+                { ...userData, contents: textContents },
+                mediaFiles,
+                fallbackTitleImage,
+                fallbackTitleContent
+            );
+
             set((state) => ({
-                boardList: state.boardList.map((board) => (board.id === boardId ? updatedBoard : board)),
+                boardList: state.boardList.map((b) => (b.id === boardId ? updatedBoard : b)),
                 selectedBoard: updatedBoard,
             }));
         } catch (error) {
-            console.error('❌ updateExistingBoard 오류:', error);
+            console.error('❌ 게시글 수정 실패:', error);
         }
     },
 
