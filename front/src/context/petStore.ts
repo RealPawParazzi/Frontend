@@ -62,16 +62,21 @@ const petStore = create<PetStore>((set) => ({
     addPet: async (petData, petImage) => {
         try {
             const newPet = await registerPet({
-                name: petData.name,
-                type: petData.type,
-                birthDate: petData.birthDate,
+                    name: petData.name,
+                    type: petData.type,
+                    birthDate: petData.birthDate,
                 },
-                petImage || '', // petImg 값이 없을 경우 빈 문자열로 처리
+                petImage ? {
+                    uri: String(petImage.uri),
+                    name: String(petImage.name || 'petProfile.jpg'),
+                    type: String(petImage.type || 'image/jpeg'),
+                } : undefined
             );
 
             set((state) => ({ pets: [...state.pets, newPet] })); // ✅ 상태 업데이트
         } catch (error) {
             console.error('🐶❌ 반려동물 추가 실패:', error);
+            throw error; // 에러를 상위로 전파
         }
     },
 
@@ -82,11 +87,15 @@ const petStore = create<PetStore>((set) => ({
     editPet: async (petId, petData, petImage) => {
         try {
             const updatedPet = await updatePet(petId, {
-                name: petData.name,
-                type: petData.type, // type을 breed로 변환하지 않도록 수정
-                birthDate: petData.birthDate,
+                    name: petData.name,
+                    type: petData.type,
+                    birthDate: petData.birthDate,
                 },
-                petImage || '', // petImg 값이 없을 경우 빈 문자열로 처리
+                petImage ? {
+                    uri: String(petImage.uri),
+                    name: String(petImage.name || 'updated_pet.jpg'),
+                    type: String(petImage.type || 'image/jpeg'),
+                } : undefined
             );
 
             set((state) => ({
@@ -94,6 +103,7 @@ const petStore = create<PetStore>((set) => ({
             }));
         } catch (error) {
             console.error('🐶❌ 반려동물 정보 수정 실패:', error);
+            throw error; // 에러를 상위로 전파하여 UI에서 처리할 수 있도록 함
         }
     },
 
