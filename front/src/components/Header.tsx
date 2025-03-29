@@ -13,16 +13,39 @@ const Header = () => {
     // ✅ Zustand에서 현재 선택한 반려동물 정보 가져오기
     const { userData } = userStore(); // 🟢 선택된 반려동물 상태
 
+    // ✅ 기본 이미지
+    const DEFAULT_IMAGE = require('../assets/images/pets-1.jpg');
+
+    // ✅ 안전한 이미지 소스 가져오기
+    const getImageSource = () => {
+        if (!userData?.petList?.length) { return DEFAULT_IMAGE; }
+
+        const petImage = userData.petList[0]?.image;
+        if (!petImage) { return DEFAULT_IMAGE; }
+
+        if (typeof petImage === 'string') {
+            return {
+                uri: petImage,
+                width: 40,
+                height: 40,
+                cache: 'force-cache',
+            };
+        }
+
+        return DEFAULT_IMAGE;
+    };
+
     return (
         <View style={styles.container}>
             {/* 🖼️ 반려동물 프로필 (왼쪽) */}
             <TouchableOpacity style={styles.petContainer}>
                 <Image
-                    // 우선 간이로 리스트에서 첫번째 펫으로 셀렉티드 함
-                    source={userData.petList[0]?.image ? { uri: userData.petList[0]?.image } : require('../assets/images/pets-1.jpg')}
+                    source={getImageSource()}
                     style={styles.petImage}
                 />
-                <Text style={styles.petName}>{userData.petList[0]?.name || '반려동물 선택'}</Text>
+                <Text style={styles.petName}>
+                    {userData?.petList?.[0]?.name || '반려동물 선택'}
+                </Text>
                 <Icon name="keyboard-arrow-down" size={20} color="black" />
             </TouchableOpacity>
 

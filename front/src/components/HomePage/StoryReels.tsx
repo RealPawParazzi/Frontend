@@ -4,8 +4,8 @@ import Video from 'react-native-video';
 
 interface Story {
     id: string;
-    image: any;
-    video?: any;
+    image: string;
+    video?: string;
 }
 
 /**
@@ -31,7 +31,10 @@ const StoryReels = ({ stories }: { stories: Story[] }) => {
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
                     <TouchableOpacity onPress={() => openStory(item)} style={styles.storyContainer}>
-                        <Image source={item.image} style={styles.storyImage} />
+                        <Image
+                            source={item.image ? { uri: String(item.image) } : require('../../assets/images/cat-1.jpg')}
+                            style={styles.storyImage}
+                        />
                     </TouchableOpacity>
                 )}
                 showsHorizontalScrollIndicator={false}
@@ -42,13 +45,16 @@ const StoryReels = ({ stories }: { stories: Story[] }) => {
                 <TouchableOpacity style={styles.modalContainer} onPress={() => setModalVisible(false)}>
                     {selectedStory?.video ? (
                         <Video
-                            source={selectedStory.video}
+                            source={selectedStory.video ? { uri: String(selectedStory.video) } : undefined}
                             style={styles.fullScreenMedia}
                             controls
                             resizeMode="contain"
                         />
                     ) : (
-                        <Image source={selectedStory?.image} style={styles.fullScreenMedia} />
+                        <Image
+                            source={selectedStory?.image ? { uri: String(selectedStory.image) } : require('../../assets/images/cat-4.jpg')}
+                            style={styles.fullScreenMedia}
+                        />
                     )}
                 </TouchableOpacity>
             </Modal>

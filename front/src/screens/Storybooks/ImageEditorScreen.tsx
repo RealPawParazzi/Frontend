@@ -31,7 +31,12 @@ const ImageEditorScreen = () => {
                 <Text style={styles.buttonText}>이미지 선택하기</Text>
             </TouchableOpacity>
 
-            {imageUri && <Image source={{ uri: imageUri }} style={styles.image} />}
+            {imageUri && (
+                <Image
+                    source={imageUri ? { uri: String(imageUri) } : require('../../assets/images/user-2.png')}
+                    style={styles.image}
+                />
+            )}
         </View>
     );
 };

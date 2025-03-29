@@ -5,8 +5,13 @@ import Video from 'react-native-video';
 
 
 interface MemoryVideoProps {
-    video: { id: string; title: string; video: any };
+    video: {
+        id: string;
+        title: string;
+        video: string;
+    };
 }
+
 
 
 /**
@@ -31,7 +36,7 @@ const MemoryVideo = ({ video }: MemoryVideoProps) => {
                 </>
             ) : (
                 <Video
-                    source={video.video}
+                    source={video.video ? { uri: String(video.video) } : undefined}
                     style={styles.video}
                     controls
                     resizeMode="cover"
