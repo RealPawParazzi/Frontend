@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import {View, Text, TouchableOpacity, Modal, StyleSheet, SafeAreaView} from 'react-native';
+import {View, Text, TouchableOpacity, Modal, StyleSheet, SafeAreaView, Platform} from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import CalendarScreen from '../screens/CalendarScreen';
@@ -31,7 +31,10 @@ const BottomTabNavigator = ({ navigation }: any) => {
                     headerShown: false, // ✅ 상단 네비게이션 바 숨기기
                     tabBarActiveTintColor: '#000',
                     tabBarInactiveTintColor: 'gray',
-                    tabBarStyle: { height: 40, paddingBottom: 15 }, // ✅ 탭 바 높이를 조정해서 통일
+                    tabBarStyle: {
+                        height: Platform.OS === 'ios' ? 40 : 60,
+                        paddingBottom: Platform.OS === 'ios' ? 15 : 15,
+                    }, // ✅ 탭 바 높이를 조정해서 통일
                 })}
             >
                 <Tab.Screen name="Home" component={HomeScreen} options={{ title: '홈' }} />
@@ -127,7 +130,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#ffcf33', // ✅ 아이콘 배경 색상 (조금 더 튀도록 변경)
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: -20, // ✅ 버튼이 너무 위로 올라가는 문제 해결
+        marginBottom: Platform.OS === 'ios' ? -30 : -10, // ✅ 버튼이 너무 위로 올라가는 문제 해결
+
     },
     modalContainer: {
         flex: 1,
