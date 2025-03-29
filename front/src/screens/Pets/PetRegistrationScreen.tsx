@@ -75,11 +75,14 @@ const PetRegistrationScreen = ({ navigation }: { navigation: any }) => {
             };
 
             const petImageData = petImage
-                ? { uri: petImage, name: 'petProfile.jpg', type: 'image/jpeg' } // $$$$$$$$ 이미지 타입 명확히 정의
+                ? {
+                    uri: String(petImage),
+                    name: 'petProfile.jpg',
+                    type: 'image/jpeg',
+                }
                 : undefined;
 
-            console.log('🐶 API 요청 데이터:', petData, petImageData); // 🚀 전송 데이터 확인
-
+            console.log('🐶 API 요청 데이터:', petData, petImageData);
             await registerPet(petData, petImageData); // ✅ formData로 전달 처리됨
 
             // ✅ 상태 업데이트 (펫 리스트 최신화)
@@ -102,7 +105,10 @@ const PetRegistrationScreen = ({ navigation }: { navigation: any }) => {
 
                 {/* 🖼️ 프로필 이미지 선택 (크기 증가) */}
                 <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
-                    <Image source={petImage ? { uri: petImage } : require('../../assets/images/pets-1.jpg')} style={styles.petImage} />
+                    <Image
+                        source={petImage ? { uri: String(petImage) } : require('../../assets/images/pets-1.jpg')}
+                        style={styles.petImage}
+                    />
                     <View style={styles.addImageIcon}>
                         <MaterialIcons name="add" size={24} color="white" />
                     </View>
