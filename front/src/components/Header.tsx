@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import userStore from '../context/userStore'; // ✅ Zustand 전역 상태 가져오기
 
@@ -46,12 +46,20 @@ const Header = () => {
                 <Text style={styles.petName}>
                     {userData?.petList?.[0]?.name || '반려동물 선택'}
                 </Text>
-                <Icon name="keyboard-arrow-down" size={20} color="black" />
+                <Icon
+                    name={Platform.OS === 'ios' ? 'keyboard-arrow-down' : 'arrow-drop-down'}
+                    size={20}
+                    color="black"
+                />
             </TouchableOpacity>
 
             {/* 🔔 알림 아이콘 (오른쪽) */}
             <TouchableOpacity style={styles.notificationIcon}>
-                <Icon name="notifications" size={28} color="black" />
+                <Icon
+                    name={Platform.OS === 'ios' ? 'notifications' : 'notifications-none'}
+                    size={28}
+                    color="black"
+                />
             </TouchableOpacity>
         </View>
     );

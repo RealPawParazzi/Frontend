@@ -103,9 +103,17 @@ android {
             signingConfig signingConfigs.debug
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
-        }
-    }
-}
+       }
+           }
+
+           // 아이콘 폰트 설정 추가
+           project.ext.vectoricons = [
+               iconFontNames: [ 'MaterialIcons.ttf' ]
+           ]
+
+           apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
+       }
+
 
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin

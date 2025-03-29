@@ -273,7 +273,11 @@ const StorybookScreen = ({ navigation }: any) => {
                                     <TouchableOpacity
                                         style={styles.deleteButton}
                                         onPress={() => removeBlock(index)}>
-                                        <MaterialIcons name="close" size={20} color="white" />
+                                        <MaterialIcons
+                                            name={Platform.OS === 'ios' ? 'close' : 'close'}
+                                            size={20}
+                                            color="white"
+                                        />
                                     </TouchableOpacity>
                                 </View>
                             )}
