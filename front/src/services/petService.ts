@@ -17,17 +17,17 @@ export const registerPet = async (
     petData: { name: string; type: string; birthDate: string },
     petImage?: { uri: string; name: string; type: string }
 ) => {
-    const token = await AsyncStorage.getItem('userToken'); // 🔑 토큰 가져오기
+    const token = await AsyncStorage.getItem('accessToken'); // 🔑 토큰 가져오기
     if (!token) { throw new Error('로그인이 필요합니다.'); }
 
     const formData = new FormData();
     formData.append('petData', JSON.stringify(petData)); // ✅ data라는 필드로 JSON 데이터를 전송 (서버가 요구한 이름 사용)
 
-    if (petImage) {
+    if (petImage && petImage.uri) {
         formData.append('petImage', {
-            uri: petImage.uri,
-            name: petImage.name,
-            type: petImage.type,
+            uri: String(petImage.uri),
+            name: String(petImage.name || 'petProfile.jpg'),
+            type: String(petImage.type || 'image/jpeg'),
         } as any); // 🚩🚩🚩 as any 캐스팅 필수 (React Native 호환성)
     }
 
@@ -55,7 +55,7 @@ export const registerPet = async (
  * @throws 반려동물 목록 조회 실패 시 오류 발생
  */
 export const getPetList = async () => { // ✅ userId 제거
-    const token = await AsyncStorage.getItem('userToken');
+    const token = await AsyncStorage.getItem('accessToken');
     if (!token) { throw new Error('로그인이 필요합니다.'); }
 
     const response = await fetch(`${API_BASE_URL}/all`, {
@@ -103,7 +103,7 @@ export const updatePet = async (
     petData: Partial<{ name: string; type: string; birthDate: string }>,
     petImage?: { uri: string; name: string; type: string }
 ) => {
-    const token = await AsyncStorage.getItem('userToken');
+    const token = await AsyncStorage.getItem('accessToken');
     if (!token) { throw new Error('로그인이 필요합니다.'); }
 
     const formData = new FormData();
@@ -112,11 +112,11 @@ export const updatePet = async (
         formData.append('petData', JSON.stringify(petData)); // 부분 업데이트 JSON
     }
 
-    if (petImage) {
+    if (petImage && petImage.uri) {
         formData.append('petImage', {
-            uri: petImage.uri,
-            name: petImage.name,
-            type: petImage.type,
+            uri: String(petImage.uri),
+            name: String(petImage.name || 'updated_pet.jpg'),
+            type: String(petImage.type || 'image/jpeg'),
         } as any); // 🚩🚩🚩 타입 캐스팅 필수
     }
 
@@ -142,7 +142,7 @@ export const updatePet = async (
  * @throws 반려동물 삭제 실패 시 오류 발생
  */
 export const deletePet = async (petId: number) => {
-    const token = await AsyncStorage.getItem('userToken');
+    const token = await AsyncStorage.getItem('accessToken');
     if (!token) { throw new Error('로그인이 필요합니다.'); }
 
     const response = await fetch(`${API_BASE_URL}/${petId}`, {

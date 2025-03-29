@@ -1,6 +1,8 @@
 // userService.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
+import { reissueAccessToken } from './authService';
+
 
 // 🔹 백엔드 API 기본 URL
 const API_BASE_URL = Platform.OS === 'android'
@@ -16,6 +18,34 @@ export interface UserData {
     petList: { id: string; name: string; imageUrl: string }[];
     recentPosts: { id: string; title: string; content: string; imageUrl: string }[];
 }
+
+/**
+ * ✅ 인증 헤더 자동 생성 함수 (Access Token 만료 시 자동 재발급)
+ * - accessToken 가져오기
+ * - /me 테스트 요청 → 401이면 refresh로 갱신 시도
+ * - 최종 Authorization 헤더 반환
+ */
+const getAuthorizedHeaders = async (): Promise<HeadersInit> => {
+    let token = await AsyncStorage.getItem('accessToken');
+    let headers = { Authorization: `Bearer ${token}` };
+
+    // 🟡 accessToken 테스트 → 만료되었으면 refresh 시도
+    const test = await fetch(`${API_BASE_URL}/me`, { headers });
+    if (test.status === 401) {
+        // 🔁 Refresh 토큰으로 재발급 시도
+        const newToken = await reissueAccessToken();
+        if (newToken) {
+            token = newToken;
+            headers = { Authorization: `Bearer ${token}` };
+        } else {
+            // ❌ 재발급 실패 시 에러 발생
+            throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+        }
+    }
+
+    return headers;
+};
+
 
 /**
  * ✅ 전체 회원 목록 조회 API
@@ -46,17 +76,14 @@ export const fetchAllUsers = async (): Promise<UserData[]> => {
 
 /**
  * ✅ 현재 로그인된 사용자 정보 가져오기
- * @returns 사용자 정보 객체 반환
- * @throws 토큰이 없거나 유효하지 않을 경우 오류 발생
+ * - accessToken 헤더 포함
+ * - 토큰 만료 시 자동 갱신 포함
  */
 export const fetchUserData = async (): Promise<UserData> => {
     try {
-        const token = await AsyncStorage.getItem('userToken');
-        if (!token) throw new Error('토큰이 없습니다.');
+        const headers = await getAuthorizedHeaders();
 
-        const response = await fetch(`${API_BASE_URL}/me`, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await fetch(`${API_BASE_URL}/me`, { headers });
 
         if (!response.ok) {
             console.error('❌ 사용자 정보를 불러오지 못했습니다.', response.status);
@@ -74,10 +101,11 @@ export const fetchUserData = async (): Promise<UserData> => {
 };
 
 /**
- * ✅ 사용자 정보 수정 API (multipart/form-data)
- * @param updateData 변경할 사용자 정보 객체 (닉네임, 이름)
- * @param profileImage 프로필 이미지 파일 (선택 사항)
- * @returns 수정된 사용자 정보
+ * ✅ 사용자 정보 수정 API
+ * @param updateData 닉네임, 이름 등 변경할 필드
+ * @param profileImage 새 프로필 이미지 (선택)
+ * - multipart/form-data 형식 전송
+ * - accessToken 포함 + 만료 시 갱신 처리
  */
 export const updateUser = async (
     updateData: {
@@ -87,10 +115,7 @@ export const updateUser = async (
     profileImage?: { uri: string; name: string; type: string } // 🔵 변경된 타입
 ) => {
     try {
-        console.log('📤 사용자 정보 수정 요청:', updateData);
-
-        const token = await AsyncStorage.getItem('userToken');
-        if (!token) throw new Error('토큰이 없습니다.');
+        const headers = await getAuthorizedHeaders();
 
         const formData = new FormData();
 
@@ -108,10 +133,8 @@ export const updateUser = async (
 
         const response = await fetch(`${API_BASE_URL}/me`, {
             method: 'PATCH',
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-            body: formData, // ✅ multipart/form-data 요청
+            headers,
+            body: formData,
         });
 
         if (!response.ok) {

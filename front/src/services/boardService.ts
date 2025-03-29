@@ -16,7 +16,7 @@ export const createBoard = async (
     titleContent?: string,
 ) => {
     try {
-        const token = await AsyncStorage.getItem('userToken');
+        const token = await AsyncStorage.getItem('accessToken');
         if (!token) { throw new Error('로그인이 필요합니다.'); }
 
         const formData = new FormData();
@@ -114,7 +114,7 @@ export const updateBoard = async (
     titleContent?: string
 ) => {
     try {
-        const token = await AsyncStorage.getItem('userToken');
+        const token = await AsyncStorage.getItem('accessToken');
         if (!token) { throw new Error('로그인이 필요합니다.'); }
 
         const formData = new FormData();
@@ -160,7 +160,7 @@ export const updateBoard = async (
  */
 export const deleteBoard = async (boardId: number) => {
     try {
-        const token = await AsyncStorage.getItem('userToken');
+        const token = await AsyncStorage.getItem('accessToken');
         if (!token) { throw new Error('로그인이 필요합니다.'); }
 
         const response = await fetch(`${API_BASE_URL}/${boardId}`, {
@@ -182,7 +182,7 @@ export const deleteBoard = async (boardId: number) => {
  */
 export const toggleLike = async (boardId: number) => {
     try {
-        const token = await AsyncStorage.getItem('userToken');
+        const token = await AsyncStorage.getItem('accessToken');
         if (!token) { throw new Error('로그인이 필요합니다.'); }
 
         const response = await fetch(`${API_BASE_URL}/${boardId}/like`, {

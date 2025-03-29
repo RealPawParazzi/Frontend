@@ -9,7 +9,7 @@ const API_BASE_URL = Platform.OS === 'android'
 
 /** ✅ 인증 헤더 가져오기 */
 const getAuthHeaders = async () => {
-    const token = await AsyncStorage.getItem('userToken');
+    const token = await AsyncStorage.getItem('accessToken');
     if (!token) { throw new Error('로그인이 필요합니다.'); }
     return { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 };

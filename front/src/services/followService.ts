@@ -16,7 +16,7 @@ const API_BASE_URL = Platform.OS === 'android'
  */
 const getAuthHeaders = async () => {
     try {
-        const token = await AsyncStorage.getItem('userToken');
+        const token = await AsyncStorage.getItem('accessToken');
         if (!token) {
             throw new Error('❌ [인증 오류] 로그인 정보가 없습니다.');
         }
