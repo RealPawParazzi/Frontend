@@ -37,12 +37,15 @@ export const registerUser = async (
             } as any);
         }
 
+        const accessToken = await AsyncStorage.getItem('accessToken');
+
+
         const response = await fetch(`${API_BASE_URL}/signup`, {
             method: 'POST',
             headers: {
-                Authorization: `Bearer ${await AsyncStorage.getItem('userToken')}`, // 🔵 토큰 추가
+                Authorization: `Bearer ${accessToken}`,
             },
-            body: formData, // ✅ multipart/form-data 요청
+            body: formData,
         });
 
         if (!response.ok) {
@@ -63,7 +66,7 @@ export const deleteUser = async () => {
     try {
         console.log('📤 회원 탈퇴 요청');
 
-        const token = await AsyncStorage.getItem('userToken');
+        const token = await AsyncStorage.getItem('accessToken');
         if (!token) { throw new Error('토큰이 없습니다.'); }
 
         const response = await fetch(`${API_BASE_URL}/delete`, {
@@ -76,7 +79,7 @@ export const deleteUser = async () => {
             throw new Error(errorData.message || '회원 탈퇴 실패');
         }
 
-        await AsyncStorage.removeItem('userToken'); // ✅ 탈퇴 성공 시 토큰 삭제
+        await AsyncStorage.multiRemove(['accessToken', 'refreshToken']);
         return '회원 탈퇴 완료';
     } catch (error: any) {
         throw new Error(error.message);
@@ -104,9 +107,12 @@ export const loginUser = async (data: { email: string; password: string }) => {
             throw new Error(errorData.message || '로그인 실패');
         }
 
-        const { token } = await response.json();
-        await AsyncStorage.setItem('userToken', token); // ✅ 로그인 성공 시 토큰 저장
-        return token;
+        const { accessToken, refreshToken } = await response.json();
+        await AsyncStorage.multiSet([
+            ['accessToken', accessToken],
+            ['refreshToken', refreshToken],
+        ]); // ✅ 로그인 성공 시 토큰 저장
+        return accessToken;
     } catch (error: any) {
         throw new Error(error.message);
     }
@@ -118,7 +124,42 @@ export const loginUser = async (data: { email: string; password: string }) => {
  */
 export const logoutUser = async () => {
     console.log('📤 로그아웃 요청');
-    await AsyncStorage.removeItem('userToken'); // 🔵 토큰 삭제
+
+    const accessToken = await AsyncStorage.getItem('accessToken');
+    const refreshToken = await AsyncStorage.getItem('refreshToken');
+
+
+    await fetch(`${API_BASE_URL}/logout`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ accessToken, refreshToken }),
+    });
+
+    await AsyncStorage.multiRemove(['accessToken', 'refreshToken']);
+};
+
+export const reissueAccessToken = async (): Promise<string | null> => {
+    try {
+        const refreshToken = await AsyncStorage.getItem('refreshToken');
+        const response = await fetch(`${API_BASE_URL}/reissue`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refreshToken }),
+        });
+
+        if (!response.ok) { return null; }
+
+        const { accessToken, refreshToken: newRefreshToken } = await response.json();
+        await AsyncStorage.multiSet([
+            ['accessToken', accessToken],
+            ['refreshToken', newRefreshToken],
+        ]);
+        return accessToken;
+    } catch {
+        return null;
+    }
 };
 
 /**
@@ -127,17 +168,17 @@ export const logoutUser = async () => {
  */
 export const validateToken = async (): Promise<boolean> => {
     try {
-        const token = await AsyncStorage.getItem('userToken');
-        if (!token) {return false;}
+        const token = await AsyncStorage.getItem('accessToken');
+        if (!token) { return false; }
 
         // 🔹 백엔드에 `/auth/validate` 없으므로 대신 유저 데이터를 가져와 확인
         const userData = await fetchUserData();
 
-
         // 🔹 유저 데이터가 존재하고, 아이디가 0이 아닐 경우 유효한 로그인 상태로 판단
         return !!(userData?.id && userData.id !== '0');
     } catch {
-        return false;
+        const newToken = await reissueAccessToken();
+        return !!newToken;
     }
 };
 

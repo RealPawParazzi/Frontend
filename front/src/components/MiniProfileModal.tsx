@@ -7,6 +7,10 @@ import userFollowStore from '../context/userFollowStore';        // 현재 로�
 import profileFollowStore from '../context/profileFollowStore';  // 프로필 유저(B)의 팔로워/팔로잉 관리
 import boardStore from '../context/boardStore';
 import userStore from '../context/userStore'; // ✅ 현재 로그인된 사용자 정보 가져오기
+import { getImageSource } from '../utils/imageUtils';
+
+// ✅ 기본 프로필 이미지
+const DEFAULT_PROFILE_IMAGE = require('../assets/images/profile-1.png');
 
 
 interface MiniProfileModalProps {
@@ -129,9 +133,8 @@ const MiniProfileModal = ({ visible, onClose, user }: MiniProfileModalProps) => 
 
                     {/* 프로필 이미지 */}
                     <Image
-                        source={{ uri: user.profileImage || 'https://via.placeholder.com/80' }}
+                        source={getImageSource(user.profileImage, DEFAULT_PROFILE_IMAGE)}
                         style={styles.profileImage}
-                        defaultSource={require('../assets/images/profile-1.png')}
                     />
 
                     {/* 닉네임 */}

@@ -259,14 +259,17 @@ const EditStorybookScreen = ({ route, navigation }: { route: EditStorybookScreen
                                 <View>
                                     {block.value.toLowerCase().endsWith('.mp4') || block.value.toLowerCase().includes('video') ? (
                                         <Video
-                                            source={{ uri: block.value }}
+                                            source={block.value ? { uri: String(block.value) } : undefined}
                                             style={styles.mediaPreview}
                                             resizeMode="cover"
                                             controls={true}
                                             paused={true}
                                         />
                                     ) : (
-                                        <Image source={{ uri: block.value }} style={styles.mediaPreview} />
+                                        <Image
+                                            source={block.value ? { uri: String(block.value) } : require('../../assets/images/user-2.png')}
+                                            style={styles.mediaPreview}
+                                        />
                                     )}
                                     <TouchableOpacity
                                         style={styles.representativeTag}

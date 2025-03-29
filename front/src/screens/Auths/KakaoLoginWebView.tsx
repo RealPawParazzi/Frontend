@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ActivityIndicator, StyleSheet, SafeAreaView } from 'react-native';
+import {ActivityIndicator, StyleSheet, SafeAreaView, Platform} from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useNavigation } from '@react-navigation/native'; // ✅ useNavigation 사용
 import { useKakaoStore } from '../../context/kakaoStore';
@@ -48,7 +48,11 @@ const KakaoLoginWebView: React.FC = () => {
     return (
         <SafeAreaView style={styles.container}>
             <WebView
-                source={{ uri: 'http://localhost:8080/api/auth/login/kakao' }}
+                source={{
+                    uri: Platform.OS === 'android'
+                        ? 'http://10.0.2.2:8080/api/auth/login/kakao'
+                        : 'http://localhost:8080/api/auth/login/kakao',
+                }}
                 onNavigationStateChange={handleShouldStartLoadWithRequest}
                 startInLoadingState
                 renderLoading={() => (

@@ -103,13 +103,30 @@ android {
             signingConfig signingConfigs.debug
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
-        }
-    }
-}
+       }
+           }
+
+           // 아이콘 폰트 설정 추가
+           project.ext.vectoricons = [
+               iconFontNames: [ 'MaterialIcons.ttf' ]
+           ]
+
+           apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
+       }
+
 
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
+
+    // 지도 관련
+    implementation "com.google.android.gms:play-services-maps:18.2.0"
+    implementation "com.google.android.gms:play-services-location:21.2.0"
+
+    // 이미지 처리
+    implementation "com.github.bumptech.glide:glide:4.16.0"
+    annotationProcessor "com.github.bumptech.glide:compiler:4.16.0"
+
 
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")

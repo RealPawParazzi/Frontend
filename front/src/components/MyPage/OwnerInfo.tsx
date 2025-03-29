@@ -7,6 +7,8 @@ import { useNavigation } from '@react-navigation/native';
 import PostList from './PostList';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import authStore from '../../context/authStore'; // ✅ 아이콘 추가
+import { getImageSource } from '../../utils/imageUtils';
+
 
 // ✅ 기본 프로필 이미지
 const DEFAULT_PROFILE_IMAGE = require('../../assets/images/user-2.png');
@@ -36,7 +38,7 @@ const OwnerInfo = () => {
     // ✅ 게시글 개수 및 최신 게시물 시간 업데이트
     useEffect(() => {
         const userPosts = boardList
-            .filter((post) => post.author.id === userData.id)
+            .filter((post) => post.author.id === Number(userData.id))
             .sort((a, b) => new Date(b.writeDatetime).getTime() - new Date(a.writeDatetime).getTime());
 
         setLatestPostTime(userPosts.length > 0 ? getRelativeTime(userPosts[0].writeDatetime) : '없음');
@@ -57,13 +59,14 @@ const OwnerInfo = () => {
 
     useEffect(() => {
         setPostCount(boardList.length || 0);
-        // TODO: 유저가 업로드한 메모리 이미지 가져오기 (더미 데이터)
-        setMemories([
+        // 메모리 이미지 URL이 문자열인지 확인
+        const memoryImages = [
             'https://via.placeholder.com/80',
             'https://via.placeholder.com/80',
             'https://via.placeholder.com/80',
             'https://via.placeholder.com/80',
-        ]);
+        ].filter(url => typeof url === 'string');
+        setMemories(memoryImages);
     }, [boardList]);
 
     // ✅ 상대적인 시간 계산 함수
@@ -99,7 +102,7 @@ const OwnerInfo = () => {
                 {/* ✅ 프로필 이미지 + 사용자 정보 */}
                 <View style={styles.profileInfo}>
                     <Image
-                        source={userData.profileImage ? { uri: userData.profileImage } : DEFAULT_PROFILE_IMAGE}
+                        source={getImageSource(userData.profileImage, DEFAULT_PROFILE_IMAGE)}
                         style={styles.profileImage}
                     />
                     <View style={styles.userInfo}>
@@ -167,7 +170,10 @@ const OwnerInfo = () => {
                 keyExtractor={(item, index) => index.toString()}
                 renderItem={({ item }) => (
                     <TouchableOpacity style={styles.memoryCircle}>
-                        <Image source={{ uri: item }} style={styles.memoryImage} />
+                        <Image
+                            source={getImageSource(item, DEFAULT_PROFILE_IMAGE)}
+                            style={styles.memoryImage}
+                        />
                     </TouchableOpacity>
                 )}
                 showsHorizontalScrollIndicator={false}
@@ -204,7 +210,10 @@ const OwnerInfo = () => {
                     numColumns={3} // 🔹 사진을 3열로 출력
                     renderItem={({ item }) => (
                         <View style={styles.photoContainer}>
-                            <Image source={{ uri: item }} style={styles.photo} />
+                            <Image
+                                source={getImageSource(item, DEFAULT_PROFILE_IMAGE)}
+                                style={styles.photo}
+                            />
                         </View>
                     )}
                 />

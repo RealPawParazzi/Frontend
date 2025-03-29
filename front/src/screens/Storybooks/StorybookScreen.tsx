@@ -139,25 +139,34 @@ const StorybookScreen = ({ navigation }: any) => {
             const imageBlocks = validBlocks.filter(b => b.type === 'File');
 
             // ✅ imageUris 배열을 변환
-            const mediaFiles = imageBlocks.map(({ value }) => ({
-                uri: value,
-                name: value.split('/').pop() || `media_${Date.now()}`,
-                type: value.endsWith('.mp4') ? 'video/mp4' : 'image/jpeg',
-            }));
+            const mediaFiles = imageBlocks.map(({ value }) => {
+                const fileName = value.split('/').pop() || `media_${Date.now()}`;
+                const isVideo = value.toLowerCase().endsWith('.mp4') || value.toLowerCase().includes('video');
+                return {
+                    uri: String(value),
+                    name: fileName,
+                    type: isVideo ? 'video/mp4' : 'image/jpeg',
+                };
+            });
 
             // ✅ 대표 이미지도 타입 맞춰 처리
             const coverImage = titleImage
                 ? {
-                    uri: titleImage,
+                    uri: String(titleImage),
                     name: titleImage.split('/').pop() || `cover_${Date.now()}`,
-                    type: titleImage.endsWith('.mp4') ? 'video/mp4' : 'image/jpeg',
+                    type: titleImage.toLowerCase().endsWith('.mp4') || titleImage.toLowerCase().includes('video')
+                        ? 'video/mp4'
+                        : 'image/jpeg',
                 }
                 : undefined;
 
             const boardPayload = {
-                title,
+                title: String(title),
                 visibility: isPublic ? 'PUBLIC' : 'FOLLOWERS',
-                contents: validBlocks,
+                contents: validBlocks.map(block => ({
+                    ...block,
+                    value: String(block.value),
+                })),
             };
 
             await createNewBoard(
@@ -242,14 +251,17 @@ const StorybookScreen = ({ navigation }: any) => {
                                 <View>
                                     {block.value.toLowerCase().endsWith('.mp4') || block.value.toLowerCase().includes('video') ? (
                                         <Video
-                                            source={{ uri: block.value }}
+                                            source={block.value ? { uri: String(block.value) } : undefined}
                                             style={styles.mediaPreview}
                                             resizeMode="cover"
                                             controls={true}
                                             paused={true}
                                         />
                                     ) : (
-                                        <Image source={{ uri: block.value }} style={styles.mediaPreview} />
+                                        <Image
+                                            source={block.value ? { uri: String(block.value) } : require('../../assets/images/user-2.png')}
+                                            style={styles.mediaPreview}
+                                        />
                                     )}
                                     <TouchableOpacity
                                         style={styles.representativeTag}
@@ -261,7 +273,11 @@ const StorybookScreen = ({ navigation }: any) => {
                                     <TouchableOpacity
                                         style={styles.deleteButton}
                                         onPress={() => removeBlock(index)}>
-                                        <MaterialIcons name="close" size={20} color="white" />
+                                        <MaterialIcons
+                                            name={Platform.OS === 'ios' ? 'close' : 'close'}
+                                            size={20}
+                                            color="white"
+                                        />
                                     </TouchableOpacity>
                                 </View>
                             )}

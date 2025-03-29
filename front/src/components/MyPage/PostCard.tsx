@@ -4,6 +4,9 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { getImageSource } from '../../utils/imageUtils';
+
+const DEFAULT_PROFILE_IMAGE = require('../../assets/images/user-2.png');
 
 /** ✅ 게시글 데이터 타입 */
 interface Post {
@@ -32,7 +35,10 @@ const PostCard: React.FC<{ post: Post }> = ({ post }) => {
             {/* 🔹 상단 프로필 정보 + 작성 시간 + 옵션 버튼 */}
             <View style={styles.header}>
                 <View style={styles.profileContainer}>
-                    <Image source={{ uri: post.author.profileImageUrl }} style={styles.profileImage} />
+                    <Image
+                        source={getImageSource(post.author.profileImageUrl, DEFAULT_PROFILE_IMAGE)}
+                        style={styles.profileImage}
+                    />
                     <View>
                         <Text style={styles.authorName}>{post.author.nickname}</Text>
                         <Text style={styles.postTime}>{post.writeDatetime.split('T')[0]}</Text>
@@ -47,7 +53,10 @@ const PostCard: React.FC<{ post: Post }> = ({ post }) => {
 
             {/* 🔹 게시글 메인 이미지 */}
             <TouchableOpacity onPress={() => navigation.navigate('StorybookDetailScreen', { boardId: post.id })}>
-                <Image source={{ uri: post.titleImage }} style={styles.postImage} />
+                <Image
+                    source={getImageSource(post.titleImage, DEFAULT_PROFILE_IMAGE)}
+                    style={styles.postImage}
+                />
             </TouchableOpacity>
 
             {/* 🔹 타이틀 콘텐츠 */}
