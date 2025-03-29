@@ -244,7 +244,9 @@ const StorybookDetailScreen = ({ route, navigation }: { route: StorybookDetailSc
                             {/* 작성자 정보 */}
                             <View style={styles.authorContainer}>
                                 <Image
-                                    source={{ uri: selectedBoard.author?.profileImageUrl || 'https://via.placeholder.com/40' }}
+                                    source={selectedBoard.author?.profileImageUrl ?
+                                        { uri: String(selectedBoard.author.profileImageUrl) }
+                                        : require('../../assets/images/user-2.png')}
                                     style={styles.authorImage}
                                 />
                                 <View>
@@ -264,7 +266,7 @@ const StorybookDetailScreen = ({ route, navigation }: { route: StorybookDetailSc
                                     <View key={index} style={styles.mediaContainer}>
                                         {content.value.toLowerCase().endsWith('.mp4') || content.value.toLowerCase().includes('video') ? (
                                             <Video
-                                                source={{ uri: content.value }}
+                                                source={content.value ? { uri: String(content.value) } : undefined}
                                                 style={styles.postVideo}
                                                 resizeMode="cover"
                                                 controls={true}
@@ -272,7 +274,7 @@ const StorybookDetailScreen = ({ route, navigation }: { route: StorybookDetailSc
                                             />
                                         ) : (
                                             <Image
-                                                source={{ uri: content.value }}
+                                                source={content.value ? { uri: String(content.value) } : require('../../assets/images/profile-1.png')}
                                                 style={styles.postImage}
                                                 resizeMode="cover"
                                             />
