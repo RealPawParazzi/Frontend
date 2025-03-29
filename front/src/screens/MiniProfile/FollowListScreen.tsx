@@ -9,9 +9,13 @@ import userStore from '../../context/userStore';
 import userFollowStore, { Follower, Following } from '../../context/userFollowStore';
 import profileFollowStore from '../../context/profileFollowStore';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { getImageSource } from '../../utils/imageUtils';
 
 // FlatList 항목을 위한 유니온 타입 정의
 type FollowListItem = Follower | Following;
+
+// ✅ 기본 프로필 이미지
+const DEFAULT_PROFILE_IMAGE = require('../../assets/images/profile-1.png');
 
 const FollowListScreen = () => {
     const navigation = useNavigation();
@@ -88,7 +92,7 @@ const FollowListScreen = () => {
             return (
                 <View style={styles.userItem}>
                     <Image
-                        source={{ uri: item.followerProfileImageUrl || 'https://via.placeholder.com/50' }}
+                        source={getImageSource(item.followerProfileImageUrl, DEFAULT_PROFILE_IMAGE)}
                         style={styles.profileImage}
                     />
                     <Text style={styles.usernameText}>
@@ -101,7 +105,7 @@ const FollowListScreen = () => {
             return (
                 <View style={styles.userItem}>
                     <Image
-                        source={{ uri: item.followingProfileImageUrl || 'https://via.placeholder.com/50' }}
+                        source={getImageSource(item.followingProfileImageUrl, DEFAULT_PROFILE_IMAGE)}
                         style={styles.profileImage}
                     />
                     <Text style={styles.usernameText}>

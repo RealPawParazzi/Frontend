@@ -4,6 +4,8 @@ import {
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import petStore, { Pet } from '../context/petStore';
+import { getImageSource } from '../utils/imageUtils';
+
 
 // ✅ 기본 이미지 설정
 const DEFAULT_PET_IMAGE = require('../assets/images/pets-1.jpg');
@@ -53,7 +55,7 @@ const PetInfoMiniModal: React.FC<PetInfoMiniModalProps> = ({ visible, onClose, p
                     </TouchableOpacity>
 
                     {/* 🔹 반려동물 이미지 */}
-                    <Image source={pet.petImg ? { uri: pet.petImg } : DEFAULT_PET_IMAGE} style={styles.petImage} />
+                    <Image source={getImageSource(pet.petImg, DEFAULT_PET_IMAGE)} style={styles.petImage} />
 
                     {/* 🔹 수정/삭제 버튼 */}
                     <View style={styles.headerButtons}>
