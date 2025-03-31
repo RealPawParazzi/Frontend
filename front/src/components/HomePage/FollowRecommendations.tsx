@@ -33,7 +33,7 @@ const FollowRecommendations = () => {
                 data={followRecommendations}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
-                    <ShadowWrapper style={{ marginBottom: 12, marginHorizontal: 12 }}> {/* $$$ 여백 추가 $$$ */}
+                    <ShadowWrapper style={{ marginBottom: 12, marginHorizontal: 10 }}> {/*  여백 추가  */}
                         <View style={styles.cardContent}>
                         {/* 🖼️ 프로필 이미지 + 유저 이름 */}
                         <TouchableOpacity
@@ -42,7 +42,7 @@ const FollowRecommendations = () => {
                                 setSelectedUser({
                                     id: item.id,
                                     name: item.name,
-                                    profileImage: item.profileImage,
+                                    profileImage: item.profileImage.toString(),
                                 });
                                 setIsModalVisible(true);
                             }}
