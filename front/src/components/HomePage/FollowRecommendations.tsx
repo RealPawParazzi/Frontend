@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { View, Image, FlatList, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import userStore from '../../context/userStore';
 import MiniProfileModal from '../MiniProfileModal';
+import ShadowWrapper from '../../common/ShadowWrapper'; // 추가
+
 
 /** ✅ 유저 타입 정의 */
 interface User {
@@ -28,32 +30,36 @@ const FollowRecommendations = () => {
     return (
         <View style={styles.container}>
             <FlatList
-                data={followRecommendations} // ✅ Zustand에서 가져온 유저 리스트
+                data={followRecommendations}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
-                    <View style={styles.itemContainer}>
-                        {/* 🖼️ 프로필 이미지 클릭 시 미니 프로필 모달 열기 */}
-                        <TouchableOpacity onPress={() => {
-                            setSelectedUser({
-                                id: item.id,
-                                name: item.name,
-                                profileImage: item.profileImage,
-                            });
-                            setIsModalVisible(true);
-                        }}>
+                    <ShadowWrapper style={{ marginBottom: 12, marginHorizontal: 12 }}> {/* $$$ 여백 추가 $$$ */}
+                        <View style={styles.cardContent}>
+                        {/* 🖼️ 프로필 이미지 + 유저 이름 */}
+                        <TouchableOpacity
+                            style={styles.profileSection}
+                            onPress={() => {
+                                setSelectedUser({
+                                    id: item.id,
+                                    name: item.name,
+                                    profileImage: item.profileImage,
+                                });
+                                setIsModalVisible(true);
+                            }}
+                        >
                             <Image
                                 source={typeof item.profileImage === 'string' ? { uri: item.profileImage } : item.profileImage}
                                 style={styles.profileImage}
                             />
-                        </TouchableOpacity>
-                        <View style={styles.textContainer}>
                             <Text style={styles.name}>{item.name}</Text>
-                        </View>
+                        </TouchableOpacity>
+
                         {/* ➕ 팔로우 버튼 */}
                         <TouchableOpacity style={styles.followButton}>
                             <Text style={styles.followText}>+ 팔로우</Text>
                         </TouchableOpacity>
-                    </View>
+                        </View>
+                    </ShadowWrapper>
                 )}
                 showsVerticalScrollIndicator={false}
                 nestedScrollEnabled={true} // ✅ 내부 스크롤 활성화
@@ -72,19 +78,41 @@ const FollowRecommendations = () => {
 
 
 const styles = StyleSheet.create({
-    container: { paddingVertical: 20 },
-    itemContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-    profileImage: { width: 50, height: 50, borderRadius: 50, marginRight: 10 },
-    textContainer: { flex: 1 },
-    name: { fontSize: 14, fontWeight: 'bold' },
-    followButton: {
-        backgroundColor: '#6A5ACD',
-        paddingVertical: 5,
-        paddingHorizontal: 10,
-        borderRadius: 10,
+    container: {
+        paddingVertical: 20,
+    },
+    cardContent: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 10,
         marginHorizontal: 10,
     },
-    followText: { color: 'white', fontWeight: 'bold' },
+    profileSection: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    profileImage: {
+        width: 45,
+        height: 45,
+        borderRadius: 22.5,
+        marginRight: 12,
+    },
+    name: {
+        fontSize: 15,
+        fontWeight: '600',
+    },
+    followButton: {
+        backgroundColor: '#6A5ACD',
+        paddingVertical: 6,
+        paddingHorizontal: 14,
+        borderRadius: 20,
+    },
+    followText: {
+        color: 'white',
+        fontWeight: '600',
+        fontSize: 13,
+    },
 });
 
 export default FollowRecommendations;
