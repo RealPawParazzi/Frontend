@@ -15,8 +15,8 @@ interface Post {
     titleImage: string;
     titleContent: string;
     writeDatetime: string;
-    likes: number;
-    comments: number;
+    favoriteCount: number;
+    commentCount: number;
     author: {
         id: number;
         nickname: string;
@@ -66,12 +66,12 @@ const PostCard: React.FC<{ post: Post }> = ({ post }) => {
             <View style={styles.footer}>
                 <View style={styles.iconContainer}>
                     <Icon name="favorite-border" size={20} color="gray" />
-                    <Text style={styles.iconText}>{post.likes}</Text>
+                    <Text style={styles.iconText}>{post.favoriteCount}</Text>
                 </View>
 
                 <View style={styles.iconContainer}>
                     <Icon name="chat-bubble-outline" size={20} color="gray" />
-                    <Text style={styles.iconText}>{post.comments}</Text>
+                    <Text style={styles.iconText}>{post.commentCount}</Text>
                 </View>
             </View>
         </View>
