@@ -210,30 +210,30 @@ const MapScreen = () => {
     return (
         <View style={styles.container}>
 
-            {/* 📅 날짜 선택 */}
-            <View style={styles.datePickerContainer}>
+            {/* 📅 날짜 선택 (상단 고정) */}
+            <View style={styles.datePickerOverlay}>
                 <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
                     <Text style={styles.dateText}>{selectedDate.toISOString().split('T')[0]}</Text>
                     <Icon name="calendar-today" size={20} color="black" />
                 </TouchableOpacity>
-                {showDatePicker && (
-                    <DateTimePicker
-                        value={selectedDate}
-                        mode="date"
-                        display="default"
-                        onChange={(event, date) => {
-                            setShowDatePicker(false);
-                            if (date) { setSelectedDate(date); }
-                        }}
-                    />
-                )}
             </View>
+            {showDatePicker && (
+                <DateTimePicker
+                    value={selectedDate}
+                    mode="date"
+                    display="default"
+                    onChange={(event, date) => {
+                        setShowDatePicker(false);
+                        if (date) { setSelectedDate(date); }
+                    }}
+                />
+            )}
 
             {/* 🗺️ Google Maps 적용 */}
             <View style={styles.mapContainer}>
                 <MapView
-                    ref={mapRef} // ✅ 지도 참조 연결
-                    style={styles.map}
+                    ref={mapRef}
+                    style={StyleSheet.absoluteFillObject} // ✅ 화면 전체 덮도록 설정
                     provider={PROVIDER_GOOGLE}
                     initialRegion={{
                         latitude: 37.5665,
@@ -267,49 +267,45 @@ const MapScreen = () => {
                 </MapView>
             </View>
 
-            {/* 🐾 현재 위치 갱신 버튼 */}
+            {/* 📍 현재 위치 버튼 (우하단 고정) */}
             <TouchableOpacity style={styles.locationButton} onPress={getCurrentLocation}>
                 <Icon name="my-location" size={24} color="white" />
             </TouchableOpacity>
 
-            {/* ✅ 실시간 거리 & 속도 표시 */}
-            <View style={styles.statsContainer}>
+            {/* 📊 거리/속도 통계 + 산책 버튼 */}
+            <View style={styles.statsOverlay}>
                 <Text style={styles.statsText}>이동 거리: {totalDistance} km</Text>
                 <Text style={styles.statsText}>평균 속도: {averageSpeed} km/h</Text>
-            </View>
-
-            {/* 🐾 산책 컨트롤 버튼 */}
-            <View style={styles.walkControl}>
                 <TouchableOpacity
                     style={[styles.walkButton, isWalking && styles.walking]}
                     onPress={isWalking ? handleWalkEnd : () => setIsWalking(true)}
                 >
-                    <Text style={styles.walkButtonText}>
-                        {isWalking ? '산책 종료' : '산책 시작'}
-                    </Text>
+                    <Text style={styles.walkButtonText}>{isWalking ? '산책 종료' : '산책 시작'}</Text>
                 </TouchableOpacity>
             </View>
 
-            {/* 🐶 반려동물 선택 */}
-            <FlatList
-                horizontal
-                data={userData.petList}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.petList}
-                renderItem={({ item }) => (
-                    <TouchableOpacity
-                        style={[
-                            styles.petButton,
-                            selectedPet.id === item.id && styles.selectedPetButton,
-                        ]}
-                        onPress={() => setSelectedPet(item)}
-                    >
-                        <Image source={item.image} style={styles.petImage} />
-                        <Text style={styles.petName}>{item.name}</Text>
-                    </TouchableOpacity>
-                )}
-                showsHorizontalScrollIndicator={false}
-            />
+
+            {/* 🐶 반려동물 리스트 (하단 고정) */}
+            <View style={styles.petListOverlay}>
+                <FlatList
+                    horizontal
+                    data={userData.petList}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item }) => (
+                        <TouchableOpacity
+                            style={[
+                                styles.petButton,
+                                selectedPet.id === item.id && styles.selectedPetButton,
+                            ]}
+                            onPress={() => setSelectedPet(item)}
+                        >
+                            <Image source={item.image} style={styles.petImage} />
+                            <Text style={styles.petName}>{item.name}</Text>
+                        </TouchableOpacity>
+                    )}
+                    showsHorizontalScrollIndicator={false}
+                />
+            </View>
         </View>
     );
 };
@@ -319,12 +315,11 @@ const MapScreen = () => {
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#ffffff' },
 
-
-    /** 📅 날짜 선택 */
-    datePickerContainer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        marginVertical: 10,
+    datePickerOverlay: {
+        position: 'absolute',
+        top: 40,
+        alignSelf: 'center',
+        zIndex: 10,
     },
     dateButton: {
         flexDirection: 'row',
@@ -341,10 +336,25 @@ const styles = StyleSheet.create({
     dateText: { fontSize: 16, marginRight: 5, fontWeight: 'bold' },
 
     /** 🗺️ 지도 스타일 */
-    mapContainer: { flex: 1.5, overflow: 'hidden', borderRadius: 15, marginHorizontal: 10 },
+    mapContainer: { flex: 1.5, overflow: 'hidden' },
     map: { width: '100%', height: '100%' },
 
-    statsContainer: { alignItems: 'center', padding: 10 },
+    statsOverlay: {
+        position: 'absolute',
+        bottom: 140,
+        alignSelf: 'center',
+        alignItems: 'center',
+        zIndex: 10,
+    },
+
+    petListOverlay: {
+        position: 'absolute',
+        bottom: 20,
+        width: '100%',
+        paddingVertical: 8,
+        alignItems: 'center',
+        zIndex: 10,
+    },
     statsText: { fontSize: 16, fontWeight: 'bold' },
 
     /** 📍 현재 위치 버튼 */
@@ -356,12 +366,6 @@ const styles = StyleSheet.create({
         padding: 12,
         borderRadius: 50,
         elevation: 3,
-    },
-
-    /** 🐾 산책 버튼 */
-    walkControl: {
-        alignItems: 'center',
-        paddingVertical: 15,
     },
     walkButton: {
         backgroundColor: '#FF5733',
