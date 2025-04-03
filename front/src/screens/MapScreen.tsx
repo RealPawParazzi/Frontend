@@ -1,3 +1,4 @@
+// 🐾 MapScreen.tsx - 반려동물 산책 기능 포함 메인 지도 화면
 import React, { useState, useEffect, useRef } from 'react';
 import {
     View,
@@ -8,6 +9,7 @@ import {
     Image,
     Alert,
     Modal,
+    Platform,
 } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { requestLocationPermission } from '../utils/permissions/locationPermission';
@@ -20,19 +22,33 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 const MapScreen = () => {
     const { userData } = userStore();
     const { saveWalk, fetchWalk } = walkStore();
+
+    // 🐶 선택된 반려동물
     const [selectedPet, setSelectedPet] = useState(userData.petList[0]);
-    const [selectedDate, setSelectedDate] = useState(new Date());
+    // 🟢 산책 중 여부
     const [isWalking, setIsWalking] = useState(false);
+    // 🧭 위치 기록 배열
     const [walkRoute, setWalkRoute] = useState<{ latitude: number; longitude: number; timestamp: string }[]>([]);
+    // 🕰️ 산책 시작 시간
     const [startTime, setStartTime] = useState<string | null>(null);
+    // 📏 총 이동 거리 (km)
     const [totalDistance, setTotalDistance] = useState(0);
+    // 🚀 평균 속도 (km/h)
     const [averageSpeed, setAverageSpeed] = useState(0);
+    // 🆔 현재 산책 기록 ID
     const [currentWalkId, setCurrentWalkId] = useState<number | null>(null);
+    // 📍 현재 위치 좌표
     const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+    // 🐾 반려동물 선택 모달
     const [isPetModalVisible, setPetModalVisible] = useState(false);
     const [keepThisPet, setKeepThisPet] = useState(true);
+    // ⏱️ 경과 시간 추적용
+    const [elapsedTime, setElapsedTime] = useState('00:00:00');
+
+    // 📍 지도 참조
     const mapRef = useRef<MapView | null>(null); // ✅ 지도 참조 객체 추가
 
+    // ✅ 위치 권한 요청 및 확인 함수
     const checkLocationPermission = async (): Promise<boolean> => {
         const granted = await requestLocationPermission();
         console.log(granted ? '✅ 위치 권한 허용됨' : '❌ 위치 권한 거부됨');
@@ -81,10 +97,25 @@ const MapScreen = () => {
         );
     };
 
-    /** ✅ 최초 앱 실행 시 현재 위치 가져오기 */
+    // ✅ 컴포넌트 마운트 시 현재 위치 받아오기
     useEffect(() => {
         getCurrentLocation();
     }, []);
+
+    // ✅ 산책 중 타이머 작동
+    useEffect(() => {
+        let timer: string | number | NodeJS.Timeout | undefined;
+        if (isWalking && startTime) {
+            timer = setInterval(() => {
+                const diff = new Date().getTime() - new Date(startTime).getTime();
+                const hours = String(Math.floor(diff / 3600000)).padStart(2, '0');
+                const minutes = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+                const seconds = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+                setElapsedTime(`${hours}:${minutes}:${seconds}`);
+            }, 1000);
+        }
+        return () => clearInterval(timer);
+    }, [isWalking, startTime]);
 
     /** ✅ 선택된 펫의 산책 기록 불러오기 */
     useEffect(() => {
@@ -92,7 +123,7 @@ const MapScreen = () => {
             console.log(`📥 [산책 기록 요청] 펫 ID: ${selectedPet.id}`);
             fetchWalk(Number(selectedPet.id)); // petId 기준으로 변경
         }
-    }, [selectedPet, selectedDate, fetchWalk]);
+    }, [selectedPet, fetchWalk]);
 
     /** ✅ 위치 추적 설정 (위치 권한 확인 후 실행) */
     useEffect(() => {
@@ -160,9 +191,9 @@ const MapScreen = () => {
         };
     }, [isWalking, startTime, walkRoute]);
 
-    /** ✅ 실시간 거리 및 평균 속도 업데이트 */
+    // ✅ 거리 계산 및 평균 속도 계산
     useEffect(() => {
-        if (walkRoute.length > 1) {
+        if (walkRoute.length > 1 && startTime) {
             const distance = calculateDistance(walkRoute);
             setTotalDistance(distance);
             const duration = (new Date().getTime() - new Date(startTime || '').getTime()) / (1000 * 60 * 60);
@@ -170,15 +201,13 @@ const MapScreen = () => {
         }
     }, [startTime, walkRoute]);
 
-    /** ✅ 거리 계산 함수 */
-    const calculateDistance = (route: { latitude: number; longitude: number }[]) => {
+    // ✅ 산책 거리 계산 함수 (간단한 유클리드 방식)
+    const calculateDistance = (route: string | any[]) => {
         let distance = 0;
         for (let i = 1; i < route.length; i++) {
             const prev = route[i - 1];
             const curr = route[i];
-            distance += Math.sqrt(
-                Math.pow(curr.latitude - prev.latitude, 2) + Math.pow(curr.longitude - prev.longitude, 2)
-            ) * 111;
+            distance += Math.sqrt(Math.pow(curr.latitude - prev.latitude, 2) + Math.pow(curr.longitude - prev.longitude, 2)) * 111;
         }
         return parseFloat(distance.toFixed(2));
     };
@@ -219,6 +248,16 @@ const MapScreen = () => {
 
     return (
         <View style={styles.container}>
+            {/* ✅ 산책 중 상단 정보 바 */}
+            {isWalking && (
+                <View style={styles.topInfoBar}>
+                    <View style={styles.topInfoLeft}>
+                        <Text style={styles.walkingPetText}>🐶 {selectedPet.name}와 행복한 산책 중</Text>
+                        <Text style={styles.walkingTime}>{elapsedTime}</Text>
+                    </View>
+                    <Image source={selectedPet.image} style={styles.petImage} />
+                </View>
+            )}
             {/* 🗺️ Google Maps 적용 */}
             <View style={styles.mapContainer}>
                 <MapView
@@ -232,6 +271,7 @@ const MapScreen = () => {
                         longitudeDelta: 0.01,
                     }}
                 >
+
                     {/* ✅ 현재 위치 마커 */}
                     {currentLocation && (
                         <Marker coordinate={currentLocation}>
@@ -270,22 +310,26 @@ const MapScreen = () => {
                 <Icon name="my-location" size={24} color="white" />
             </TouchableOpacity>
 
-            {/* 📊 거리/속도 통계 + 산책 버튼 */}
-            <View style={styles.statsOverlay}>
-                <Text style={styles.statsText}>이동 거리: {totalDistance} km</Text>
-                <Text style={styles.statsText}>평균 속도: {averageSpeed} km/h</Text>
+            {/* ✅ 하단 버튼 바 */}
+            <View style={styles.bottomBar}>
+                {isWalking && (
+                    <TouchableOpacity style={styles.cameraButton}>
+                        <Icon name="photo-camera" size={24} color="#333" />
+                    </TouchableOpacity>
+                )}
+
                 <TouchableOpacity
-                    style={[styles.walkButton, isWalking && styles.walking]}
+                    style={styles.walkMainButton}
                     onPress={() => {
                         if (isWalking) handleWalkEnd();
-                        else { setPetModalVisible(true); }
+                        else setPetModalVisible(true);
                     }}
                 >
                     <Text style={styles.walkButtonText}>{isWalking ? '산책 종료' : '산책 시작'}</Text>
                 </TouchableOpacity>
             </View>
 
-
+            {/* 🐾 반려동물 선택 모달 */}
             <Modal visible={isPetModalVisible} transparent animationType="slide">
                 <View style={styles.modalContainer}>
                     <View style={styles.modalContent}>
@@ -343,6 +387,29 @@ const MapScreen = () => {
 /** ✅ 스타일 정의 */
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#ffffff' },
+    /** 상단 정보 바 (산책 중만 표시됨) */
+    topInfoBar: {
+        position: 'absolute',
+        top: Platform.OS === 'ios' ? 20 : 10,
+        left: 20,
+        right: 20,
+        backgroundColor: '#fff',
+        padding: 14,
+        borderRadius: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        zIndex: 99,
+        shadowColor: '#000',
+        shadowOpacity: 0.08,
+        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 2 },
+    },
+    topInfoLeft: { flex: 1 },
+    walkingPetText: { fontSize: 14, fontWeight: '600' },
+    walkingTime: { fontSize: 24, fontWeight: 'bold' },
+    petImage: { width: 40, height: 40, borderRadius: 20, marginLeft: 10 },
+
     /** 🗺️ 지도 스타일 */
     mapContainer: { flex: 1.5, overflow: 'hidden' },
     map: { width: '100%', height: '100%' },
@@ -359,25 +426,35 @@ const styles = StyleSheet.create({
     /** 📍 현재 위치 버튼 */
     locationButton: {
         position: 'absolute',
-        bottom: 140,
+        bottom: 120,
         right: 20,
-        backgroundColor: '#007AFF',
+        backgroundColor: '#4D7CFE',
         padding: 12,
         borderRadius: 50,
         elevation: 3,
     },
-    walkButton: {
-        backgroundColor: '#FF5733',
-        paddingVertical: 12,
-        paddingHorizontal: 25,
-        borderRadius: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-        elevation: 3,
+    bottomBar: {
+        position: 'absolute',
+        bottom: 30,
+        flexDirection: 'row',
+        width: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 24,
     },
-    walking: { backgroundColor: '#FFB400' },
+    cameraButton: {
+        backgroundColor: 'white',
+        padding: 12,
+        borderRadius: 40,
+        marginRight: 12,
+    },
+    walkMainButton: {
+        flex: 1,
+        backgroundColor: '#4D7CFE',
+        paddingVertical: 16,
+        borderRadius: 32,
+        alignItems: 'center',
+    },
     walkButtonText: { color: 'white', fontSize: 18, fontWeight: 'bold' },
 
     markerIcon: {
