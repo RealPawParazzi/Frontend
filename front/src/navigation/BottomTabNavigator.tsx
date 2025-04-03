@@ -184,6 +184,7 @@ const styles = StyleSheet.create({
     },
     fabLabel: {
         fontSize: 12,
+        fontWeight: 'bold', // ✅ 볼드체!
         color: '#333',
         marginTop: 4,
     },
