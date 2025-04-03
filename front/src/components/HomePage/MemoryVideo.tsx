@@ -106,6 +106,7 @@ const styles = StyleSheet.create({
     },
     card: {
         width: screenWidth * 0.8,
+        height: 180, // 카드 자체도 고정
         marginRight: 12,
         borderRadius: 12,
         backgroundColor: '#fff',
