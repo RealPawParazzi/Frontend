@@ -75,6 +75,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 15,
         paddingVertical: 10,
+
+        // 💫 그림자 스타일 추가
+        backgroundColor: '#fff', // 그림자 보이게 하려면 필요
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+        elevation: 4, // Android용
+        zIndex: 10, // iOS z-index 효과 보정
     },
     petContainer: {
         flexDirection: 'row',
