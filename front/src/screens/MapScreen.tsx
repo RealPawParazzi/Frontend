@@ -1,19 +1,27 @@
-import React, {useState, useEffect, useRef} from 'react';
-import {View, Text, TouchableOpacity, StyleSheet, FlatList, Image, Alert } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+    View,
+    Text,
+    TouchableOpacity,
+    StyleSheet,
+    FlatList,
+    Image,
+    Alert,
+    Modal,
+} from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
-import { requestLocationPermission } from '../utils/permissions/locationPermission'; // ✅ 권한 요청 추가
-import Geolocation from 'react-native-geolocation-service'; // ✅ 위치 추적
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { requestLocationPermission } from '../utils/permissions/locationPermission';
+import Geolocation from 'react-native-geolocation-service';
 import walkStore from '../context/walkStore';
 import userStore from '../context/userStore';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+
 
 const MapScreen = () => {
     const { userData } = userStore();
     const { saveWalk, fetchWalk } = walkStore();
     const [selectedPet, setSelectedPet] = useState(userData.petList[0]);
     const [selectedDate, setSelectedDate] = useState(new Date());
-    const [showDatePicker, setShowDatePicker] = useState(false);
     const [isWalking, setIsWalking] = useState(false);
     const [walkRoute, setWalkRoute] = useState<{ latitude: number; longitude: number; timestamp: string }[]>([]);
     const [startTime, setStartTime] = useState<string | null>(null);
@@ -21,6 +29,8 @@ const MapScreen = () => {
     const [averageSpeed, setAverageSpeed] = useState(0);
     const [currentWalkId, setCurrentWalkId] = useState<number | null>(null);
     const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+    const [isPetModalVisible, setPetModalVisible] = useState(false);
+    const [keepThisPet, setKeepThisPet] = useState(true);
     const mapRef = useRef<MapView | null>(null); // ✅ 지도 참조 객체 추가
 
     const checkLocationPermission = async (): Promise<boolean> => {
@@ -209,26 +219,6 @@ const MapScreen = () => {
 
     return (
         <View style={styles.container}>
-
-            {/* 📅 날짜 선택 (상단 고정) */}
-            <View style={styles.datePickerOverlay}>
-                <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
-                    <Text style={styles.dateText}>{selectedDate.toISOString().split('T')[0]}</Text>
-                    <Icon name="calendar-today" size={20} color="black" />
-                </TouchableOpacity>
-            </View>
-            {showDatePicker && (
-                <DateTimePicker
-                    value={selectedDate}
-                    mode="date"
-                    display="default"
-                    onChange={(event, date) => {
-                        setShowDatePicker(false);
-                        if (date) { setSelectedDate(date); }
-                    }}
-                />
-            )}
-
             {/* 🗺️ Google Maps 적용 */}
             <View style={styles.mapContainer}>
                 <MapView
@@ -244,20 +234,28 @@ const MapScreen = () => {
                 >
                     {/* ✅ 현재 위치 마커 */}
                     {currentLocation && (
-                        <Marker
-                            coordinate={currentLocation}
-                            title="현재 위치"
-                            pinColor="blue"
-                        />
+                        <Marker coordinate={currentLocation}>
+                            <Image
+                                source={require('../assets/images/marker/currentIcon.png')}
+                                style={styles.markerIcon}
+                            />
+                        </Marker>
                     )}
 
                     {/* ✅ 현재 산책 경로 마커 */}
                     {walkRoute.length > 0 && walkRoute.map((coord, index) => (
-                        <Marker
-                            key={index}
-                            coordinate={coord}
-                            title={index === 0 ? '출발' : index === walkRoute.length - 1 ? '도착' : ''}
-                        />
+                        <Marker key={index} coordinate={coord}>
+                            <Image
+                                source={
+                                    index === 0
+                                        ? require('../assets/images/marker/startIcon.png')
+                                        : index === walkRoute.length - 1
+                                            ? require('../assets/images/marker/endIcon.png')
+                                            : require('../assets/images/marker/middleIcon.png')
+                                }
+                                style={styles.markerIcon}
+                            />
+                        </Marker>
                     ))}
 
                     {/* ✅ 실시간 산책 경로 표시 */}
@@ -278,34 +276,65 @@ const MapScreen = () => {
                 <Text style={styles.statsText}>평균 속도: {averageSpeed} km/h</Text>
                 <TouchableOpacity
                     style={[styles.walkButton, isWalking && styles.walking]}
-                    onPress={isWalking ? handleWalkEnd : () => setIsWalking(true)}
+                    onPress={() => {
+                        if (isWalking) handleWalkEnd();
+                        else { setPetModalVisible(true); }
+                    }}
                 >
                     <Text style={styles.walkButtonText}>{isWalking ? '산책 종료' : '산책 시작'}</Text>
                 </TouchableOpacity>
             </View>
 
 
-            {/* 🐶 반려동물 리스트 (하단 고정) */}
-            <View style={styles.petListOverlay}>
-                <FlatList
-                    horizontal
-                    data={userData.petList}
-                    keyExtractor={(item) => item.id}
-                    renderItem={({ item }) => (
+            <Modal visible={isPetModalVisible} transparent animationType="slide">
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>🤔 <Text style={{ color: '#4D7CFE' }}>누구랑</Text> 산책할까요?</Text>
+                        <FlatList
+                            horizontal
+                            data={userData.petList}
+                            keyExtractor={(item) => item.id}
+                            renderItem={({ item }) => (
+                                <TouchableOpacity
+                                    onPress={() => setSelectedPet(item)}
+                                    style={[
+                                        styles.modalPetCard,
+                                        selectedPet?.id === item.id && styles.modalPetCardSelected,
+                                    ]}
+                                >
+                                    <Image source={item.image} style={{ width: 50, height: 50, borderRadius: 25 }} />
+                                    <Text>{item.name}</Text>
+                                </TouchableOpacity>
+                            )}
+                            showsHorizontalScrollIndicator={false}
+                        />
+
+                        <View style={styles.checkboxRow}>
+                            <TouchableOpacity
+                                style={{ flexDirection: 'row', alignItems: 'center' }}
+                                onPress={() => setKeepThisPet(!keepThisPet)}
+                            >
+                                <Icon
+                                    name={keepThisPet ? 'check-box' : 'check-box-outline-blank'}
+                                    size={24}
+                                    color={keepThisPet ? '#4D7CFE' : '#999'}
+                                />
+                                <Text style={{ marginLeft: 8 }}>계속 이 아이와 산책할게요</Text>
+                            </TouchableOpacity>
+                        </View>
+
                         <TouchableOpacity
-                            style={[
-                                styles.petButton,
-                                selectedPet.id === item.id && styles.selectedPetButton,
-                            ]}
-                            onPress={() => setSelectedPet(item)}
+                            style={styles.modalButton}
+                            onPress={() => {
+                                setPetModalVisible(false);
+                                setIsWalking(true);
+                            }}
                         >
-                            <Image source={item.image} style={styles.petImage} />
-                            <Text style={styles.petName}>{item.name}</Text>
+                            <Text style={styles.modalButtonText}>산책 시작하기</Text>
                         </TouchableOpacity>
-                    )}
-                    showsHorizontalScrollIndicator={false}
-                />
-            </View>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 };
@@ -314,27 +343,6 @@ const MapScreen = () => {
 /** ✅ 스타일 정의 */
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#ffffff' },
-
-    datePickerOverlay: {
-        position: 'absolute',
-        top: 40,
-        alignSelf: 'center',
-        zIndex: 10,
-    },
-    dateButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 12,
-        backgroundColor: 'white',
-        borderRadius: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    dateText: { fontSize: 16, marginRight: 5, fontWeight: 'bold' },
-
     /** 🗺️ 지도 스타일 */
     mapContainer: { flex: 1.5, overflow: 'hidden' },
     map: { width: '100%', height: '100%' },
@@ -343,15 +351,6 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 140,
         alignSelf: 'center',
-        alignItems: 'center',
-        zIndex: 10,
-    },
-
-    petListOverlay: {
-        position: 'absolute',
-        bottom: 20,
-        width: '100%',
-        paddingVertical: 8,
         alignItems: 'center',
         zIndex: 10,
     },
@@ -381,36 +380,52 @@ const styles = StyleSheet.create({
     walking: { backgroundColor: '#FFB400' },
     walkButtonText: { color: 'white', fontSize: 18, fontWeight: 'bold' },
 
-
-    /** 🐶 반려동물 선택 리스트 */
-    petList: {
-        flexDirection: 'row',
-        paddingHorizontal: 15,
-        paddingVertical: 10,
-        justifyContent: 'center',
+    markerIcon: {
+        width: 36,
+        height: 36,
+        resizeMode: 'contain',
+        backgroundColor: '#ffffff',
+        borderRadius: 50,
     },
-    petButton: {
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'flex-end',
+        backgroundColor: 'rgba(0,0,0,0.5)',
+    },
+    modalContent: {
+        backgroundColor: 'white',
+        padding: 30,
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+    },
+    modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 16 },
+    modalPetCard: {
         alignItems: 'center',
         justifyContent: 'center',
-        marginHorizontal: 10,
-        padding: 10,
-        borderRadius: 50,
-        backgroundColor: 'white',
-        width: 70,
-        height: 70,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
+        marginRight: 16,
+        padding: 12,
+        borderRadius: 12,
+        backgroundColor: '#F0F0F0',
     },
-    selectedPetButton: {
+    modalPetCardSelected: {
         backgroundColor: '#FFDD99',
         borderWidth: 2,
         borderColor: '#FFB400',
     },
-    petImage: { width: 50, height: 50, borderRadius: 25 },
-    petName: { fontSize: 12, marginTop: 5, fontWeight: '600' },
+    checkboxRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: 16,
+    },
+    checkboxLabel: { marginLeft: 8 },
+    modalButton: {
+        backgroundColor: '#4D7CFE',
+        paddingVertical: 14,
+        borderRadius: 14,
+        alignItems: 'center',
+    },
+    modalButtonText: { color: 'white', fontSize: 16 },
 });
 
 export default MapScreen;
+
