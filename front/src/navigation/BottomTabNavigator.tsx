@@ -1,5 +1,17 @@
+// 🧭 BottomTabNavigator.tsx - 네비게이션 바 및 커스텀 FAB 구현 (네이버 스타일 부채꼴 메뉴)
 import React, { useState } from 'react';
-import {View, Text, TouchableOpacity, Modal, StyleSheet, SafeAreaView, Platform} from 'react-native';
+import {
+    View,
+    Text,
+    TouchableOpacity,
+    StyleSheet,
+    SafeAreaView,
+    Platform,
+    Animated,
+    Dimensions,
+    Easing,
+    Image,
+} from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import CalendarScreen from '../screens/CalendarScreen';
@@ -8,11 +20,30 @@ import MyPageScreen from '../screens/MyPageScreen';
 import HomeScreen from '../screens/HomeScreen';
 import Header from '../components/Header';
 
-
 const Tab = createBottomTabNavigator();
 
 const BottomTabNavigator = ({ navigation }: any) => {
-    const [modalVisible, setModalVisible] = useState(false);
+    const [menuVisible, setMenuVisible] = useState(false);
+    const [animation] = useState(new Animated.Value(0));
+
+
+    // ✅ FAB 메뉴 애니메이션 실행 함수
+    const toggleMenu = () => {
+        setMenuVisible(!menuVisible);
+        Animated.timing(animation, {
+            toValue: menuVisible ? 0 : 1,
+            duration: 250,
+            easing: Easing.out(Easing.ease),
+            useNativeDriver: false,
+        }).start();
+    };
+
+    // ✅ FAB 버튼 위치들 계산
+    const fabOptions = [
+        { label: '게시물 등록', icon: 'edit', screen: 'StorybookScreen' },
+        { label: '동영상 생성', icon: 'videocam', screen: 'VideoEditorScreen' },
+        { label: '이미지 생성', icon: 'image', screen: 'ImageEditorScreen' },
+    ];
 
     return (
         <SafeAreaView style={styles.safeContainer}>
@@ -40,72 +71,63 @@ const BottomTabNavigator = ({ navigation }: any) => {
                 <Tab.Screen name="Home" component={HomeScreen} options={{ title: '홈' }} />
                 <Tab.Screen name="Calendar" component={CalendarScreen} options={{ title: '캘린더' }} />
 
-                {/* 🟢 Post 버튼: 누르면 모달이 뜸 */}
-                <Tab.Screen
-                    name="Post"
-                    component={HomeScreen} // 기본적으로 화면 변화 없음
-                    options={{
-                        title: '게시물 올리기',
-                        tabBarButton: () => (
-                            <TouchableOpacity
-                                style={styles.tabBarButton}
-                                onPress={() => setModalVisible(true)}
-                                activeOpacity={0.7}
-                            >
-                                <View style={styles.addButton}>
-                                    <Icon name="add-box" size={35} color="#FFF" />
-                                </View>
-                            </TouchableOpacity>
-                        ),
-                    }}
-                />
+                {/* 📍 중간 add 버튼은 화면 없음 (커스텀 렌더링됨) */}
+                <Tab.Screen name="Dummy" component={View} options={{ tabBarButton: () => null }} />
 
                 <Tab.Screen name="Map" component={MapScreen} options={{ title: '산책' }} />
                 <Tab.Screen name="MyPage" component={MyPageScreen} options={{ title: '마이페이지' }} />
             </Tab.Navigator>
 
-            {/* 📌 Post 버튼 클릭 시 선택 모달 */}
-            <Modal visible={modalVisible} animationType="fade" transparent>
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>무엇을 만들까요?</Text>
+            {/* 🌟 중앙 Add 버튼 (FAB 스타일) */}
+            <View style={styles.fabContainer}>
+                {fabOptions.map((option, index) => {
+                    const angle = (Math.PI / 3) * index + Math.PI / 6; // ✅ 위쪽 부채꼴 방향으로 변경
+                    const radius = 80;
+                    const x = animation.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, radius * Math.cos(angle)],
+                    });
+                    const y = animation.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, -radius * Math.sin(angle)], // ✅ 위 방향
+                    });
 
-                        <TouchableOpacity
-                            style={styles.modalButton}
-                            onPress={() => {
-                                navigation.navigate('StorybookScreen');
-                                setModalVisible(false);
-                            }}
+
+                    return (
+                        <Animated.View
+                            key={option.label}
+                            style={[
+                                styles.fabOption,
+                                {
+                                    transform: [
+                                        { translateX: x },
+                                        { translateY: y },
+                                        { scale: animation }, // ✅ 확대 효과
+                                    ],
+                                    opacity: animation,    // ✅ 투명도 적용
+                                },
+                            ]}
+                            pointerEvents={menuVisible ? 'auto' : 'none'} // ✅ 클릭 방지
                         >
-                            <Text style={styles.modalButtonText}>📖 게시물 등록</Text>
-                        </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.fabOptionButton}
+                                onPress={() => {
+                                    toggleMenu();
+                                    navigation.navigate(option.screen);
+                                }}
+                            >
+                                <Icon name={option.icon} size={22} color="#4D7CFE" />
+                            </TouchableOpacity>
+                            <Text style={styles.fabLabel}>{option.label}</Text>
+                        </Animated.View>
+                    );
+                })}
 
-                        <TouchableOpacity
-                            style={styles.modalButton}
-                            onPress={() => {
-                                navigation.navigate('VideoEditorScreen');
-                                setModalVisible(false);
-                            }}
-                        >
-                            <Text style={styles.modalButtonText}>🎥 동영상 만들기</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={styles.modalButton}
-                            onPress={() => {
-                                navigation.navigate('ImageEditorScreen');
-                                setModalVisible(false);
-                            }}
-                        >
-                            <Text style={styles.modalButtonText}>🖼️ 이미지 만들기</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
-                            <Text style={styles.cancelButtonText}>닫기</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </Modal>
+                {/* ✅ 중앙 원형 FAB 버튼 */}
+                <TouchableOpacity style={styles.fabMainButton} onPress={toggleMenu} activeOpacity={0.8}>
+                    <Icon name="add" size={30} color="#4D7CFE" />
+                </TouchableOpacity>
+            </View>
         </SafeAreaView>
     );
 };
@@ -123,53 +145,47 @@ const styles = StyleSheet.create({
         bottom: 10, // ✅ 탭 바 내에서 버튼 위치 조정
         alignSelf: 'center', // ✅ 버튼을 중앙 정렬
     },
-    addButton: {
+    fabContainer: {
+        position: 'absolute',
+        bottom: 30,
+        alignSelf: 'center',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    fabMainButton: {
         width: 60,
         height: 60,
         borderRadius: 30,
-        backgroundColor: '#ffcf33', // ✅ 아이콘 배경 색상 (조금 더 튀도록 변경)
+        backgroundColor: '#fff', // ✅ 흰색 배경
+        borderWidth: 2,
+        borderColor: '#4D7CFE', // ✅ 테두리 색상 적용
+        alignItems: 'center',
         justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: Platform.OS === 'ios' ? -30 : -10, // ✅ 버튼이 너무 위로 올라가는 문제 해결
-
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 3 },
     },
-    modalContainer: {
-        flex: 1,
+    fabOption: {
+        position: 'absolute',
+        alignItems: 'center',
+    },
+    fabOptionButton: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: '#fff',
+        borderWidth: 1,
+        borderColor: '#4D7CFE',
+        alignItems: 'center',
         justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        marginBottom: 4,
     },
-    modalContent: {
-        backgroundColor: 'white',
-        width: 300,
-        padding: 20,
-        borderRadius: 10,
-        alignItems: 'center',
-    },
-    modalTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 15,
-    },
-    modalButton: {
-        padding: 10,
-        backgroundColor: '#FFD700',
-        width: '100%',
-        alignItems: 'center',
-        borderRadius: 5,
-        marginVertical: 5,
-    },
-    modalButtonText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    cancelButton: {
-        marginTop: 10,
-        padding: 8,
-    },
-    cancelButtonText: {
-        color: 'red',
-        fontSize: 14,
+    fabLabel: {
+        fontSize: 12,
+        color: '#333',
+        marginTop: 4,
     },
 });
 
