@@ -3,7 +3,7 @@ import { View, ScrollView, Text, StyleSheet } from 'react-native';
 import MemoryVideo from '../components/HomePage/MemoryVideo';
 import FollowRecommendations from '../components/HomePage/FollowRecommendations';
 import StoryReels from '../components/HomePage/StoryReels';
-import StoryBooksList from '../components/HomePage/StoryBooksList';
+import StoryBooksList from '../components/HomePage/HomePageStoryBooks/StoryBooksList';
 import userStore from '../context/userStore';
 
 /**

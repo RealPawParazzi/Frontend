@@ -4,7 +4,6 @@ import authStore from '../../context/authStore';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
-import { kakaoLogin } from '../../services/kakaoService';
 
 // ✅ 네비게이션 타입 지정
 type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
@@ -56,11 +55,6 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         } finally {
             setLoading(false);
         }
-    };
-
-    // ✅ 카카오 로그인 실행 로직 추가
-    const handleKakaoLogin = async () => {
-        await kakaoLogin();
     };
 
     return (
