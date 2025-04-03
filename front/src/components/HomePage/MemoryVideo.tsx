@@ -2,7 +2,6 @@
 import React, { useState, useMemo } from 'react';
 import {
     View,
-    Image,
     Text,
     StyleSheet,
     TouchableOpacity,
@@ -46,20 +45,18 @@ const MemoryVideo = () => {
                 horizontal
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => {
-                    //  수정된 부분: 재생할 video URL 우선순위 결정
                     const videoUrl =
                         typeof item.titleImage === 'string' &&
                         item.titleImage.toLowerCase().endsWith('.mp4')
                             ? item.titleImage
                             : item.contents?.find(
-                                (c) =>
-                                    c.type === 'File' &&
-                                    c.value.toLowerCase().endsWith('.mp4')
+                                (c) => c.type === 'File' && c.value.toLowerCase().endsWith('.mp4')
                             )?.value;
 
                     return (
                         <View style={styles.card}>
                             {playingBoardId === item.id && videoUrl ? (
+                                // ✅ 재생 중인 영상
                                 <Video
                                     source={{ uri: videoUrl }}
                                     style={styles.video}
@@ -67,32 +64,31 @@ const MemoryVideo = () => {
                                     resizeMode="cover"
                                 />
                             ) : (
-                                <>
-                                    {/* 썸네일: 게시글 대표 이미지 또는 fallback */}
-                                    <Image
-                                        source={
-                                            typeof item.titleImage === 'string' &&
-                                            item.titleImage.toLowerCase().endsWith('.mp4')
-                                                ? require('../../assets/images/post-2.jpg') // fallback 이미지
-                                                : typeof item.titleImage === 'string'
-                                                    ? { uri: item.titleImage }
-                                                    : item.titleImage
-                                        }
-                                        style={styles.image}
+                                // ✅ 썸네일처럼 정지된 영상 보여주기
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        setPlayingBoardId(item.id); // ✅ 재생 시작
+                                    }}
+                                    activeOpacity={0.9}
+                                >
+                                    <Video
+                                        source={{ uri: videoUrl! }}
+                                        style={styles.image} // 썸네일용 정지화면
+                                        paused
+                                        resizeMode="cover"
                                     />
+                                    {/* 제목 & 닉네임 */}
                                     <View style={styles.textContainer}>
                                         <Text style={styles.title} numberOfLines={1}>
                                             {item.title}
                                         </Text>
-                                        <Text style={styles.subtitle}>기억 속의 영상</Text>
+                                        <Text style={styles.subtitle}>{item.author.nickname}</Text>
                                     </View>
-                                    <TouchableOpacity
-                                        style={styles.playButton}
-                                        onPress={() => setPlayingBoardId(item.id)}
-                                    >
-                                        <Icon name="play-circle" size={30} color="black" />
-                                    </TouchableOpacity>
-                                </>
+                                    {/* 재생 버튼은 View로만 처리 */}
+                                    <View style={styles.playButton}>
+                                        <Icon name="play-circle" size={30} color="white" />
+                                    </View>
+                                </TouchableOpacity>
                             )}
                         </View>
                     );
@@ -122,19 +118,25 @@ const styles = StyleSheet.create({
     },
     image: {
         width: '100%',
-        height: 140,
+        height: 180,
         resizeMode: 'cover',
+        backgroundColor: '#000',
     },
     textContainer: {
-        padding: 10,
+        position: 'absolute',
+        bottom: 10,
+        left: 10,
+        right: 10,
     },
     title: {
         fontSize: 16,
         fontWeight: 'bold',
+        color: '#fff',
     },
     subtitle: {
         fontSize: 12,
-        color: 'gray',
+        color: '#ccc',
+        marginTop: 2,
     },
     playButton: {
         position: 'absolute',
