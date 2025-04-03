@@ -102,7 +102,7 @@ const MemoryVideo = () => {
 
 const styles = StyleSheet.create({
     sliderContainer: {
-        marginTop: 20,
+        marginVertical: 25,
     },
     card: {
         width: screenWidth * 0.8,
