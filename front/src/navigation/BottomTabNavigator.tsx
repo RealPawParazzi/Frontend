@@ -60,7 +60,7 @@ const BottomTabNavigator = ({ navigation }: any) => {
                         return <Icon name={iconName as any} size={size} color={color} />;
                     },
                     headerShown: false, // ✅ 상단 네비게이션 바 숨기기
-                    tabBarActiveTintColor: '#000',
+                    tabBarActiveTintColor: '#4D7CFE',
                     tabBarInactiveTintColor: 'gray',
                     tabBarStyle: {
                         height: Platform.OS === 'ios' ? 40 : 60,
