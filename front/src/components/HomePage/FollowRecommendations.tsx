@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     followButton: {
-        backgroundColor: '#6A5ACD',
+        backgroundColor: '#4D7CFE',
         paddingVertical: 6,
         paddingHorizontal: 14,
         borderRadius: 20,
