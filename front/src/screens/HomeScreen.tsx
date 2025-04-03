@@ -2,7 +2,7 @@ import React from 'react';
 import { View, ScrollView, Text, StyleSheet } from 'react-native';
 import MemoryVideo from '../components/HomePage/MemoryVideo';
 import FollowRecommendations from '../components/HomePage/FollowRecommendations';
-import StoryReels from '../components/HomePage/StoryReels';
+import RecommendShortcutButtons from '../components/HomePage/RecommendShortcutButtons';
 import StoryBooksList from '../components/HomePage/HomePageStoryBooks/StoryBooksList';
 import userStore from '../context/userStore';
 
@@ -12,20 +12,16 @@ import userStore from '../context/userStore';
  * - "오늘의 추억 영상", "스토리 릴", "팔로우 추천", "StoryBooks for Today" 섹션 포함
  */
 const HomeScreen = () => {
-    const { memoryVideos, storyBooks, storyReels } = userStore(); // ✅ Zustand 데이터 가져오기
+    const { storyBooks } = userStore(); // ✅ Zustand 데이터 가져오기
 
     return (
         <View style={styles.container}>
             <ScrollView showsVerticalScrollIndicator={false}>
                 {/* 🎞️ 오늘의 추억 영상 */}
-                <Text style={styles.sectionTitle}>오늘의 추억 영상 →</Text>
-                {memoryVideos.map((video) => (
-                    <MemoryVideo key={video.id} video={video} />
-                ))}
+                <MemoryVideo />
 
-                {/* 📸 스토리 릴 */}
-                <Text style={styles.sectionTitle}>스토리 →</Text>
-                <StoryReels stories={storyReels} />
+                {/* 추천 컨텐츠 아이콘들 */}
+                <RecommendShortcutButtons />
 
                 {/* 👥 팔로우 추천 */}
                 <Text style={styles.sectionTitle}>팔로우 추천 →</Text>
