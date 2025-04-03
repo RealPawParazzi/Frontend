@@ -24,12 +24,12 @@ const HomeScreen = () => {
                 <RecommendShortcutButtons />
 
                 {/* 👥 팔로우 추천 */}
-                <Text style={styles.sectionTitle}>팔로우 추천 →</Text>
+                <Text style={styles.sectionTitle}> 👥 팔로우 추천 </Text>
                 <FollowRecommendations />
 
                 {/* 📖 StoryBooks for Today */}
-                <Text style={styles.sectionTitle}>StoryBooks for Today →</Text>
-                <StoryBooksList storyBooks={storyBooks} />
+                <Text style={styles.sectionTitle}> 📖 오늘의 게시물 </Text>
+                <StoryBooksList />
             </ScrollView>
         </View>
     );
