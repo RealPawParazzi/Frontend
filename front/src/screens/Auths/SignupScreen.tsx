@@ -92,7 +92,7 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
             <TouchableOpacity onPress={handleImagePick} style={styles.imageContainer}>
                 <Image source={getProfileImage()} style={styles.profileImage} />
                 <View style={styles.iconContainer}>
-                    <Icon name="add-circle" size={28} color="#6A4BBC" />
+                    <Icon name="add-circle" size={28} color="#4D7CFE" />
                 </View>
             </TouchableOpacity>
 
@@ -131,7 +131,7 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
 
 const styles = StyleSheet.create({
     container: { flex: 1, padding: 20, justifyContent: 'center', backgroundColor: '#FFF' },
-    logo: { fontSize: 32, color: '#6A4BBC', fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
+    logo: { fontSize: 32, color: '#4D7CFE', fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
     subtitle: { fontSize: 14, color: '#888', textAlign: 'center', marginBottom: 20 },
 
     // 수정된 이미지 컨테이너 스타일 (중앙 배치)
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     },
     passwordInput: { flex: 1 },
 
-    signupButton: { width: '100%', backgroundColor: '#6A4BBC', padding: 15, borderRadius: 10, alignItems: 'center', marginTop: 20 },
+    signupButton: { width: '100%', backgroundColor: '#4D7CFE', padding: 15, borderRadius: 10, alignItems: 'center', marginTop: 20 },
     signupButtonText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
 });
 

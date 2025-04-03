@@ -129,7 +129,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
 const styles = StyleSheet.create({
     container: { flex: 1, padding: 20, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF' },
-    logo: { fontSize: 32, color: '#6A4BBC', fontWeight: 'bold', marginBottom: 30 },
+    logo: { fontSize: 32, color: '#4D7CFE', fontWeight: 'bold', marginBottom: 30 },
     welcome: { fontSize: 16, color: '#888', marginBottom: 50 },
 
     input: { width: '100%', padding: 15, backgroundColor: '#F3F3F3', borderRadius: 10, marginBottom: 15 },
@@ -140,9 +140,9 @@ const styles = StyleSheet.create({
     },
     passwordInput: { flex: 1 },
 
-    forgotPassword: { alignSelf: 'flex-end', color: '#6A4BBC', marginTop: 10 ,marginBottom: 40 },
+    forgotPassword: { alignSelf: 'flex-end', color: '#4D7CFE', marginTop: 10 ,marginBottom: 40 },
 
-    loginButton: { width: '100%', backgroundColor: '#6A4BBC', padding: 15, borderRadius: 10, alignItems: 'center', marginBottom: 20 },
+    loginButton: { width: '100%', backgroundColor: '#4D7CFE', padding: 15, borderRadius: 10, alignItems: 'center', marginBottom: 20 },
     loginButtonText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
 
     continueText: { color: '#888', marginTop: 10 ,marginBottom: 15 },
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     socialIcon: { width: 40, height: 40 },
 
     signupText: { color: '#888' , marginTop: 2},
-    signupLink: { color: '#6A4BBC', fontWeight: 'bold' },
+    signupLink: { color: '#4D7CFE', fontWeight: 'bold' },
 
     tutorialContainer: {
         marginTop: 15,
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     },
 
     tutorialLink: {
-        color: '#6A4BBC',
+        color: '#4D7CFE',
         fontWeight: 'bold',
     },
 });

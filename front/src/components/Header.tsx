@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff', // 그림자 보이게 하려면 필요
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.15,
+        shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 4, // Android용
         zIndex: 10, // iOS z-index 효과 보정

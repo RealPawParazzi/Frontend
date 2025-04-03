@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
     suggestion: { fontSize: 14, color: 'gray', marginBottom: 15 },
 
     uploadButton: {
-        backgroundColor: '#6A4BBC',
+        backgroundColor: '#4D7CFE',
         paddingVertical: 10,
         paddingHorizontal: 20,
         borderRadius: 8,

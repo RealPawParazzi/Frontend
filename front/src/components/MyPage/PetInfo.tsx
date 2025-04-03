@@ -162,10 +162,10 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 2,
-        borderColor: '#FFD700', // ✅ 점선 테두리 색상
+        borderColor: '#4D7CFE', // ✅ 점선 테두리 색상
         borderRadius: 12,
         borderStyle: 'dashed', // ✅ 점선 테두리
-        backgroundColor: '#FAF3E0',
+        backgroundColor: '#e0ecfa',
     },
 
     /** ✅ 추가 버튼 텍스트 */

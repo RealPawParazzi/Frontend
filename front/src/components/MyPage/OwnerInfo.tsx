@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
         height: 70,
         borderRadius: 35,
         borderWidth: 2,
-        borderColor: '#6A4BBC',
+        borderColor: '#4D7CFE',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 10,
@@ -356,10 +356,10 @@ const styles = StyleSheet.create({
         borderBottomColor: 'transparent',
     },
     activeTab: {
-        borderBottomColor: '#6A4BBC',
+        borderBottomColor: '#4D7CFE',
     },
     activeTabText: {
-        color: '#6A4BBC',
+        color: '#4D7CFE',
         fontWeight: 'bold',
     },
     tabText: {
