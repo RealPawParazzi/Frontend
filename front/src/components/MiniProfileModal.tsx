@@ -264,17 +264,21 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     followButton: {
-        backgroundColor: '#4A90E2',
-        paddingVertical: 8,
-        paddingHorizontal: 20,
-        borderRadius: 5,
+        backgroundColor: '#4D7CFE',
+        paddingHorizontal: 14,
+        paddingVertical: 6,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#4D7CFE',
     },
+
     unfollowButton: {
-        backgroundColor: '#E74C3C', // 언팔로우 버튼 색상
+        backgroundColor: 'white',
     },
     followText: {
-        color: '#FFF',
+        color: 'white',
         fontWeight: 'bold',
+        fontSize: 13,
     },
     closeProfileButton: { // 🛠 본인 프로필일 때 닫기 버튼 스타일 추가
         backgroundColor: '#888',
