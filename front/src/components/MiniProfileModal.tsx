@@ -200,7 +200,12 @@ const MiniProfileModal = ({ visible, onClose, user }: MiniProfileModalProps) => 
                             ]}
                             onPress={handleFollowToggle}
                         >
-                            <Text style={styles.followText}>{isFollowing ? '언팔로우' : '팔로우'}</Text>
+                            <Text
+                                style={[
+                                    styles.followText,
+                                    isFollowing && styles.unfollowText,
+                                ]}
+                            >{isFollowing ? '언팔로우' : '팔로우'}</Text>
                         </TouchableOpacity>
                     )}
                 </View>
@@ -277,6 +282,11 @@ const styles = StyleSheet.create({
     },
     followText: {
         color: 'white',
+        fontWeight: 'bold',
+        fontSize: 13,
+    },
+    unfollowText: {
+        color: '#4D7CFE',
         fontWeight: 'bold',
         fontSize: 13,
     },
