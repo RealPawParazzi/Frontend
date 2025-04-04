@@ -1,10 +1,11 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import { View, ScrollView, Text, StyleSheet } from 'react-native';
 import MemoryVideo from '../components/HomePage/MemoryVideo';
 import FollowRecommendations from '../components/HomePage/FollowRecommendations';
 import RecommendShortcutButtons from '../components/HomePage/RecommendShortcutButtons';
 import StoryBooksList from '../components/HomePage/HomePageStoryBooks/StoryBooksList';
 import userStore from '../context/userStore';
+import boardStore from '../context/boardStore';
 
 /**
  * 📌 HomeScreen (홈 화면)
@@ -12,6 +13,12 @@ import userStore from '../context/userStore';
  * - "오늘의 추억 영상", "스토리 릴", "팔로우 추천", "StoryBooks for Today" 섹션 포함
  */
 const HomeScreen = () => {
+    const { fetchBoardList } = boardStore();
+
+    useEffect(() => {
+        // 컴포넌트가 마운트될 때 전체 게시물을 불러옴
+        fetchBoardList();
+    }, [fetchBoardList]);
     return (
         <View style={styles.container}>
             <ScrollView showsVerticalScrollIndicator={false}>
