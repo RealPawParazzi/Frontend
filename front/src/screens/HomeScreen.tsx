@@ -4,7 +4,6 @@ import MemoryVideo from '../components/HomePage/MemoryVideo';
 import FollowRecommendations from '../components/HomePage/FollowRecommendations';
 import RecommendShortcutButtons from '../components/HomePage/RecommendShortcutButtons';
 import StoryBooksList from '../components/HomePage/HomePageStoryBooks/StoryBooksList';
-import userStore from '../context/userStore';
 import boardStore from '../context/boardStore';
 
 /**
@@ -54,8 +53,6 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#fff',
         paddingHorizontal: 10,
-        paddingTop: 10,
-        paddingBottom: 50,
     },
     sectionTitle: {
         fontSize: 18,
