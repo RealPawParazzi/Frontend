@@ -163,16 +163,16 @@ const userStore = create<{
         },
     ],
 
-    /** ✅ 서버에서 전체 유저 가져와서 랜덤 추천 리스트 생성 */
+    /** ✅ 서버에서 전체 유저 가져와서 랜덤 추천 3명 리스트 생성 */
     loadFollowRecommendations: async () => {
         try {
             const users = await fetchAllUsers();
 
             // ✅ 가입된 유저 데이터 가공
-            const recommendations: FollowRecommendation[] = users.slice(0, 4).map((user) => ({
+            const recommendations: FollowRecommendation[] = users.slice(0, 3).map((user) => ({
                 id: user.id,
                 name: user.nickName || user.name,
-                profileImage: user.profileImage ? { uri: String(user.profileImage) } : require('../assets/images/profile-1.png'),
+                profileImage: user.profileImage ? { uri: String(user.profileImage) } : require('../assets/images/user-2.png'),
             }));
 
             set({ followRecommendations: recommendations });
