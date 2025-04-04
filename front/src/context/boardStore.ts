@@ -11,7 +11,7 @@ import {
 } from '../services/boardService';
 
 /** 📌 게시글 데이터 타입 정의 */
-interface Board {
+export interface Board {
     id: number;
     title: string;
     visibility: 'PUBLIC' | 'FOLLOWERS';
