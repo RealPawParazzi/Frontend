@@ -1,14 +1,23 @@
-import React, { useEffect, useState } from 'react';
-import {View, Text, Image, StyleSheet, FlatList, TouchableOpacity, Alert, Modal} from 'react-native';
+import React, {useEffect, useMemo, useState} from 'react';
+import {
+    View,
+    Text,
+    Image,
+    StyleSheet,
+    FlatList,
+    TouchableOpacity,
+    Alert,
+    Modal,
+} from 'react-native';
 import userStore from '../../context/userStore';
-import boardStore from '../../context/boardStore';
-import userFollowStore from '../../context/userFollowStore'; // 현재 로그인 유저의 팔로우 상태 관리
+import userFollowStore from '../../context/userFollowStore';
 import { useNavigation } from '@react-navigation/native';
 import PostList from './PostList';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import authStore from '../../context/authStore'; // ✅ 아이콘 추가
+import authStore from '../../context/authStore';
 import { getImageSource } from '../../utils/imageUtils';
-
+import boardStore from '../../context/boardStore';
+import Video from "react-native-video";
 
 // ✅ 기본 프로필 이미지
 const DEFAULT_PROFILE_IMAGE = require('../../assets/images/user-2.png');
@@ -16,7 +25,6 @@ const DEFAULT_PROFILE_IMAGE = require('../../assets/images/user-2.png');
 const OwnerInfo = () => {
     const navigation = useNavigation();
     const { userData } = userStore();
-    const { boardList, fetchUserBoards } = boardStore();
     const { logout } = authStore(); // ✅ 로그아웃 함수 가져오기
     const [selectedTab, setSelectedTab] = useState<'posts' | 'photos' | 'videos'>('posts');
     const [menuVisible, setMenuVisible] = useState(false); // ✅ 햄버거 메뉴 모달 상태
@@ -29,21 +37,24 @@ const OwnerInfo = () => {
     const [followingCount, setFollowingCount] = useState(0);
     const [memories, setMemories] = useState<string[]>([]);
     const [latestPostTime, setLatestPostTime] = useState('없음');
+    const { userBoardsMap, fetchUserBoards } = boardStore();
 
-    // ✅ 게시글 데이터 가져오기
-    useEffect(() => {
-        fetchUserBoards(Number(userData.id));
-    }, [fetchUserBoards, userData.id]);
+    const myBoards = useMemo(() => {
+        return userBoardsMap[Number(userData.id)] || [];
+    }, [userBoardsMap, userData.id]);
 
     // ✅ 게시글 개수 및 최신 게시물 시간 업데이트
     useEffect(() => {
-        const userPosts = boardList
-            .filter((post) => post.author.id === Number(userData.id))
-            .sort((a, b) => new Date(b.writeDatetime).getTime() - new Date(a.writeDatetime).getTime());
+        if (userData.id) {
+            fetchUserBoards(Number(userData.id));
+        }
+    }, [userData.id, fetchUserBoards]);
 
-        setLatestPostTime(userPosts.length > 0 ? getRelativeTime(userPosts[0].writeDatetime) : '없음');
-        setPostCount(userPosts.length || 0);
-    }, [boardList, userData.id]);
+    useEffect(() => {
+        const sortedPosts = [...myBoards].sort((a, b) => new Date(b.writeDatetime).getTime() - new Date(a.writeDatetime).getTime());
+        setPostCount(myBoards.length);
+        setLatestPostTime(sortedPosts.length > 0 ? getRelativeTime(sortedPosts[0].writeDatetime) : '없음');
+    }, [myBoards]);
 
     // ✅ 팔로잉 & 팔로워 목록 가져오기
     useEffect(() => {
@@ -58,16 +69,14 @@ const OwnerInfo = () => {
     }, [followers, following]);
 
     useEffect(() => {
-        setPostCount(boardList.length || 0);
-        // 메모리 이미지 URL이 문자열인지 확인
         const memoryImages = [
             'https://via.placeholder.com/80',
             'https://via.placeholder.com/80',
             'https://via.placeholder.com/80',
             'https://via.placeholder.com/80',
-        ].filter(url => typeof url === 'string');
+        ];
         setMemories(memoryImages);
-    }, [boardList]);
+    }, []);
 
     // ✅ 상대적인 시간 계산 함수
     const getRelativeTime = (dateString: string) => {
@@ -202,10 +211,10 @@ const OwnerInfo = () => {
             </View>
 
             {/* ✅ 선택된 탭에 따라 다른 컴포넌트 출력 */}
-            {selectedTab === 'posts' && <PostList />}
+            {selectedTab === 'posts' && <PostList userId={Number(userData.id)} />}
             {selectedTab === 'photos' && (
                 <FlatList
-                    data={boardList.filter(post => post.titleImage).map(post => post.titleImage)}
+                    data={myBoards.filter((post) => !!post.titleImage).map((post) => post.titleImage)}
                     keyExtractor={(item, index) => index.toString()}
                     numColumns={3} // 🔹 사진을 3열로 출력
                     renderItem={({ item }) => (
@@ -219,9 +228,43 @@ const OwnerInfo = () => {
                 />
             )}
             {selectedTab === 'videos' && (
-                <View style={styles.emptyContainer}>
-                    <Text style={styles.emptyText}>아직 업로드된 비디오가 없습니다.</Text>
-                </View>
+                <>
+                    {myBoards.filter((post) =>
+                        post.contents?.some((c) =>
+                            c.type === 'File' &&
+                            typeof c.value === 'string' &&
+                            (c.value.endsWith('.mp4') || c.value.endsWith('.mov'))
+                        )
+                    ).length > 0 ? (
+                        <FlatList
+                            data={myBoards.filter((post) =>
+                                post.contents?.some((c) =>
+                                    c.type === 'File' &&
+                                    typeof c.value === 'string' &&
+                                    (c.value.endsWith('.mp4') || c.value.endsWith('.mov'))
+                                )
+                            )}
+                            keyExtractor={(item) => item.id.toString()}
+                            renderItem={({ item }) => (
+                                <View style={styles.videoCard}>
+                                    <Text style={styles.videoTitle}>{item.titleContent}</Text>
+                                    <Video
+                                        source={{ uri: item.contents?.find(c => c.type === 'File' && c.value.endsWith('.mp4'))?.value || '' }}
+                                        style={styles.videoPlayer}
+                                        resizeMode="cover"
+                                        repeat
+                                        muted
+                                        controls={true}
+                                    />
+                                </View>
+                            )}
+                        />
+                    ) : (
+                        <View style={styles.emptyContainer}>
+                            <Text style={styles.emptyText}>아직 업로드된 비디오가 없습니다.</Text>
+                        </View>
+                    )}
+                </>
             )}
         </View>
     );
@@ -375,7 +418,23 @@ const styles = StyleSheet.create({
         height: '100%',
         borderRadius: 5,
     },
-
+    videoCard: {
+        marginBottom: 20,
+        borderRadius: 10,
+        overflow: 'hidden',
+        backgroundColor: '#000',
+    },
+    videoTitle: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#fff',
+        padding: 8,
+        backgroundColor: '#222',
+    },
+    videoPlayer: {
+        width: '100%',
+        height: 300,
+    },
     emptyContainer: {
         alignItems: 'center',
         marginTop: 20,
