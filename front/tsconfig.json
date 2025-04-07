@@ -4,6 +4,7 @@
     "esModuleInterop": true,    // CommonJS 모듈 호환성 추가
     "target": "esnext",
     "module": "esnext",
+    "types": ["@env"],
     "strict": true,
     "jsx": "react-native",
     "allowSyntheticDefaultImports": true,
