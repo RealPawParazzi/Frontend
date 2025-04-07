@@ -14,7 +14,7 @@ import {
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { requestLocationPermission } from '../utils/permissions/locationPermission';
 import Geolocation from 'react-native-geolocation-service';
-import walkStore, {Walk} from '../context/walkStore';
+import walkStore from '../context/walkStore';
 import userStore from '../context/userStore';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import PetRouteBottomModal from '../components/PetRouteBottomModal'; // 추가된 모달 컴포넌트 import
