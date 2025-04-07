@@ -5,6 +5,7 @@
     "target": "esnext",
     "module": "esnext",
     "types": ["@env"],
+    "include": ["src", "env.d.ts"],
     "strict": true,
     "jsx": "react-native",
     "allowSyntheticDefaultImports": true,

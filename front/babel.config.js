@@ -7,7 +7,7 @@ module.exports = {
       'blocklist': null,
       'allowlist': null,
       'safe': false,
-      'allowUndefined': true
+      'allowUndefined': true,
     }],
     'react-native-reanimated/plugin', // ✅ 꼭 마지막에 위치해야 함!
   ],
