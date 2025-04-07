@@ -28,6 +28,7 @@ export const getImageSource = (uri: any, defaultImage: any) => {
     const safeUri = getSafeImageUri(uri);
     if (safeUri) {
         return { uri: safeUri };
+    } else {
+        return defaultImage;
     }
-    return defaultImage;
 };
