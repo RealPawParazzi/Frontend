@@ -11,14 +11,23 @@ import {
     Modal,
     Platform,
 } from 'react-native';
-import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker, Polyline, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import { requestLocationPermission } from '../utils/permissions/locationPermission';
 import Geolocation from 'react-native-geolocation-service';
 import walkStore from '../context/walkStore';
 import userStore from '../context/userStore';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import PetRouteBottomModal from '../components/PetRouteBottomModal'; // 추가된 모달 컴포넌트 import
+import PlaceDetailModal from '../components/PlaceDetailModal';
+import { searchPetFriendlyPlaces } from '../services/placeSearchService';
+import { createPlace } from '../services/placeService';
 
+// NodeJS 타입 오류 방지를 위한 글로벌 선언
+declare global {
+    namespace NodeJS {
+        interface Timeout {}
+    }
+}
 
 const MapScreen = () => {
     const { userData } = userStore();
@@ -52,6 +61,14 @@ const MapScreen = () => {
 
     // 📍 지도 참조
     const mapRef = useRef<MapView | null>(null); // ✅ 지도 참조 객체 추가
+    const [mapRegion, setMapRegion] = useState<Region | null>(null);
+
+    // 근처 검색 장소 배열
+    const [nearbyPlaces, setNearbyPlaces] = useState<any[]>([]);
+
+    const [isPlaceModalVisible, setIsPlaceModalVisible] = useState(false);
+    const [selectedPlace, setSelectedPlace] = useState<any>(null);
+
 
     // ✅ 위치 권한 요청 및 확인 함수
     const checkLocationPermission = async (): Promise<boolean> => {
@@ -75,6 +92,13 @@ const MapScreen = () => {
             (position) => {
                 const { latitude, longitude } = position.coords;
                 setCurrentLocation({ latitude, longitude });
+                setMapRegion({
+                    latitude,
+                    longitude,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                });
+                console.log('위치 가져오기 성공:', latitude, longitude);
 
                 // ✅ 현재 위치를 지도 중심으로 이동
                 mapRef.current?.animateToRegion({
@@ -107,9 +131,21 @@ const MapScreen = () => {
         getCurrentLocation();
     }, []);
 
-    // ✅ 산책 중 타이머 작동
+    // ✅ 현재 위치가 정해지면 근처 장소 검색
     useEffect(() => {
-        let timer: string | number | NodeJS.Timeout | undefined;
+        if (currentLocation) {
+            const { latitude, longitude } = currentLocation;
+            searchPetFriendlyPlaces(latitude, longitude).then((places) => {
+                console.log('🐾 nearbyPlaces 저장됨:', places); // 👈 로그 확인!
+                setNearbyPlaces(places ?? []);
+            });
+        }
+    }, [currentLocation]);
+
+    // ✅ 타이머 시작 (산책 시작 시)
+    useEffect(() => {
+        let timer: ReturnType<typeof setInterval>; // ✅ 이게 핵심!
+
         if (isWalking && startTime) {
             timer = setInterval(() => {
                 const diff = new Date().getTime() - new Date(startTime).getTime();
@@ -119,7 +155,10 @@ const MapScreen = () => {
                 setElapsedTime(`${hours}:${minutes}:${seconds}`);
             }, 1000);
         }
-        return () => clearInterval(timer);
+
+        return () => {
+            if (timer) clearInterval(timer); // 💡 여기서도 오류 안 나게 잘 작동함
+        };
     }, [isWalking, startTime]);
 
     /** ✅ 선택된 펫의 산책 기록 불러오기 */
@@ -130,7 +169,7 @@ const MapScreen = () => {
         }
     }, [selectedPet, fetchWalk]);
 
-    /** ✅ 위치 추적 설정 (위치 권한 확인 후 실행) */
+    // ✅ 위치 추적 시작 (산책 중일 때만 watchPosition 실행)
     useEffect(() => {
         let watchId: any = null;
 
@@ -154,6 +193,12 @@ const MapScreen = () => {
 
                     // ✅ 현재 위치 상태 업데이트
                     setCurrentLocation({ latitude, longitude });
+                    setMapRegion({
+                        latitude,
+                        longitude,
+                        latitudeDelta: 0.01,
+                        longitudeDelta: 0.01,
+                    });
 
                     // ✅ 현재 위치에 따라 지도 이동 (산책 중만 이동)
                     if (isWalking) {
@@ -310,7 +355,7 @@ const MapScreen = () => {
                     ref={mapRef}
                     style={StyleSheet.absoluteFillObject} // ✅ 화면 전체 덮도록 설정
                     provider={PROVIDER_GOOGLE}
-                    initialRegion={{
+                    region={mapRegion ?? {
                         latitude: 37.5665,
                         longitude: 126.9780,
                         latitudeDelta: 0.01,
@@ -343,6 +388,26 @@ const MapScreen = () => {
                             />
                         </Marker>
                     ))}
+
+                    {nearbyPlaces.map((place, index) => (
+                        <Marker
+                            key={`place-${index}`}
+                            coordinate={{
+                                latitude: place.geometry.location.lat,
+                                longitude: place.geometry.location.lng,
+                            }}
+                            onPress={() => {
+                                setSelectedPlace(place); // 클릭 시 모달 표시용 상태 저장
+                                setIsPlaceModalVisible(true);
+                            }}
+                        >
+                            <Image
+                                source={require('../assets/images/marker/middleIcon.png')}
+                                style={styles.markerIcon}
+                            />
+                        </Marker>
+                    ))}
+
 
                     {/* ✅ 실시간 산책 경로 표시 */}
                     {walkRoute.length > 1 && (
@@ -435,6 +500,26 @@ const MapScreen = () => {
                     image: pet.image,
                 }))}
                 onSelectPet={handleSelectPetFromModal}
+            />
+
+            <PlaceDetailModal
+                isVisible={isPlaceModalVisible}
+                place={selectedPlace}
+                onClose={() => setIsPlaceModalVisible(false)}
+                onAddFavorite={async () => {
+                    if (!selectedPlace) { return; }
+                    try {
+                        await createPlace({
+                            name: selectedPlace.name,
+                            address: selectedPlace.vicinity,
+                            latitude: selectedPlace.geometry.location.lat,
+                            longitude: selectedPlace.geometry.location.lng,
+                        });
+                        Alert.alert('✅ 즐겨찾기에 추가되었습니다!');
+                    } catch (e) {
+                        Alert.alert('❌ 실패', '즐겨찾기 추가에 실패했습니다.');
+                    }
+                }}
             />
 
             {/* ✅ 추가된 버튼: 산책 루트 보기 모달 열기 */}
