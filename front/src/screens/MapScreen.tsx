@@ -14,14 +14,15 @@ import {
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { requestLocationPermission } from '../utils/permissions/locationPermission';
 import Geolocation from 'react-native-geolocation-service';
-import walkStore from '../context/walkStore';
+import walkStore, {Walk} from '../context/walkStore';
 import userStore from '../context/userStore';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import PetRouteBottomModal from '../components/PetRouteBottomModal'; // 추가된 모달 컴포넌트 import
 
 
 const MapScreen = () => {
     const { userData } = userStore();
-    const { saveWalk, fetchWalk } = walkStore();
+    const { saveWalk, fetchWalk, walks, fetchPetWalksByDate } = walkStore(); // fetchPetWalksByDate 추가
 
     // 🐶 선택된 반려동물
     const [selectedPet, setSelectedPet] = useState(userData.petList[0]);
@@ -44,6 +45,10 @@ const MapScreen = () => {
     const [keepThisPet, setKeepThisPet] = useState(true);
     // ⏱️ 경과 시간 추적용
     const [elapsedTime, setElapsedTime] = useState('00:00:00');
+
+    const [isBottomSheetVisible, setBottomSheetVisible] = useState(false); // 추가: 하단 모달 표시 여부
+
+    const [petRoutes, setPetRoutes] = useState<any[]>([]); // 선택한 펫의 루트를 위한 상태
 
     // 📍 지도 참조
     const mapRef = useRef<MapView | null>(null); // ✅ 지도 참조 객체 추가
@@ -246,6 +251,47 @@ const MapScreen = () => {
         }
     };
 
+    const handleSelectPetFromModal = async (petId: number) => {
+        // ✅ 1. Pet 객체 존재 여부 체크
+        const foundPet = userData.petList.find((pet) => pet.id === petId.toString());
+        if (!foundPet) {
+            Alert.alert('❌ 선택된 반려동물을 찾을 수 없습니다.');
+            return;
+        }
+        setSelectedPet(foundPet);
+        const today = new Date().toISOString().split('T')[0];
+        const dateParam = `${today}T12:00:00Z`; // ✅ 고정 시간 (UTC)
+
+        try {
+            // ✅ 2. 날짜 기준 산책 기록 불러오기
+            const petWalks = await fetchPetWalksByDate(petId, dateParam);
+
+            if (petWalks && petWalks.length > 0) {
+                const lastRoute = petWalks[0].route;
+                setPetRoutes(lastRoute); // ✅ 경로 상태 저장
+
+                // ✅ 3. 맵 이동
+                if (lastRoute.length > 0) {
+                    mapRef.current?.animateToRegion({
+                        latitude: lastRoute[0].latitude,
+                        longitude: lastRoute[0].longitude,
+                        latitudeDelta: 0.01,
+                        longitudeDelta: 0.01,
+                    }, 1000);
+                }
+            } else {
+                setPetRoutes([]);
+                Alert.alert('🚫 산책 기록 없음', '해당 반려동물의 오늘 산책 기록이 없습니다.');
+            }
+        } catch (err) {
+            console.error('❌ 산책 기록 조회 중 에러 발생:', err);
+            Alert.alert('에러', '산책 기록을 불러오는 중 문제가 발생했습니다.');
+        }
+
+        setBottomSheetVisible(false); // ✅ 모달 닫기
+    };
+
+
     return (
         <View style={styles.container}>
             {/* ✅ 산책 중 상단 정보 바 */}
@@ -322,7 +368,7 @@ const MapScreen = () => {
                     style={styles.walkMainButton}
                     onPress={() => {
                         if (isWalking) handleWalkEnd();
-                        else setPetModalVisible(true);
+                        else { setPetModalVisible(true); }
                     }}
                 >
                     <Text style={styles.walkButtonText}>{isWalking ? '산책 종료' : '산책 시작'}</Text>
@@ -379,6 +425,30 @@ const MapScreen = () => {
                     </View>
                 </View>
             </Modal>
+            {/* ✅ 하단 모달: 펫 루트 선택용 */}
+            <PetRouteBottomModal
+                isVisible={isBottomSheetVisible}
+                onClose={() => setBottomSheetVisible(false)}
+                pets={userData.petList.map(pet => ({
+                    id: Number(pet.id), // ← 숫자로 변환!
+                    name: pet.name,
+                    image: pet.image,
+                }))}
+                onSelectPet={handleSelectPetFromModal}
+            />
+
+            {/* ✅ 추가된 버튼: 산책 루트 보기 모달 열기 */}
+            <TouchableOpacity
+                style={[styles.locationButton, { bottom: 190 }]} // 위치 조정
+                onPress={() => setBottomSheetVisible(true)}
+            >
+                <Icon name="pets" size={22} color="white" />
+            </TouchableOpacity>
+
+            {/* ✅ 선택된 펫의 산책 루트를 지도에 표시 */}
+            {petRoutes.length > 1 && (
+                <Polyline coordinates={petRoutes} strokeColor="#FFDD99" strokeWidth={4} />
+            )}
         </View>
     );
 };

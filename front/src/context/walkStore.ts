@@ -48,7 +48,7 @@ interface WalkStore {
     deleteWalk: (walkId: number) => Promise<void>;
     fetchWalksByPet: (petId: number) => Promise<void>;
     fetchWalksByDate: (date: string) => Promise<void>;
-    fetchPetWalksByDate: (petId: number, date: string) => Promise<void>;
+    fetchPetWalksByDate: (petId: number, date: string) => Promise<Walk[]>;
 }
 
 /** ✅ Zustand Store 생성 */
@@ -149,8 +149,10 @@ const walkStore = create<WalkStore>((set) => ({
             set((state) => ({
                 petWalks: { ...state.petWalks, [petId]: walks },
             }));
+            return walks;
         } catch (error) {
             console.error('❌ [펫 날짜별 산책 기록 불러오기 실패]:', error);
+            return [];
         }
     },
 }));
