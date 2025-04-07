@@ -41,7 +41,7 @@ const TutorialScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF', padding: 20 },
     text: { fontSize: 18, textAlign: 'center', marginBottom: 40 },
-    button: { backgroundColor: '#6A4BBC', paddingVertical: 12, paddingHorizontal: 30, borderRadius: 10 },
+    button: { backgroundColor: '#4D7CFE', paddingVertical: 12, paddingHorizontal: 30, borderRadius: 10 },
     buttonText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
 });
 

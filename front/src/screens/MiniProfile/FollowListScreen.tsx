@@ -10,12 +10,13 @@ import userFollowStore, { Follower, Following } from '../../context/userFollowSt
 import profileFollowStore from '../../context/profileFollowStore';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { getImageSource } from '../../utils/imageUtils';
+import MiniProfileModal from '../../components/MiniProfileModal';
 
 // FlatList 항목을 위한 유니온 타입 정의
 type FollowListItem = Follower | Following;
 
 // ✅ 기본 프로필 이미지
-const DEFAULT_PROFILE_IMAGE = require('../../assets/images/profile-1.png');
+const DEFAULT_PROFILE_IMAGE = require('../../assets/images/user-2.png');
 
 const FollowListScreen = () => {
     const navigation = useNavigation();
@@ -47,6 +48,13 @@ const FollowListScreen = () => {
     const [followerList, setFollowerList] = useState<Follower[]>([]);
     const [followingList, setFollowingList] = useState<Following[]>([]);
 
+    // 💬 미니모달 상태 및 유저 정보 저장
+    const [selectedUser, setSelectedUser] = useState<{
+        id: number;
+        name: string;
+        profileImage: string;
+    } | null>(null);
+    const [isModalVisible, setIsModalVisible] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -71,12 +79,12 @@ const FollowListScreen = () => {
         fetchData();
     }, [selectedSegment, userId, userData.id, fetchUserFollowers, fetchProfileFollowers, fetchUserFollowing, fetchProfileFollowing]);
 
-    // 리스트가 비어있는지 확인하는 함수
+    // ✅ 리스트가 비어있는지 확인
     const isListEmpty = selectedSegment === 0
         ? followerList.length === 0
         : followingList.length === 0;
 
-    // 각 항목에 대한 고유 키를 생성하는 함수
+    // ✅ 각 항목의 고유 키 설정
     const getItemKey = (item: FollowListItem): string => {
         if ('followerId' in item) {
             return `follower-${item.followerId}`;
@@ -85,38 +93,52 @@ const FollowListScreen = () => {
         }
     };
 
-    // 특정 항목을 렌더링하는 함수
+    // ✅ FlatList 항목 렌더링 + 모달 오픈 기능 추가
     const renderItem = ({ item }: { item: FollowListItem }) => {
         if ('followerId' in item) {
-            // 팔로워인 경우
             return (
-                <View style={styles.userItem}>
+                <TouchableOpacity
+                    style={styles.userItem}
+                    onPress={() => {
+                        setSelectedUser({
+                            id: item.followerId,
+                            name: item.followerNickName,
+                            profileImage: item.followerProfileImageUrl || '',
+                        });
+                        setIsModalVisible(true); // ✅ 미니모달 열기
+                    }}
+                >
                     <Image
                         source={getImageSource(item.followerProfileImageUrl, DEFAULT_PROFILE_IMAGE)}
                         style={styles.profileImage}
                     />
-                    <Text style={styles.usernameText}>
-                        {item.followerNickName}
-                    </Text>
-                </View>
+                    <Text style={styles.usernameText}>{item.followerNickName}</Text>
+                </TouchableOpacity>
             );
         } else {
-            // 팔로잉인 경우
             return (
-                <View style={styles.userItem}>
+                <TouchableOpacity
+                    style={styles.userItem}
+                    onPress={() => {
+                        setSelectedUser({
+                            id: item.followingId,
+                            name: item.followingNickName,
+                            profileImage: item.followingProfileImageUrl || '',
+                        });
+                        setIsModalVisible(true); // ✅ 미니모달 열기
+                    }}
+                >
                     <Image
                         source={getImageSource(item.followingProfileImageUrl, DEFAULT_PROFILE_IMAGE)}
                         style={styles.profileImage}
                     />
-                    <Text style={styles.usernameText}>
-                        {item.followingNickName}
-                    </Text>
-                </View>
+                    <Text style={styles.usernameText}>{item.followingNickName}</Text>
+                </TouchableOpacity>
             );
         }
     };
 
-    // 헤더 타이틀 생성
+    // ✅ 헤더 텍스트 지정
     const getHeaderTitle = () => {
         return selectedSegment === 0
             ? `${userName}님의 팔로워`
@@ -152,7 +174,7 @@ const FollowListScreen = () => {
             ) : (
                 <View style={styles.emptyContainer}>
                     <Image
-                        source={require('../../assets/images/profile-1.png')}
+                        source={require('../../assets/images/user-2.png')}
                         style={styles.emptyImage}
                     />
                     <Text style={styles.emptyText}>
@@ -163,9 +185,19 @@ const FollowListScreen = () => {
                     </TouchableOpacity>
                 </View>
             )}
+
+            {/* ✅ 미니 프로필 모달 */}
+            {selectedUser && (
+                <MiniProfileModal
+                    visible={isModalVisible}
+                    onClose={() => setIsModalVisible(false)}
+                    user={selectedUser}
+                />
+            )}
         </SafeAreaView>
     );
 };
+
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#FFF' },

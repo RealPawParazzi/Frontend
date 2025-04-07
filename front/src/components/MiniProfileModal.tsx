@@ -3,10 +3,13 @@ import {
     View, Text, Image, Modal, StyleSheet, TouchableOpacity,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import userFollowStore from '../context/userFollowStore';        // 현재 로그인 유저의 팔로우 상태 관리
-import profileFollowStore from '../context/profileFollowStore';  // 프로필 유저(B)의 팔로워/팔로잉 관리
-import boardStore from '../context/boardStore';
-import userStore from '../context/userStore'; // ✅ 현재 로그인된 사용자 정보 가져오기
+
+import userFollowStore from '../context/userFollowStore';        // 현재 로그인 유저의 팔로우 상태
+import profileFollowStore from '../context/profileFollowStore';  // 프로필 유저(B)의 팔로우 정보
+import userStore from '../context/userStore';                    // 현재 로그인 유저 정보
+
+// ✅ boardStore 완전 제거하고 아래 API만 사용
+import { getBoardsByMember } from '../services/boardService';
 import { getImageSource } from '../utils/imageUtils';
 
 // ✅ 기본 프로필 이미지
@@ -25,13 +28,22 @@ interface MiniProfileModalProps {
 
 const MiniProfileModal = ({ visible, onClose, user }: MiniProfileModalProps) => {
     const navigation = useNavigation();
-    const { following, fetchFollowing, followUser, unfollowUser } = userFollowStore();   // userFollowStore 사용
-    const { followers, following: profileFollowing, fetchProfileFollowers, fetchProfileFollowing, setFollowerCount, setFollowingCount, followerCount, followingCount } = profileFollowStore();  // profileFollowStore 사용
-    const { boardList, fetchUserBoards } = boardStore();
+    const { following, fetchFollowing, followUser, unfollowUser } = userFollowStore();
+    const {
+        followers,
+        following: profileFollowing,
+        fetchProfileFollowers,
+        fetchProfileFollowing,
+        setFollowerCount,
+        setFollowingCount,
+        followerCount,
+        followingCount,
+    } = profileFollowStore();
+
     const { userData } = userStore();
 
     const [isFollowing, setIsFollowing] = useState(false);
-    const [postCount, setPostCount] = useState(0);
+    const [postCount, setPostCount] = useState(0); // ✅ 게시물 수 상태 (boardList 사용 안 함)
 
 
     /** ✅ 현재 프로필이 로그인한 유저의 프로필인지 확인 */
@@ -40,6 +52,16 @@ const MiniProfileModal = ({ visible, onClose, user }: MiniProfileModalProps) => 
     /** ✅ 프로필 정보 불러오기 */
     useEffect(() => {
         if (visible) {
+            // ✅ 게시물 수만 별도 fetch (스토어 안 건드림)
+            getBoardsByMember(user.id)
+                .then((userBoards) => {
+                    setPostCount(userBoards.length);
+                })
+                .catch((error) => {
+                    console.error('❌ 프로필 게시글 가져오기 실패:', error);
+                    setPostCount(0); // fallback
+                });
+
             // B(프로필 유저)의 팔로워 및 팔로잉 목록 가져오기
             fetchProfileFollowers(user.id); // ✅ B(프로필 유저)를 팔로우하는 사람들의 목록
             fetchProfileFollowing(user.id); // ✅ B(프로필 유저)가 팔로우하는 사람들의 목록
@@ -49,13 +71,12 @@ const MiniProfileModal = ({ visible, onClose, user }: MiniProfileModalProps) => 
                 fetchFollowing(Number(userData.id)); // ✅ A(로그인 유저)가 팔로우하는 사람들의 목록
             }
 
-            fetchUserBoards(user.id); // 유저 게시글 불러오기
         }
 
         console.log('현재 로그인 유저(A) = ', userData.id);
         console.log('프로필의 주인인 유저(B) = ', user.id);
 
-    }, [visible, user.id, fetchFollowing, fetchUserBoards, userData.id, isOwnProfile, fetchProfileFollowers, fetchProfileFollowing]);
+    }, [visible, user.id, fetchFollowing, userData.id, isOwnProfile, fetchProfileFollowers, fetchProfileFollowing]);
 
     /** ✅ 팔로우 상태 & 게시물 개수 업데이트 */
     useEffect(() => {
@@ -65,14 +86,11 @@ const MiniProfileModal = ({ visible, onClose, user }: MiniProfileModalProps) => 
             setIsFollowing(loggedInUserFollowing.length > 0);
         }
 
-        // 게시물 수 업데이트
-        setPostCount(boardList.length || 0);
-
         // 팔로워/팔로잉 수 업데이트
         setFollowerCount(followers.length);
         setFollowingCount(profileFollowing.length);
 
-    }, [following, followers, boardList, user.id, isOwnProfile, setFollowerCount, setFollowingCount, profileFollowing.length]);
+    }, [following, followers, user.id, isOwnProfile, setFollowerCount, setFollowingCount, profileFollowing.length]);
 
 
 
@@ -182,7 +200,12 @@ const MiniProfileModal = ({ visible, onClose, user }: MiniProfileModalProps) => 
                             ]}
                             onPress={handleFollowToggle}
                         >
-                            <Text style={styles.followText}>{isFollowing ? '언팔로우' : '팔로우'}</Text>
+                            <Text
+                                style={[
+                                    styles.followText,
+                                    isFollowing && styles.unfollowText,
+                                ]}
+                            >{isFollowing ? '언팔로우' : '팔로우'}</Text>
                         </TouchableOpacity>
                     )}
                 </View>
@@ -246,17 +269,26 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     followButton: {
-        backgroundColor: '#4A90E2',
-        paddingVertical: 8,
-        paddingHorizontal: 20,
-        borderRadius: 5,
+        backgroundColor: '#4D7CFE',
+        paddingHorizontal: 14,
+        paddingVertical: 6,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#4D7CFE',
     },
+
     unfollowButton: {
-        backgroundColor: '#E74C3C', // 언팔로우 버튼 색상
+        backgroundColor: 'white',
     },
     followText: {
-        color: '#FFF',
+        color: 'white',
         fontWeight: 'bold',
+        fontSize: 13,
+    },
+    unfollowText: {
+        color: '#4D7CFE',
+        fontWeight: 'bold',
+        fontSize: 13,
     },
     closeProfileButton: { // 🛠 본인 프로필일 때 닫기 버튼 스타일 추가
         backgroundColor: '#888',

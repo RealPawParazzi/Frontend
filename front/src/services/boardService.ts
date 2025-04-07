@@ -93,7 +93,7 @@ export const getBoardList = async () => {
 };
 
 /**
- * ✅ 특정 회원의 게시글 목록 조회 API ???? 백엔드에 얘 있나..?
+ * ✅ 특정 회원의 게시글 목록 조회 API
  * @param memberId 회원 ID
  * @returns 특정 회원의 게시글 목록 배열 반환
  * @throws 게시글 목록 조회 실패 시 오류 발생

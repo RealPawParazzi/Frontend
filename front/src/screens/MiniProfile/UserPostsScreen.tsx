@@ -3,7 +3,7 @@ import {
     View, Text, FlatList, Image, StyleSheet, SafeAreaView, TouchableOpacity,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import boardStore from '../../context/boardStore';
+import boardStore, { Board } from '../../context/boardStore';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 // @ts-ignore
@@ -12,23 +12,25 @@ const UserPostsScreen = () => {
     const route = useRoute();
     const { userId, userName } = route.params as { userId: number; userName: string };
 
-    const { boardList, fetchUserBoards } = boardStore();
-    const [posts, setPosts] = useState(boardList);  // ✅ 초기 상태를 store로 설정
+    const { userBoardsMap, fetchUserBoards } = boardStore();
+    const [posts, setPosts] = useState<Board[]>([]);
 
-    // ✅ userId 바뀔 때 게시글 데이터 로딩
+    // ✅ 게시글 불러오기 (userId 변경 시마다)
     useEffect(() => {
-        fetchUserBoards(userId);
+        if (userId) {
+            fetchUserBoards(userId);
+        }
     }, [fetchUserBoards, userId]);
 
-    // ✅ boardList가 변경될 때 posts 업데이트
+    // ✅ userBoardsMap 변경 시 게시글 업데이트
     useEffect(() => {
-        setPosts(boardList);
-    }, [boardList]);
+        setPosts(userBoardsMap[userId] || []);
+    }, [userBoardsMap, userId]);
 
     /** 게시글 클릭 시 상세화면 이동 */
     const handlePostPress = (postId: number) => {
         // @ts-ignore
-        navigation.navigate('StorybookDetailScreen', { boardId: postId }); // ✅ postId를 boardId로 수정
+        navigation.navigate('StorybookDetailScreen', { boardId: postId });
     };
 
     return (

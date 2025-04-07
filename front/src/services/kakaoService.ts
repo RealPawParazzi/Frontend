@@ -6,7 +6,8 @@ const API_BASE_URL = Platform.OS === 'android'
     ? 'http://10.0.2.2:8080/api/auth'  // 안드로이드용
     : 'http://localhost:8080/api/auth'; // iOS용
 
-export const kakaoLogin = async () => {
-    // ✅ 백엔드 카카오 로그인 API로 이동 (웹뷰 방식 추천)
-    Linking.openURL(`${API_BASE_URL}/login/kakao`);
+export const requestKakaoToken = async (code: string) => {
+    const response = await fetch(`${API_BASE_URL}/kakao/callback?code=${code}`);
+    if (!response.ok) throw new Error('카카오 로그인 실패');
+    return await response.json(); // { accessToken, refreshToken }
 };

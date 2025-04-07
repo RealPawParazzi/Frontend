@@ -1,35 +1,92 @@
-import React, { useState } from 'react';
-import { View, Text, FlatList, Image, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+// 📅 CalendarScreen.tsx - 게시글 & 산책 날짜 캘린더 표시 + 선택 날짜 활동 상세
+import React, { useState, useEffect } from 'react';
+import {
+    View,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    StyleSheet,
+    ScrollView,
+} from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import userStore from '../context/userStore';
+import walkStore from '../context/walkStore';
+import boardStore from '../context/boardStore';
 
 const CalendarScreen = () => {
-    const { userData } = userStore(); // ✅ Zustand에서 사용자 데이터 가져오기
+    const { userData } = userStore();
+    const { walks } = walkStore();
+    const { boardList } = boardStore();
+
     const [selectedDate, setSelectedDate] = useState('');
     const [searchText, setSearchText] = useState('');
+    const [markedDates, setMarkedDates] = useState({});
 
-    // 📌 선택한 날짜의 활동 기록 필터링
-    const filteredPosts = userData.recentPosts.filter(post =>
-        post.title.includes(searchText) || searchText === ''
+    // 📆 날짜 문자열 파싱 함수
+    const formatDate = (datetime: string) => datetime.split('T')[0];
+
+    // 🟦 산책기록 + 게시물 날짜 마킹
+    useEffect(() => {
+        const tempMarked: Record<string, any> = {};
+
+        // 1️⃣ 산책 날짜 마킹
+        Object.values(walks).forEach((walk) => {
+            const dateKey = formatDate(walk.startTime);
+            tempMarked[dateKey] = {
+                marked: true,
+                dotColor: '#4D7CFE',
+                selectedColor: '#4D7CFE',
+            };
+        });
+
+        // 2️⃣ 게시글 날짜 마킹 (산책 없을 경우만 연한 색)
+        boardList.forEach((post) => {
+            const dateKey = post.writeDatetime?.split('T')[0];
+            if (!tempMarked[dateKey]) {
+                tempMarked[dateKey] = {
+                    marked: true,
+                    dotColor: '#B3C7FF',
+                };
+            }
+        });
+
+        // 3️⃣ 선택 날짜 마킹
+        if (selectedDate) {
+            tempMarked[selectedDate] = {
+                ...(tempMarked[selectedDate] || {}),
+                selected: true,
+                selectedColor: '#4D7CFE',
+            };
+        }
+
+        setMarkedDates(tempMarked);
+    }, [walks, boardList, selectedDate]);
+
+    // 📌 선택 날짜의 산책 + 게시물 필터
+    const filteredWalks = Object.values(walks).filter(
+        (w) => formatDate(w.startTime) === selectedDate
     );
+
+    const filteredPosts = boardList.filter(
+        (post) =>
+            post.writeDatetime?.startsWith(selectedDate) &&
+            (post.title.includes(searchText) || searchText === '')
+    );
+
 
     return (
         <View style={styles.container}>
-
-            {/* 🗓️ 캘린더 */}
             <Calendar
                 onDayPress={(day: { dateString: React.SetStateAction<string>; }) => setSelectedDate(day.dateString)}
-                markedDates={{
-                    [selectedDate]: { selected: true, selectedColor: '#6A5ACD' },
-                }}
+                markedDates={markedDates}
                 theme={{
-                    selectedDayBackgroundColor: '#6A5ACD',
-                    todayTextColor: '#6A5ACD',
-                    arrowColor: '#6A5ACD',
+                    selectedDayBackgroundColor: '#4D7CFE',
+                    todayTextColor: '#4D7CFE',
+                    arrowColor: '#4D7CFE',
                 }}
             />
 
-            {/* 🔍 반려동물 검색 */}
+            {/* 🔍 검색창 */}
             <View style={styles.searchContainer}>
                 <TextInput
                     style={styles.searchInput}
@@ -42,36 +99,68 @@ const CalendarScreen = () => {
                 </TouchableOpacity>
             </View>
 
-            {/* 📌 선택한 날짜의 반려동물 기록 표시 */}
-            <FlatList
-                data={filteredPosts}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <View style={styles.postContainer}>
-                        <Image source={item.image} style={styles.postImage} />
-                        <View style={styles.postInfo}>
-                            <Text style={styles.postTitle}>{item.title}</Text>
-                            <Text style={styles.postDescription}>Category • $$ • 1.2 miles away</Text>
-                        </View>
-                    </View>
+            <ScrollView>
+                {/* 🐾 산책 기록 */}
+                {filteredWalks.length > 0 && (
+                    <>
+                        <Text style={styles.sectionTitle}>📍 산책 기록</Text>
+                        {filteredWalks.map((walk) => (
+                            <View key={walk.id} style={styles.walkItem}>
+                                <Text style={styles.walkTitle}>[산책] {walk.distance}km</Text>
+                                <Text style={styles.walkDesc}>
+                                    {new Date(walk.startTime).toLocaleTimeString()} • 평균 {walk.averageSpeed}km/h
+                                </Text>
+                            </View>
+                        ))}
+                    </>
                 )}
-            />
+
+                {/* 📝 게시물 */}
+                {filteredPosts.length > 0 && (
+                    <>
+                        <Text style={styles.sectionTitle}>📝 게시물</Text>
+                        {filteredPosts.map((post) => (
+                            <View key={post.id} style={styles.postItem}>
+                                <Text style={styles.postTitle}>[게시물] {post.title}</Text>
+                                <Text style={styles.postContent}>{post.titleContent}</Text>
+                                <Text style={styles.postAuthor}>작성자: {post.author?.nickname}</Text>
+                            </View>
+                        ))}
+                    </>
+                )}
+            </ScrollView>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#ffffff', padding: 15 },
-    title: { fontSize: 24, fontWeight: 'bold', marginBottom: 10 },
     searchContainer: { flexDirection: 'row', alignItems: 'center', marginVertical: 10 },
     searchInput: { flex: 1, borderWidth: 1, borderColor: '#ccc', padding: 10, borderRadius: 8 },
-    searchButton: { backgroundColor: '#6A5ACD', padding: 10, marginLeft: 10, borderRadius: 8 },
+    searchButton: { backgroundColor: '#4D7CFE', padding: 10, marginLeft: 10, borderRadius: 8 },
     searchButtonText: { color: 'white', fontWeight: 'bold' },
-    postContainer: { flexDirection: 'row', alignItems: 'center', marginVertical: 10 },
-    postImage: { width: 60, height: 60, borderRadius: 10, marginRight: 10 },
-    postInfo: { flex: 1 },
-    postTitle: { fontSize: 16, fontWeight: 'bold' },
-    postDescription: { fontSize: 12, color: 'gray' },
+
+    sectionTitle: { fontSize: 16, fontWeight: 'bold', marginTop: 16 },
+
+    walkItem: {
+        backgroundColor: '#EDF3FF',
+        padding: 10,
+        marginTop: 8,
+        borderRadius: 8,
+    },
+    walkTitle: { fontWeight: 'bold', color: '#4D7CFE' },
+    walkDesc: { fontSize: 12, color: '#333', marginTop: 2 },
+
+    postItem: {
+        backgroundColor: '#E6EDFF',
+        padding: 10,
+        marginTop: 8,
+        borderRadius: 8,
+    },
+    postTitle: { fontWeight: 'bold', color: '#4D7CFE' },
+    postContent: { marginTop: 4, fontSize: 14 },
+    postAuthor: { marginTop: 4, fontSize: 12, color: 'gray' },
 });
 
 export default CalendarScreen;
+

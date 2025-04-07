@@ -1,39 +1,56 @@
-// kakaoStore.ts - 카카오 로그인 상태 관리 전용 스토어 (Zustand 사용)
+// ✅ kakaoStore.ts - Access + Refresh 토큰 구조에 맞게 전체 리팩토링 (Zustand)
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { validateToken } from '../services/authService';
 
-// "카카오스테이트" 인터페이스 정의
+// ✅ 카카오 상태 타입 정의
 interface KakaoState {
-    token: string | null;           // JWT 토큰
-    isKakaoLogin: boolean;          // 카카오 로그인 여부
-
-    setToken: (token: string) => void;    // 토큰 저장 함수
-    clearToken: () => void;               // 토큰 삭제 함수
-    checkTokenValidity: () => Promise<boolean>; // 토큰 유효성 확인 함수
+    token: string | null;
+    isKakaoLogin: boolean;
+    setToken: (accessToken: string, refreshToken: string) => Promise<void>;
+    clearToken: () => Promise<void>;
+    checkTokenValidity: () => Promise<boolean>;
 }
 
-// "카카오스토어" 생성
+// ✅ Zustand 기반 스토어 생성
 export const useKakaoStore = create<KakaoState>((set) => ({
     token: null,
     isKakaoLogin: false,
 
-    // ✅ JWT 토큰 저장 및 카카오 로그인 상태 true로 변경
-    setToken: async (token: string) => {
-        await AsyncStorage.setItem('userToken', token);
-        set({ token, isKakaoLogin: true }); // 카카오 로그인 성공 상태 업데이트
+    /**
+     * ✅ accessToken + refreshToken 저장
+     * - AsyncStorage에 각각 저장
+     * - 내부 상태도 함께 갱신
+     */
+    setToken: async (accessToken, refreshToken) => {
+        await AsyncStorage.multiSet([
+            ['accessToken', accessToken],
+            ['refreshToken', refreshToken],
+        ]);
+        set({ token: accessToken, isKakaoLogin: true });
     },
 
-    // ✅ JWT 토큰 삭제 및 카카오 로그인 상태 false로 변경
+    /**
+     * ✅ 모든 토큰 삭제 (로그아웃)
+     * - access + refresh 둘 다 제거
+     * - 내부 로그인 상태 false 처리
+     */
     clearToken: async () => {
-        await AsyncStorage.removeItem('userToken');
-        set({ token: null, isKakaoLogin: false }); // 로그아웃 상태 업데이트
+        await AsyncStorage.multiRemove(['accessToken', 'refreshToken']);
+        set({ token: null, isKakaoLogin: false });
     },
 
-    // ✅ 저장된 토큰의 유효성 확인 후 상태 갱신
+
+    /**
+     * ✅ 저장된 accessToken 기준 유효성 확인
+     * - 유효하면 로그인 상태 유지
+     * - 만료 or 없음 → false 반환 및 상태 초기화
+     */
     checkTokenValidity: async () => {
-        const token = await AsyncStorage.getItem('userToken');
-        if (token && await validateToken()) {
+        const token = await AsyncStorage.getItem('accessToken');
+        const isValid = token && await validateToken();
+
+        if (isValid) {
             set({ token, isKakaoLogin: true });
             return true;
         } else {

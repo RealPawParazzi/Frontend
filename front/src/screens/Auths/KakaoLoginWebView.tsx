@@ -1,59 +1,70 @@
-import React from 'react';
-import {ActivityIndicator, StyleSheet, SafeAreaView, Platform} from 'react-native';
+import React, { useRef } from 'react';
+import {
+    ActivityIndicator,
+    StyleSheet,
+    SafeAreaView,
+    Platform,
+} from 'react-native';
 import { WebView } from 'react-native-webview';
-import { useNavigation } from '@react-navigation/native'; // ✅ useNavigation 사용
+import { useNavigation } from '@react-navigation/native';
 import { useKakaoStore } from '../../context/kakaoStore';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import authStore from '../../context/authStore';
+import {requestKakaoToken} from '../../services/kakaoService';
 
 // ✅ 네비게이션 타입 정의
 type NavigationProp = StackNavigationProp<RootStackParamList, 'KakaoLoginWebView'>;
 
-
 const KakaoLoginWebView: React.FC = () => {
-    const navigation = useNavigation<NavigationProp>(); // ✅ useNavigation 사용
+    const navigation = useNavigation<NavigationProp>();
     const { setToken } = useKakaoStore();
+    const webViewRef = useRef(null); // ✅ access + refresh 저장 함수
 
-    // URL 요청 전에 매번 호출되는 함수 (즉각적인 URL 감지)
+    /**
+     * ✅ 카카오 인가 코드 처리 후 백엔드로 요청 → access/refresh 토큰 발급 받기
+     */
+    const handleKakaoLogin = async (code: string) => {
+        try {
+            const { accessToken, refreshToken } = await requestKakaoToken(code);
+            await setToken(accessToken, refreshToken);
+            authStore.setState({ isLoggedIn: true });
+            navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
+        } catch (err) {
+            console.error('카카오 로그인 처리 실패:', err);
+        }
+    };
+
     const handleShouldStartLoadWithRequest = (request: any) => {
-        const { url } = request;
-
-        // 백엔드가 제공한 성공 URL 감지
-        if (url.includes('/auth/success?token=')) {
-            const tokenMatch = url.match(/[?&]token=([^&]+)/);
-
-            if (tokenMatch) {
-                const jwtToken = decodeURIComponent(tokenMatch[1]);
-
-                setToken(jwtToken); // 토큰 저장 처리
-
-                // ✅ `isLoggedIn` 상태를 업데이트
-                authStore.setState({ isLoggedIn: true }); // 🔹 `setAuthStatus` 대신 사용
-
-
-                // ✅ 네비게이션 스택 초기화 후 Home으로 이동
-                navigation.reset({
-                    index: 0,
-                    routes: [{ name: 'Home' }],
-                });
-
-                return false; // 이 URL을 로딩하지 않음 (WebView 종료)
-            }
+        let { url } = request;
+        if (Platform.OS === 'android' && url.includes('localhost')) {
+            url = url.replace('localhost', '10.0.2.2');
         }
 
-        return true; // 그 외 URL은 계속 로딩 허용
+        const codeMatch = url.match(/[?&]code=([^&]+)/);
+        if (url.includes('/kakao/callback') && codeMatch) {
+            const code = decodeURIComponent(codeMatch[1]);
+            handleKakaoLogin(code);
+            navigation.goBack();
+            return false;
+        }
+
+        return true;
     };
 
     return (
         <SafeAreaView style={styles.container}>
             <WebView
+                ref={webViewRef}
+                originWhitelist={['*']}
                 source={{
                     uri: Platform.OS === 'android'
                         ? 'http://10.0.2.2:8080/api/auth/login/kakao'
                         : 'http://localhost:8080/api/auth/login/kakao',
                 }}
-                onNavigationStateChange={handleShouldStartLoadWithRequest}
+                onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
+                onError={({ nativeEvent }) => console.warn('WebView 에러:', nativeEvent)}
+                onHttpError={({ nativeEvent }) => console.warn('HTTP 에러 발생:', nativeEvent)}
                 startInLoadingState
                 renderLoading={() => (
                     <ActivityIndicator size="large" color="#6A4BBC" style={styles.loader} />
@@ -64,9 +75,8 @@ const KakaoLoginWebView: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-    container: {flex: 1, backgroundColor: '#FFF'}, // backgroundColor로 자연스럽게 여백 처리
-    loader: {flex: 1, justifyContent: 'center'},
+    container: { flex: 1, backgroundColor: '#FFF' },
+    loader: { flex: 1, justifyContent: 'center' },
 });
-
 
 export default KakaoLoginWebView;

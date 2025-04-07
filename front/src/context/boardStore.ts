@@ -11,7 +11,7 @@ import {
 } from '../services/boardService';
 
 /** 📌 게시글 데이터 타입 정의 */
-interface Board {
+export interface Board {
     id: number;
     title: string;
     visibility: 'PUBLIC' | 'FOLLOWERS';
@@ -73,7 +73,8 @@ const defaultBoard: Board = {
 
 /** 📌 Zustand Store 정의 */
 const boardStore = create<{
-    boardList: Board[];
+    boardList: Board[]; // 전체 게시글 리스트
+    userBoardsMap: Record<number, Board[]>; // 👈 유저별 게시글 리스트
     selectedBoard: Board | null;
     fetchBoardList: () => Promise<void>;
     fetchBoardDetail: (boardId: number) => Promise<void>;
@@ -98,7 +99,7 @@ const boardStore = create<{
     /** ✅ 게시글 목록 (기본값: dummy 데이터) */
     boardList: [defaultBoard],
 
-
+    userBoardsMap: {}, // 👈 유저 게시글 맵
     /** ✅ 선택된 게시글 */
     selectedBoard: defaultBoard,
 
@@ -111,6 +112,33 @@ const boardStore = create<{
             console.error('❌ 전체 게시글 불러오기 실패:', error);
         }
     },
+
+    /** ✅ 특정 유저 게시글 가져오기 (userBoardsMap에 저장) */
+    fetchUserBoards: async (memberId) => {
+        try {
+            if (!memberId) {
+                throw new Error(`❌ 유효하지 않은 memberId: ${memberId}`); // ✅ memberId가 올바른지 확인
+            }
+            const data = await getBoardsByMember(memberId);
+            if (data.length > 0) {
+                boardStore.setState((state) => ({
+                    userBoardsMap: {
+                        ...state.userBoardsMap,
+                        [memberId]: data,
+                    },
+                }));
+            }
+        } catch (error) {
+            console.error(`❌ 유저(${memberId}) 게시글 가져오기 실패:`, error);
+            boardStore.setState((state) => ({
+                userBoardsMap: {
+                    ...state.userBoardsMap,
+                    [memberId]: [],
+                },
+            }));
+        }
+    },
+
 
     /** 🔵 특정 게시글 상세 조회 */
     fetchBoardDetail: async (boardId) => {
@@ -193,27 +221,6 @@ const boardStore = create<{
             }));
         } catch (error) {
             console.error('❌ deleteExistingBoard 오류:', error);
-        }
-    },
-
-    /** 🔵 특정 회원의 게시글 목록 조회 */
-    fetchUserBoards: async (memberId) => {
-        try {
-            if (!memberId) {
-                throw new Error(`❌ 유효하지 않은 memberId: ${memberId}`); // ✅ memberId가 올바른지 확인
-            }
-
-            const data = await getBoardsByMember(memberId);
-            if (data.length > 0) {
-                set({ boardList: data.length > 0 ? data : [defaultBoard] });
-            } else {
-                console.warn('⚠️ 게시글이 없어서 기본 데이터 설정됨.');
-                set({ boardList: [defaultBoard] }); // ✅ 게시글이 없을 경우 기본 데이터 설정
-            }
-
-        } catch (error) {
-            console.error('❌ 특정 회원의 게시글 목록 불러오기 실패:', error);
-            set({ boardList: [defaultBoard] }); // ❌ 오류 발생 시 기본 데이터 반환
         }
     },
 
