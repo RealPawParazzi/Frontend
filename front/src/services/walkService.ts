@@ -34,12 +34,18 @@ const calculateDistance = (route: { latitude: number; longitude: number }[]) => 
  * @param startTime 시작 시간
  * @param endTime 종료 시간
  */
-export const saveWalkData = async (petId: number, walkRoute: { latitude: number; longitude: number; timestamp: string }[], startTime: string, endTime: string) => {
+export const saveWalkData = async (
+    petId: number,
+    walkRoute: { latitude: number; longitude: number; timestamp: string }[],
+    startTime: string,
+    endTime: string
+) => {
     try {
         console.log(`📤 [산책 기록 저장] -> 반려동물 ID: ${petId}`);
 
         const headers = await getAuthHeaders();
         const distance = calculateDistance(walkRoute);
+
 
         // ✅ new Date() 대신 Date.parse() 사용하여 안전한 변환
         const startMillis = Date.parse(startTime);
@@ -56,11 +62,7 @@ export const saveWalkData = async (petId: number, walkRoute: { latitude: number;
             petId,
             startTime,
             endTime,
-            route: walkRoute.map((point) => ({
-                latitude: point.latitude,
-                longitude: point.longitude,
-                timestamp: point.timestamp,
-            })),
+            route: walkRoute,
             distance,
             averageSpeed,
         };
@@ -68,20 +70,20 @@ export const saveWalkData = async (petId: number, walkRoute: { latitude: number;
         console.log('📤 [보내는 JSON 데이터]:', JSON.stringify(requestBody, null, 2));
 
 
-        // API 경로 수정 (기존: /api/walks/save → 변경: /api/walk)
+
         const response = await axios.post(`${API_BASE_URL}`, requestBody, { headers });
+
         console.log('✅ [산책 기록 저장 성공]', response.data);
+
         return response.data;
+
     } catch (error) {
         console.error('❌ [산책 기록 저장 실패]:', error);
         throw error;
     }
 };
 
-/**
- * ✅ 산책 기록 조회 API
- * @param walkId 산책 기록 ID
- */
+/** ✅ 산책 기록 단건 조회 (walkId로 조회) */
 export const getWalkHistory = async (walkId: number) => {
     try {
         console.log(`📥 [산책 기록 요청] -> 산책 ID: ${walkId}`);
@@ -89,7 +91,6 @@ export const getWalkHistory = async (walkId: number) => {
         // ✅ 인증 헤더 가져오기
         const headers = await getAuthHeaders();
 
-        // API 경로 수정 (기존: /api/walks/{petId} → 변경: /api/walk/{walkId})
         const response = await axios.get(`${API_BASE_URL}/${walkId}`, { headers });
 
         console.log('✅ [산책 기록 불러오기 성공]', response.data);
@@ -99,3 +100,53 @@ export const getWalkHistory = async (walkId: number) => {
         throw error;
     }
 };
+
+/** ✅ 산책 기록 삭제 (walkId 기준) */
+export const deleteWalkHistory = async (walkId: number) => {
+    try {
+        const headers = await getAuthHeaders();
+        await axios.delete(`${API_BASE_URL}/${walkId}`, { headers });
+        console.log('🗑️ [산책 기록 삭제 완료]', walkId);
+    } catch (error) {
+        console.error('❌ [산책 기록 삭제 실패]:', error);
+        throw error;
+    }
+};
+
+
+/** ✅ 특정 반려동물의 모든 산책 기록 조회 */
+export const getWalksByPetId = async (petId: number) => {
+    try {
+        const headers = await getAuthHeaders();
+        const response = await axios.get(`${API_BASE_URL}/pet/${petId}`, { headers });
+        return response.data;
+    } catch (error) {
+        console.error('❌ [펫의 산책 기록 불러오기 실패]:', error);
+        throw error;
+    }
+};
+
+/** ✅ 날짜 기준 전체 펫의 산책 기록 조회 */
+export const getWalksByDate = async (date: string) => {
+    try {
+        const headers = await getAuthHeaders();
+        const response = await axios.get(`${API_BASE_URL}/date?date=${encodeURIComponent(date)}`, { headers });
+        return response.data;
+    } catch (error) {
+        console.error('❌ [날짜별 산책 기록 조회 실패]:', error);
+        throw error;
+    }
+};
+
+/** ✅ 특정 펫의 특정 날짜 산책 기록 조회 */
+export const getPetWalksByDate = async (petId: number, date: string) => {
+    try {
+        const headers = await getAuthHeaders();
+        const response = await axios.get(`${API_BASE_URL}/pet/${petId}/date?date=${encodeURIComponent(date)}`, { headers });
+        return response.data;
+    } catch (error) {
+        console.error('❌ [펫의 날짜별 산책 기록 조회 실패]:', error);
+        throw error;
+    }
+};
+

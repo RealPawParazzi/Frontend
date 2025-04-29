@@ -35,6 +35,10 @@
               <category android:name="android.intent.category.DEFAULT" />
               <category android:name="android.intent.category.BROWSABLE" />
           </intent-filter>
+          <!-- ✅ 여기에 Google Maps API Key 삽입 -->
+          <meta-data
+                  android:name="com.google.android.geo.API_KEY"
+                  android:value="AIzaSyDeT7yyMTegKe8VaifVaa2RuxnuoLxO-G4" />
       </activity>
     </application>
 </manifest>

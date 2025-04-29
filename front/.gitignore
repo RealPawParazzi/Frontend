@@ -2,6 +2,10 @@
 #
 .DS_Store
 
+# Env 파일
+.env
+
+
 # Xcode
 #
 build/
