@@ -15,9 +15,9 @@ const NaverLoginWebView: React.FC = () => {
     const webViewRef = useRef(null);
     const { setToken } = useNaverStore();
 
-    const handleNaverLogin = async (code: string) => {
+    const handleNaverLogin = async (code: string, state: string) => {
         try {
-            const { accessToken, refreshToken } = await requestNaverToken(code);
+            const { accessToken, refreshToken } = await requestNaverToken(code, state);
             await setToken(accessToken, refreshToken);
             authStore.setState({ isLoggedIn: true });
             navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
@@ -33,15 +33,20 @@ const NaverLoginWebView: React.FC = () => {
         }
 
         const codeMatch = url.match(/[?&]code=([^&]+)/);
-        if (url.includes('/naver/callback') && codeMatch) {
+        const stateMatch = url.match(/[?&]state=([^&]+)/);
+
+        if (url.includes('/naver/callback') && codeMatch && stateMatch) {
             const code = decodeURIComponent(codeMatch[1]);
-            handleNaverLogin(code);
+            const state = decodeURIComponent(stateMatch[1]);
+            handleNaverLogin(code, state);  // ✅ state까지 넘겨야 함
             navigation.goBack();
             return false;
         }
 
         return true;
     };
+
+    const STATE = 'secureRandomState'; // 백엔드와 반드시 일치시켜야 함
 
     return (
         <SafeAreaView style={styles.container}>
@@ -50,8 +55,8 @@ const NaverLoginWebView: React.FC = () => {
                 originWhitelist={['*']}
                 source={{
                     uri: Platform.OS === 'android'
-                        ? 'http://10.0.2.2:8080/api/auth/login/naver'
-                        : 'http://localhost:8080/api/auth/login/naver',
+                        ? `http://10.0.2.2:8080/api/auth/login/naver?state=${STATE}`
+                        : `http://localhost:8080/api/auth/login/naver?state=${STATE}`,
                 }}
                 onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
                 onError={({ nativeEvent }) => console.warn('WebView 에러:', nativeEvent)}

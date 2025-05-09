@@ -106,6 +106,10 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 <TouchableOpacity onPress={() => navigation.navigate('KakaoLoginWebView')}>
                     <Image source={require('../../assets/images/kakao-talk_64.png')} style={styles.socialIcon} />
                 </TouchableOpacity>
+                {/* ✅ 네이버 로그인 */}
+                <TouchableOpacity onPress={() => navigation.navigate('NaverLoginWebView')}>
+                    <Image source={require('../../assets/images/naver-logo.png')} style={styles.socialIcon} />
+                </TouchableOpacity>
             </View>
 
             <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
