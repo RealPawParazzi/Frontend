@@ -3,6 +3,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import SplashScreen from '../screens/Auths/SplashScreen';
 import LoginScreen from '../screens/Auths/LoginScreen';
 import KakaoLoginWebView from '../screens/Auths/KakaoLoginWebView';
+import NaverLoginWebView from '../screens/Auths/NaverLoginWebView';
 import SignupScreen from '../screens/Auths/SignupScreen';
 import TutorialScreen from '../screens/Auths/TutorialScreen';
 import BottomTabNavigator from './BottomTabNavigator'; // 홈 화면
@@ -24,6 +25,7 @@ export type RootStackParamList = {
     Tutorial: undefined;
     Login : undefined;
     KakaoLoginWebView: undefined;
+    NaverLoginWebView: undefined;
     Signup : undefined;
     Home: undefined;
     StorybookScreen: undefined;
@@ -79,6 +81,7 @@ const AppNavigator = () => {
                     <Stack.Screen name="Splash" component={SplashScreen} />
                     <Stack.Screen name="Tutorial" component={TutorialScreen} />
                     <Stack.Screen name="KakaoLoginWebView" component={KakaoLoginWebView} />
+                    <Stack.Screen name="NaverLoginWebView" component={NaverLoginWebView} />
                     <Stack.Screen name="Signup" component={SignupScreen} />
                 </>
             )}
