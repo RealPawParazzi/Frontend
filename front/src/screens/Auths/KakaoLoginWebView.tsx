@@ -12,6 +12,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import authStore from '../../context/authStore';
 import {requestKakaoToken} from '../../services/kakaoService';
+import { loadUserData } from '../../context/userStore';
 
 // ✅ 네비게이션 타입 정의
 type NavigationProp = StackNavigationProp<RootStackParamList, 'KakaoLoginWebView'>;
@@ -28,6 +29,9 @@ const KakaoLoginWebView: React.FC = () => {
         try {
             const { accessToken, refreshToken } = await requestKakaoToken(code);
             await setToken(accessToken, refreshToken);
+
+            // ⭐ 유저 데이터 명시적으로 다시 불러오기
+            await loadUserData();
             authStore.setState({ isLoggedIn: true });
             navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
         } catch (err) {

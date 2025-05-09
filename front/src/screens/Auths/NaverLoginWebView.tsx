@@ -7,6 +7,7 @@ import { RootStackParamList } from '../../navigation/AppNavigator';
 import { useNaverStore } from '../../context/naverStore';
 import authStore from '../../context/authStore';
 import { requestNaverToken } from '../../services/naverService';
+import { loadUserData } from '../../context/userStore';
 
 type NavigationProp = StackNavigationProp<RootStackParamList, 'NaverLoginWebView'>;
 
@@ -19,6 +20,9 @@ const NaverLoginWebView: React.FC = () => {
         try {
             const { accessToken, refreshToken } = await requestNaverToken(code, state);
             await setToken(accessToken, refreshToken);
+
+            // ⭐ 유저 데이터 명시적으로 다시 불러오기
+            await loadUserData();
             authStore.setState({ isLoggedIn: true });
             navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
         } catch (err) {
