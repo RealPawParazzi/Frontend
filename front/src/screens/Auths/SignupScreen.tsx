@@ -45,7 +45,7 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
         try {
             const success = await register(email, password, nickName, name, profileImage);
             if (success) {
-                Alert.alert('성공!', '회원가입 성공! 로그인해주세요.');
+                Alert.alert('성공!', '회원가입 성공! 자동 로그인 됩니다.');
                 navigation.navigate('Login');
                 //navigation.replace('Home'); // ✅ 회원가입 성공 후 바로 Home 이동
             } else {
