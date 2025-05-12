@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
         width: 250,
         height: 250,
         borderRadius: 200,
-        backgroundColor: 'rgba(0, 0, 0, 0.1)', // ✅ 반투명 회색
+        backgroundColor: 'rgba(0, 0, 0, 0.2)', // ✅ 반투명 회색
         bottom: -80,
         alignSelf: 'center',
     },
@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
     fabLabel: {
         fontSize: 12,
         fontWeight: 'bold', // ✅ 볼드체!
-        color: '#333',
+        color: '#ffffff',
         marginTop: 2,
     },
 });
