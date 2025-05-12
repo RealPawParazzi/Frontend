@@ -78,6 +78,22 @@ const BottomTabNavigator = ({ navigation }: any) => {
 
             {/* 🌟 중앙 Add 버튼 (FAB 스타일) */}
             <View style={styles.fabContainer}>
+
+                {/* 추가된 회색 부채꼴 배경 */}
+                <Animated.View
+                    pointerEvents="none"
+                    style={[
+                        styles.fabBackdrop,
+                        {
+                            opacity: animation,
+                            transform: [
+                                { scale: animation },
+                                { rotate: '-25deg' }, // 약간 회전 줘서 부채꼴 느낌
+                            ],
+                        },
+                    ]}
+                />
+
                 {fabOptions.map((option, index) => {
                     const angle = (Math.PI / 3.5) * index + Math.PI / 4.7; // ✅ 위쪽 부채꼴 방향으로 변경
                     const radius = 90;
@@ -164,6 +180,15 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 6,
         shadowOffset: { width: 0, height: 3 },
+    },
+    fabBackdrop: {
+        position: 'absolute',
+        width: 250,
+        height: 250,
+        borderRadius: 200,
+        backgroundColor: 'rgba(0, 0, 0, 0.1)', // ✅ 반투명 회색
+        bottom: -80,
+        alignSelf: 'center',
     },
     fabOption: {
         position: 'absolute',
