@@ -8,9 +8,7 @@ import {
     SafeAreaView,
     Platform,
     Animated,
-    Dimensions,
     Easing,
-    Image,
 } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -81,8 +79,8 @@ const BottomTabNavigator = ({ navigation }: any) => {
             {/* 🌟 중앙 Add 버튼 (FAB 스타일) */}
             <View style={styles.fabContainer}>
                 {fabOptions.map((option, index) => {
-                    const angle = (Math.PI / 3) * index + Math.PI / 6; // ✅ 위쪽 부채꼴 방향으로 변경
-                    const radius = 80;
+                    const angle = (Math.PI / 3.5) * index + Math.PI / 4.7; // ✅ 위쪽 부채꼴 방향으로 변경
+                    const radius = 90;
                     const x = animation.interpolate({
                         inputRange: [0, 1],
                         outputRange: [0, radius * Math.cos(angle)],
@@ -147,7 +145,7 @@ const styles = StyleSheet.create({
     },
     fabContainer: {
         position: 'absolute',
-        bottom: 30,
+        bottom: 35,
         alignSelf: 'center',
         alignItems: 'center',
         justifyContent: 'center',
@@ -157,7 +155,7 @@ const styles = StyleSheet.create({
         height: 60,
         borderRadius: 30,
         backgroundColor: '#fff', // ✅ 흰색 배경
-        borderWidth: 2,
+        borderWidth: 2.2,
         borderColor: '#4D7CFE', // ✅ 테두리 색상 적용
         alignItems: 'center',
         justifyContent: 'center',
@@ -176,17 +174,17 @@ const styles = StyleSheet.create({
         height: 44,
         borderRadius: 22,
         backgroundColor: '#fff',
-        borderWidth: 1,
+        borderWidth: 1.3,
         borderColor: '#4D7CFE',
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 4,
+        marginBottom: 2,
     },
     fabLabel: {
         fontSize: 12,
         fontWeight: 'bold', // ✅ 볼드체!
         color: '#333',
-        marginTop: 4,
+        marginTop: 2,
     },
 });
 
