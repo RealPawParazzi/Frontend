@@ -17,7 +17,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import authStore from '../../context/authStore';
 import { getImageSource } from '../../utils/imageUtils';
 import boardStore from '../../context/boardStore';
-import Video from "react-native-video";
+import Video from 'react-native-video';
 
 // ✅ 기본 프로필 이미지
 const DEFAULT_PROFILE_IMAGE = require('../../assets/images/user-2.png');
@@ -104,6 +104,12 @@ const OwnerInfo = () => {
         ]);
     };
 
+    // useEffect(() => {
+    //     console.log('📸 userData:', userData);
+    //     console.log('📸 profileImage value:', userData.profileImage.uri);
+    //     console.log('📸 typeof profileImage:', typeof userData.profileImage);
+    // }, [userData]);
+
     return (
         <View style={styles.container}>
             {/* ✅ 상단 프로필 영역 */}
@@ -113,6 +119,9 @@ const OwnerInfo = () => {
                     <Image
                         source={getImageSource(userData.profileImage, DEFAULT_PROFILE_IMAGE)}
                         style={styles.profileImage}
+                        onError={(e) => {
+                            console.log('Image loading error:', e.nativeEvent); // 이미지 로드 에러 로깅
+                        }}
                     />
                     <View style={styles.userInfo}>
                         <Text style={styles.username}>{userData.nickName || userData.name}</Text>
