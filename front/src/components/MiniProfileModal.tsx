@@ -22,6 +22,7 @@ interface MiniProfileModalProps {
     user: {
         id: number;
         name: string;
+        //nickName: string;
         profileImage: string;
     };
 }
@@ -139,6 +140,12 @@ const MiniProfileModal = ({ visible, onClose, user }: MiniProfileModalProps) => 
             console.error('❌ [팔로우/언팔로우 오류]:', error);
         }
     };
+
+    useEffect(() => {
+        console.log('📸 user:', user);
+        console.log('📸 profileImage value:', user.profileImage);
+        console.log('📸 typeof profileImage:', typeof user.profileImage);
+    }, [user, userData]);
 
     return (
         <Modal visible={visible} animationType="slide" transparent>

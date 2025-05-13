@@ -6,8 +6,8 @@ import petStore, { loadPetData } from './petStore'; // ✅ 펫 데이터 가져�
 import boardStore, { loadBoardData } from './boardStore'; // ✅ 게시물 데이터 가져오기
 
 /** ✅ 이미지 소스 타입 정의 */
-type ImageSource = { uri: string } | number;
-type VideoSource = { uri: string } | number;
+type ImageSource = { uri: string };
+type VideoSource = { uri: string };
 
 /** ✅ 전역 데이터 타입 정의 */
 interface Pet {
@@ -59,6 +59,17 @@ interface StoryReel {
     image: ImageSource;
     video?: VideoSource;
 }
+
+const normalizeImage = (img: any) => {
+    if (!img) { return require('../assets/images/user-2.png'); }
+    if (typeof img === 'string') { return { uri: img }; }
+    if (typeof img === 'number') {
+        console.warn('⚠️ 숫자 타입 프로필 이미지 감지됨. 기본 이미지로 대체:', img);
+        return require('../assets/images/user-2.png');
+    }
+    if (img?.uri && typeof img.uri === 'string') { return { uri: img.uri }; }
+    return require('../assets/images/user-2.png');
+};
 
 
 
@@ -224,11 +235,7 @@ const userStore = create<{
             userData: {
                 ...state.userData,
                 ...newUserData,
-                profileImage: newUserData.profileImage
-                    ? (typeof newUserData.profileImage === 'string'
-                        ? { uri: String(newUserData.profileImage) }
-                        : newUserData.profileImage)
-                    : state.userData.profileImage,
+                profileImage: normalizeImage(newUserData.profileImage),
                 petCount: updatedPetList.length,
                 petList: updatedPetList.length ? updatedPetList : state.userData.petList,
                 recentPosts: updatedRecentPosts.length ? updatedRecentPosts : state.userData.recentPosts,
@@ -261,7 +268,7 @@ export const loadUserData = async () => {
             email: userInfo.email,
             nickName: userInfo.nickName,
             name: userInfo.name,
-            profileImage: userInfo.profileImage || require('../assets/images/profile-1.png'),
+            profileImage: normalizeImage(userInfo.profileImage),
             petList: updatedPetList,
             petCount: updatedPetList.length, // ✅ 펫 카운트 자동 업데이트
             recentPosts: updatedRecentPosts,
