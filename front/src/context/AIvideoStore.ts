@@ -1,57 +1,140 @@
 // 📁 context/AIvideoStore.ts
 
 import { create } from 'zustand';
-import { requestAIVideo, fetchVideoStatus } from '../services/AIvideoService';
-
-type VideoStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
-
+import {
+    createVideoRequest,
+    fetchVideoStatus,
+} from '../services/AIvideoService';
 interface AIvideoState {
     jobId: string | null;
-    status: VideoStatus | null;
+    status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | null;
     resultUrl: string | null;
-    errorMessage: string | null;
-    requestVideo: (prompt: string, duration: string, imageFile: File) => Promise<void>;
-    pollVideoStatus: () => Promise<void>;
+    finalUrl: string | null; // ✅ 추가
+    error: string | null;
+    pollInterval: NodeJS.Timeout | null;
+    startGeneration: (
+        prompt: string,
+        duration: string,
+        imageFile: { uri: string; name: string; type: string }
+    ) => Promise<void>;
+    pollStatus: (intervalMs?: number) => void;
+    setFinalUrl: (url: string) => void;
+    stopPolling: () => void;
+    reset: () => void;
+
 }
 
-const AIvideoStore = create<AIvideoState>((set, get) => ({
+export const useAIvideoStore = create<AIvideoState>((set, get) => ({
     jobId: null,
     status: null,
     resultUrl: null,
-    errorMessage: null,
+    finalUrl: null,
+    error: null,
+    pollInterval: null,  // 초기값 추가
 
-    /** ✅ 생성 요청 및 jobId 저장 */
-    requestVideo: async (prompt, duration, imageFile) => {
+
+    setFinalUrl: (url) => set({ finalUrl: url }),
+
+
+    // 1) 생성 요청 → jobId 저장
+    startGeneration: async (prompt, duration, imageFile) => {
+
+        // 이전 상태 초기화
+        get().reset();
+
+        set({ status: 'PENDING', resultUrl: null, error: null, finalUrl: null });
         try {
-            const data = await requestAIVideo(prompt, duration, imageFile);
-            set({ jobId: data.jobId, status: 'PENDING', resultUrl: null, errorMessage: null });
-        } catch (error: any) {
-            set({ errorMessage: error.message });
+            const { jobId } = await createVideoRequest(prompt, duration, imageFile);
+            set({ jobId, status: 'PENDING' });
+            // 바로 폴링 시작
+            get().pollStatus();
+        } catch (e: any) {
+            set({ status: 'FAILED', error: e.message });
         }
     },
 
-    /** ✅ 폴링으로 상태 확인 */
-    pollVideoStatus: async () => {
-        const jobId = get().jobId;
-        if (!jobId) { return; }
+    // 2) 일정 간격으로 상태 체크
+    pollStatus: (intervalMs = 5000, maxAttempts = 60) => { // 최대 5분(60회) 시도
+        const { jobId, pollInterval } = get();
+        if (!jobId) {
+            set({ error: 'jobId가 없습니다. 요청을 다시 시도해주세요.' });
+            return;
+        }
 
-        const poll = async () => {
-            try {
-                const statusRes = await fetchVideoStatus(jobId);
-                if (statusRes.status === 'COMPLETED') {
-                    set({ status: 'COMPLETED', resultUrl: statusRes.resultUrl });
-                } else if (statusRes.status === 'FAILED') {
-                    set({ status: 'FAILED', errorMessage: statusRes.errorMessage });
-                } else {
-                    setTimeout(poll, 5000); // 5초마다 재시도
-                }
-            } catch (error: any) {
-                set({ status: 'FAILED', errorMessage: error.message });
+        // 기존 폴링이 있다면 중지
+        if (pollInterval) {
+            clearInterval(Number(pollInterval));
+        }
+
+        let attempts = 0;
+
+        const interval = setInterval(async () => {
+            if (attempts >= maxAttempts) {
+                clearInterval(interval);
+                set({
+                    status: 'FAILED',
+                    error: '시간 초과: 동영상 생성에 실패했습니다.',
+                    pollInterval: null,
+                });
+                return;
             }
-        };
 
-        await poll(); // 폴링 시작
+            try {
+                const data = await fetchVideoStatus(jobId);
+                set({ status: data.status, resultUrl: data.resultUrl });
+
+                if (data.status === 'COMPLETED' && data.resultUrl) {
+                    clearInterval(interval);
+                    set({
+                        finalUrl: data.resultUrl,
+                        pollInterval: null,
+                        status: 'COMPLETED',
+                    });
+                    return;
+                }
+
+                if (data.status === 'FAILED') {
+                    clearInterval(interval);
+                    set({
+                        status: 'FAILED',
+                        error: data.errorMessage || '동영상 생성에 실패했습니다.',
+                        pollInterval: null,
+                    });
+                    return;
+                }
+
+                attempts++;
+            } catch (e: any) {
+                clearInterval(interval);
+                set({
+                    status: 'FAILED',
+                    error: e.message || '상태 조회 중 오류가 발생했습니다.',
+                    pollInterval: null,
+                });
+            }
+        }, intervalMs);
+
+        set({ pollInterval: interval });
+    },
+
+    stopPolling: () => {
+        const { pollInterval } = get();
+        if (pollInterval) {
+            clearInterval(Number(pollInterval));
+            set({ pollInterval: null });
+        }
+    },
+
+    reset: () => {
+        get().stopPolling();
+        set({
+            jobId: null,
+            status: null,
+            resultUrl: null,
+            finalUrl: null,
+            error: null,
+            pollInterval: null,
+        });
     },
 }));
 
-export default AIvideoStore;

@@ -1,46 +1,85 @@
-// 📁 services/AIvideoService.ts
-
+// services/AIvideoService.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
-
-// 🔹 백엔드 API 기본 URL
 const API_BASE_URL = Platform.OS === 'android'
-    ? 'http://10.0.2.2:8080/api/videos'  // 안드로이드용
-    : 'http://localhost:8080/api/videos'; // iOS용
+    ? 'http://10.0.2.2:8080/api/videos'
+    : 'http://localhost:8080/api/videos';
 
-/** ✅ AI 비디오 생성 요청 */
-export const requestAIVideo = async (prompt: string, duration: string, imageFile: File) => {
+interface CreateResponse {
+    requestId: number;
+    jobId: string;
+}
+
+interface StatusResponse {
+    requestId: number;
+    jobId: string;
+    status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED';
+    resultUrl: string | null;
+    thumbnailUrl: string | null;
+    duration: number | null;
+    errorMessage: string | null;
+}
+
+/**
+ * POST /api/videos
+ * form-data: { request: JSON, image: File }
+ */
+export async function createVideoRequest(
+    prompt: string,
+    duration: string,
+    imageFile: { uri: string; name: string; type: string }
+): Promise<CreateResponse> {
     const token = await AsyncStorage.getItem('accessToken');
     if (!token) { throw new Error('로그인이 필요합니다.'); }
 
-    const formData = new FormData();
-    formData.append('request', JSON.stringify({ prompt, duration }));
-    formData.append('image', imageFile);
+    const form = new FormData();
+    form.append('request', JSON.stringify({ prompt, duration }));
+    form.append('image', {
+        uri: imageFile.uri,
+        name: imageFile.name,
+        type: imageFile.type,
+    } as any);
 
-    const response = await fetch(`${API_BASE_URL}`, {
+    const res = await fetch(API_BASE_URL, {
         method: 'POST',
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-        body: formData,
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
     });
+    if (!res.ok) {
+        let errMessage = '영상 생성 요청 실패';
+        try {
+            const err = await res.json();
+            errMessage = err.message || errMessage;
+        } catch {
+            // JSON 파싱 실패 시 기본 메시지 유지
+        }
+        throw new Error(errMessage);
+    }
+    return await res.json();
+}
 
-    if (!response.ok) { throw new Error('영상 생성 요청 실패'); }
-    return await response.json(); // { jobId, requestId }
-};
-
-/** ✅ 상태 확인 API */
-export const fetchVideoStatus = async (jobId: string) => {
+/**
+ * GET /api/videos/status/{jobId}
+ */
+export async function fetchVideoStatus(
+    jobId: string
+): Promise<StatusResponse> {
     const token = await AsyncStorage.getItem('accessToken');
     if (!token) { throw new Error('로그인이 필요합니다.'); }
 
-    const response = await fetch(`${API_BASE_URL}/status/${jobId}`, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
+    const res = await fetch(`${API_BASE_URL}/status/${jobId}`, {
+        headers: { Authorization: `Bearer ${token}` },
     });
-
-    if (!response.ok) { throw new Error('상태 확인 실패'); }
-    return await response.json(); // { status, resultUrl, errorMessage, ... }
-};
+    if (!res.ok) {
+        let errMessage = '상태 조회 실패';
+        try {
+            const err = await res.json();
+            errMessage = err.message || errMessage;
+        } catch {
+            // JSON 파싱 실패 시 기본 메시지 유지
+        }
+        throw new Error(errMessage);
+    }
+    return await res.json();
+}
