@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 8,
         right: 8,
-        backgroundColor: '#FF6F00',
+        backgroundColor: '#4d7cfe',
         borderRadius: 20,
         padding: 7,
     },
@@ -254,8 +254,8 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
     },
     selectedTypeButton: {
-        backgroundColor: '#FF6F00',
-        borderColor: '#FF6F00',
+        backgroundColor: '#4d7cfe',
+        borderColor: '#4d7cfe',
     },
     typeButtonText: {
         fontSize: 16,
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
         color: '#333',
     },
     submitButton: {
-        backgroundColor: '#FF6F00',
+        backgroundColor: '#4d7cfe',
         paddingVertical: 18, // ✅ 높이 증가
         borderRadius: 12,
         alignItems: 'center',
