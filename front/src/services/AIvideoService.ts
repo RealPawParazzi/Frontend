@@ -27,14 +27,17 @@ interface StatusResponse {
  */
 export async function createVideoRequest(
     prompt: string,
-    duration: string,
+    duration: number,
     imageFile: { uri: string; name: string; type: string }
 ): Promise<CreateResponse> {
     const token = await AsyncStorage.getItem('accessToken');
     if (!token) { throw new Error('로그인이 필요합니다.'); }
 
     const form = new FormData();
-    form.append('request', JSON.stringify({ prompt, duration }));
+    form.append('request', JSON.stringify({
+        prompt,
+        duration: Number(duration), // 명시적으로 숫자로 변환
+    }));
     form.append('image', {
         uri: imageFile.uri,
         name: imageFile.name,

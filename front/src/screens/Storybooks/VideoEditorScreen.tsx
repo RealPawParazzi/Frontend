@@ -60,13 +60,15 @@ const VideoEditorScreen: React.FC = () => {
             Alert.alert('입력 오류', '이미지를 선택해주세요.');
             return;
         }
-        if (isNaN(Number(duration)) || Number(duration) <= 0) {
+        const parsedDuration = Number(duration);  // 숫자 변환 추가
+        if (isNaN(parsedDuration) || parsedDuration <= 0) {
             Alert.alert('입력 오류', '유효한 지속 시간(초)을 입력해주세요.');
             return;
         }
 
         try {
-            await startGeneration(prompt.trim(), duration, imageFile);
+            await startGeneration(prompt.trim(), parsedDuration, imageFile);
+            console.log('❗❗영상 제작 요청 : ', prompt.trim(), parsedDuration, imageFile);
         } catch (e: any) {
             Alert.alert('요청 실패', e.message || '알 수 없는 오류가 발생했습니다.');
         }

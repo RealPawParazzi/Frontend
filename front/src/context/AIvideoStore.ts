@@ -14,7 +14,7 @@ interface AIvideoState {
     pollInterval: NodeJS.Timeout | null;
     startGeneration: (
         prompt: string,
-        duration: string,
+        duration: number,
         imageFile: { uri: string; name: string; type: string }
     ) => Promise<void>;
     pollStatus: (intervalMs?: number) => void;
