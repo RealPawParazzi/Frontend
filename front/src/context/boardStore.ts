@@ -153,8 +153,16 @@ const boardStore = create<{
     /** 🟢 게시글 등록 요청 */
     createNewBoard: async (userData, _mediaFiles, titleImage, titleContent) => {
         try {
-            const textContents = userData.contents.filter((c: any) => c.type === 'text' && c.value.trim() !== '');
-            const mediaBlocks = userData.contents.filter((c: any) => c.type === 'File');
+            const contents = userData.contents || [];
+
+            const processedContents = contents.map((item: any) => ({
+                type: item.type === 'text' ? 'Text' : item.type === 'File' ? 'File' : item.type,
+                value: item.type === 'File' ? item.value.split('/').pop() || '' : item.value,
+            }));
+
+
+            const mediaBlocks = contents.filter((c: any) => c.type === 'File');
+            const textBlocks = contents.filter((c: any) => c.type === 'text');
 
             const mediaFiles = mediaBlocks.map(({ value }: any) => ({
                 uri: value,
@@ -163,10 +171,11 @@ const boardStore = create<{
             }));
 
             const fallbackTitleImage = titleImage || mediaFiles?.[0] || null;
-            const fallbackTitleContent = titleContent || textContents.find((c: any) => c.value.trim())?.value || '내용 없음';
+            const fallbackTitleContent =
+                titleContent || textBlocks.find((c: any) => c.value.trim())?.value || '내용 없음';
 
             const newBoard = await createBoard(
-                { ...userData, contents: textContents },
+                { ...userData, contents : processedContents },
                 mediaFiles,
                 fallbackTitleImage,
                 fallbackTitleContent
@@ -183,8 +192,16 @@ const boardStore = create<{
     /** 🟡 게시글 수정 요청 */
     updateExistingBoard: async (boardId, userData, _mediaFiles, titleImage, titleContent) => {
         try {
-            const textContents = userData.contents.filter((c: any) => c.type === 'text' && c.value.trim() !== '');
-            const mediaBlocks = userData.contents.filter((c: any) => c.type === 'File');
+            const contents = userData.contents || [];
+
+            const processedContents = contents.map((item: any) => ({
+                // File 타입이면 파일명만 추출하도록 수정
+                type: item.type === 'text' ? 'Text' : item.type === 'File' ? 'File' : item.type,
+                value: item.type === 'File' ? item.value.split('/').pop() || '' : item.value,
+            }));
+
+            const mediaBlocks = contents.filter((c: any) => c.type === 'File');
+            const textBlocks = contents.filter((c: any) => c.type === 'text');
 
             const mediaFiles = mediaBlocks.map(({ value }: any) => ({
                 uri: value,
@@ -192,16 +209,19 @@ const boardStore = create<{
                 type: value.endsWith('.mp4') ? 'video/mp4' : 'image/jpeg',
             }));
 
+
             const fallbackTitleImage = titleImage || mediaFiles?.[0] || null;
-            const fallbackTitleContent = titleContent || textContents.find((c: any) => c.value.trim())?.value || '내용 없음';
+            const fallbackTitleContent =
+                titleContent || textBlocks.find((c: any) => c.value.trim())?.value || '내용 없음';
 
             const updatedBoard = await updateBoard(
                 boardId,
-                { ...userData, contents: textContents },
+                { ...userData, contents: processedContents },
                 mediaFiles,
                 fallbackTitleImage,
                 fallbackTitleContent
             );
+
 
             set((state) => ({
                 boardList: state.boardList.map((b) => (b.id === boardId ? updatedBoard : b)),
