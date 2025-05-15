@@ -54,7 +54,7 @@ export const useAIvideoStore = create<AIvideoState>((set, get) => ({
     },
 
     // 2) 일정 간격으로 상태 체크
-    pollStatus: (intervalMs = 5000, maxAttempts = 60) => { // 최대 5분(60회) 시도
+    pollStatus: (intervalMs = 5000, maxAttempts = 100) => { // 최대 100회 시도
         const { jobId, pollInterval } = get();
         if (!jobId) {
             set({ error: 'jobId가 없습니다. 요청을 다시 시도해주세요.' });

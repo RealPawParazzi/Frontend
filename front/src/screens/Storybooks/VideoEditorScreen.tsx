@@ -1,5 +1,9 @@
 // screens/VideoEditorScreen.tsx
 import React, {useEffect, useRef, useState} from 'react';
+import Share from 'react-native-share';
+import RNFS from 'react-native-fs';
+import { useNavigation } from '@react-navigation/native';
+
 import {
     ScrollView,
     View,
@@ -32,6 +36,7 @@ const VideoEditorScreen: React.FC = () => {
     const startGeneration = useAIvideoStore((s) => s.startGeneration);
 
     const scrollRef = useRef<ScrollView>(null); // ✅ ref 선언
+    const navigation = useNavigation();
 
     // ✅ 이미지 선택 함수
     const pickImage = () => {
@@ -166,6 +171,50 @@ const VideoEditorScreen: React.FC = () => {
                         resizeMode="contain"
                         paused={true}
                     />
+                    {/* 기능 버튼 영역 */}
+                    <View style={styles.actionRow}>
+                        {/* 게시글 작성으로 이동 */}
+                        <TouchableOpacity
+                            style={styles.iconButton}
+                            onPress={() => {
+                                navigation.navigate('StorybookScreen', { videoUri: finalUrl }); // 이동시 URI 넘김
+                            }}>
+                            <Text style={styles.iconText}>✍️ 게시글 작성</Text>
+                        </TouchableOpacity>
+
+                        {/* 기기에 저장 */}
+                        <TouchableOpacity
+                            style={styles.iconButton}
+                            onPress={async () => {
+                                try {
+                                    const fileName = `Pawparazzi_${Date.now()}.mp4`;
+                                    const destPath = `${RNFS.DownloadDirectoryPath}/${fileName}`;
+                                    await RNFS.copyFile(finalUrl, destPath);
+                                    Alert.alert('성공', '기기에 저장되었습니다!');
+                                } catch (err) {
+                                    Alert.alert('실패', '파일 저장에 실패했습니다.');
+                                }
+                            }}>
+                            <Text style={styles.iconText}>💾 저장</Text>
+                        </TouchableOpacity>
+
+                        {/* 공유하기 */}
+                        <TouchableOpacity
+                            style={styles.iconButton}
+                            onPress={async () => {
+                                try {
+                                    await Share.open({
+                                        url: finalUrl,
+                                        type: 'video/mp4',
+                                        failOnCancel: false,
+                                    });
+                                } catch (error) {
+                                    console.warn('공유 실패:', error);
+                                }
+                            }}>
+                            <Text style={styles.iconText}>📤 공유</Text>
+                        </TouchableOpacity>
+                    </View>
                 </>
             )}
         </View>
@@ -305,6 +354,24 @@ const styles = StyleSheet.create({
         backgroundColor: '#F8F9FA',
         borderRadius: 12,
         overflow: 'hidden',
+    },
+    actionRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 16,
+    },
+    iconButton: {
+        flex: 1,
+        backgroundColor: '#F1F3F5',
+        paddingVertical: 12,
+        marginHorizontal: 4,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    iconText: {
+        fontSize: 14,
+        color: '#2C3E50',
+        fontWeight: '500',
     },
 });
 
