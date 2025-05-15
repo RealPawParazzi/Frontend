@@ -1,6 +1,7 @@
 // screens/VideoEditorScreen.tsx
-import React, { useState } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
+    ScrollView,
     View,
     Text,
     TextInput,
@@ -29,6 +30,8 @@ const VideoEditorScreen: React.FC = () => {
     const finalUrl = useAIvideoStore((s) => s.finalUrl);
     const error = useAIvideoStore((s) => s.error);
     const startGeneration = useAIvideoStore((s) => s.startGeneration);
+
+    const scrollRef = useRef<ScrollView>(null); // ✅ ref 선언
 
     // ✅ 이미지 선택 함수
     const pickImage = () => {
@@ -74,8 +77,18 @@ const VideoEditorScreen: React.FC = () => {
         }
     };
 
+    useEffect(() => {
+        if (finalUrl && scrollRef.current) {
+            setTimeout(() => {
+                scrollRef.current?.scrollToEnd({ animated: true });
+            }, 300); // 렌더링 타이밍 고려해 약간의 딜레이
+        }
+    }, [finalUrl]);
+
     return (
-        <View style={styles.container}>
+        <ScrollView ref={scrollRef} contentContainerStyle={styles.scrollContainer}>
+            <View style={styles.container}>
+                {/* ...기존 코드 유지 */}
             <Text style={styles.title}> 동영상을 생성해보자 !</Text>
 
             <TextInput
@@ -156,11 +169,16 @@ const VideoEditorScreen: React.FC = () => {
                 </>
             )}
         </View>
+    </ScrollView>
     );
 };
 
 
 const styles = StyleSheet.create({
+    scrollContainer: {
+        flexGrow: 1,
+        justifyContent: 'flex-start',
+    },
     container: {
         flex: 1,
         padding: 20,
