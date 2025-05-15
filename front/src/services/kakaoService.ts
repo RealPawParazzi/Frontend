@@ -8,6 +8,7 @@ const API_BASE_URL = Platform.OS === 'android'
 
 export const requestKakaoToken = async (code: string) => {
     const response = await fetch(`${API_BASE_URL}/kakao/callback?code=${code}`);
-    if (!response.ok) throw new Error('카카오 로그인 실패');
+    if (!response.ok) { throw new Error('카카오 로그인 실패'); }
     return await response.json(); // { accessToken, refreshToken }
 };
+

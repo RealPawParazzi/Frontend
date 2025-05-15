@@ -1,26 +1,18 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import userStore from '../context/userStore'; // ✅ Zustand 전역 상태 가져오기
+import petStore from '../context/petStore'; // userStore → petStore로 변경
 
-/**
- * 📌 Header 컴포넌트
- * - 앱의 최상단에 위치하는 헤더
- * - 왼쪽에는 앱 타이틀(PawParazzi), 오른쪽에는 알림 아이콘과 프로필 이미지 표시
- * - 프로필 이미지가 없을 경우 기본 아이콘(person) 표시
- */
 const Header = () => {
-    // ✅ Zustand에서 현재 선택한 반려동물 정보 가져오기
-    const { userData } = userStore(); // 🟢 선택된 반려동물 상태
+    const { pets } = petStore(); // Zustand에서 반려동물 리스트 가져옴
 
-    // ✅ 기본 이미지
+
     const DEFAULT_IMAGE = require('../assets/images/pets-1.jpg');
 
-    // ✅ 안전한 이미지 소스 가져오기
     const getImageSource = () => {
-        if (!userData?.petList?.length) { return DEFAULT_IMAGE; }
+        if (!pets?.length) { return DEFAULT_IMAGE; }
 
-        const petImage = userData.petList[0]?.image;
+        const petImage = pets[0]?.petImg;
         if (!petImage) { return DEFAULT_IMAGE; }
 
         if (typeof petImage === 'string') {
@@ -35,6 +27,14 @@ const Header = () => {
         return DEFAULT_IMAGE;
     };
 
+    useEffect(() => {
+        if (!pets?.length) {
+            console.log('⚠️ 반려동물 없음, 기본 이미지 사용됨');
+        } else {
+            console.log('✅ Header에서 불러온 펫:', pets[0]);
+        }
+    }, [pets]);
+
     return (
         <View style={styles.container}>
             {/* 🖼️ 반려동물 프로필 (왼쪽) */}
@@ -44,7 +44,7 @@ const Header = () => {
                     style={styles.petImage}
                 />
                 <Text style={styles.petName}>
-                    {userData?.petList?.[0]?.name || '반려동물 선택'}
+                    {pets[0]?.name || '반려동물 선택'}
                 </Text>
                 <Icon
                     name={Platform.OS === 'ios' ? 'keyboard-arrow-down' : 'arrow-drop-down'}

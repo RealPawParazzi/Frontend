@@ -227,8 +227,8 @@ const EditStorybookScreen = ({ route, navigation }: { route: EditStorybookScreen
                 <Switch
                     value={isPublic}
                     onValueChange={setIsPublic}
-                    trackColor={{ false: '#767577', true: 'rgba(255,111,0,0.32)' }}
-                    thumbColor={isPublic ? '#FF6F00' : '#f4f3f4'}
+                    trackColor={{ false: '#767577', true: 'rgba(127,148,159,0.57)' }}
+                    thumbColor={isPublic ? '#4D7CFE' : '#f4f3f4'}
                     style={{ transform: [{ scale: 0.8 }] }}
                 />
             </View>
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     },
     backButton: { padding: 8 },
     navTitle: { fontSize: 18, fontWeight: 'bold', textAlign: 'center', flex: 1 },
-    saveButton: { fontSize: 16, color: '#FF6F00', fontWeight: 'bold' },
+    saveButton: { fontSize: 16, color: '#4D7CFE', fontWeight: 'bold' },
     visibilityContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20 },
     visibilityText: { fontSize: 16, fontWeight: 'bold' },
     titleInput: {
@@ -327,7 +327,8 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         marginTop: 10,
         backgroundColor: '#000',
-    },    representativeTag: { position: 'absolute', top: 10, left: 10, backgroundColor: '#00C853', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 5 },
+    },
+    representativeTag: { position: 'absolute', top: 10, left: 10, backgroundColor: '#00C853', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 5 },
     deleteButton: { position: 'absolute', top: 10, right: 10, backgroundColor: 'rgba(0,0,0,0.3)', padding: 5, borderRadius: 20 },
     bottomBar: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', paddingVertical: 10, borderTopWidth: 1, borderColor: '#EEE', backgroundColor: '#FFF', position: 'absolute', bottom: 0, width: '100%', zIndex: 99 },
     bottomIcon: { padding: 10 },

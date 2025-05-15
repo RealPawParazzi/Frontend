@@ -19,6 +19,7 @@ const DEFAULT_PROFILE_IMAGE = require('../../assets/images/user-2.png');
 interface User {
     id: string;
     name: string;
+    //nickName: string;
     profileImage: string;
 }
 
@@ -62,6 +63,12 @@ const FollowRecommendations = () => {
             !following.some((f) => f.followingId === Number(user.id)) // 👉 이미 팔로우 중인 유저 제외
     );
 
+    useEffect(() => {
+        if (selectedUser) {
+            console.log('🧠 selectedUser가 바뀜:', selectedUser);
+        }
+    }, [selectedUser]);
+
     return (
         <View style={styles.container}>
             <FlatList
@@ -83,9 +90,8 @@ const FollowRecommendations = () => {
                                     setSelectedUser({
                                         id: item.id,
                                         name: item.name,
-                                        profileImage: typeof item.profileImage === 'string'
-                                            ? item.profileImage
-                                            : '',
+                                        //nickName: item.nickName, // 닉네임도 달라고 하기
+                                        profileImage: item.profileImage.uri,
                                     });
                                     setIsModalVisible(true);
                                 }}>
@@ -115,7 +121,6 @@ const FollowRecommendations = () => {
                     </ShadowWrapper>
                 )}
             />
-
             {selectedUser && (
                 <MiniProfileModal
                     visible={isModalVisible}
@@ -123,7 +128,7 @@ const FollowRecommendations = () => {
                     user={{
                         id: Number(selectedUser.id),
                         name: selectedUser.name,
-                        profileImage: selectedUser.profileImage,
+                        profileImage: selectedUser.profileImage.toString(),
                     }}
                 />
             )}

@@ -16,7 +16,11 @@ export interface UserData {
     nickName: string;
     profileImage: string;
     petList: { id: string; name: string; imageUrl: string }[];
+    petCount: number;
     recentPosts: { id: string; title: string; content: string; imageUrl: string }[];
+    followerList?: any[];    // ✨ 필요 시 구조 명시
+    followingList?: any[];
+    places?: any[];
 }
 
 /**
@@ -58,6 +62,8 @@ export const fetchAllUsers = async (): Promise<UserData[]> => {
 
         const users: { id: number; name: string; nickName: string; profileImage: string }[] = await response.json();
 
+        console.log('✅ 전체 유저 목록:', users);
+
         // ✅ 구조분해 할당을 사용하여 `profileImage` 유지
         return users.map(({ id, name, nickName, profileImage }) => ({
             id: String(id), // ✅ number → string 변환
@@ -66,7 +72,11 @@ export const fetchAllUsers = async (): Promise<UserData[]> => {
             profileImage, // ✅ 유지
             email: '', // 기본값 추가 (선택적 필드)
             petList: [], // 빈 배열로 기본값 설정
+            petCount: 0, // 기본값 추가
             recentPosts: [], // 빈 배열로 기본값 설정
+            // followerList: [], // 빈 배열로 기본값 설정
+            // followingList: [], // 빈 배열로 기본값 설정
+            places: [], // 빈 배열로 기본값 설정
         }));
     } catch (error) {
         console.error('❌ 전체 유저 목록 불러오기 실패:', error);
@@ -90,10 +100,49 @@ export const fetchUserData = async (): Promise<UserData> => {
             throw new Error('사용자 정보를 불러오지 못했습니다.');
         }
 
-        const userData = await response.json();
-        console.log('✅ 불러온 사용자 데이터:', userData); // ✅ 유저 데이터 확인
+        const {
+            id,
+            email,
+            name,
+            nickName,
+            password, // ❌ 보안상 실제로 사용하진 않지만 구조 보존
+            profileImageUrl, // ✅ 우리가 기대하는 필드명
+            pets = [],
+            followerList = [],
+            followingList = [],
+            places = [],
+        } = await response.json();
+        // ✅ pets, followerList, followingList, places 필드 추가
 
-        return userData;
+        console.log('✅ 최종 파싱된 유저:', {
+            id,
+            email,
+            name,
+            nickName,
+            password,
+            profileImageUrl,
+            pets,
+            followerList,
+            followingList,
+            places,
+        });
+
+
+        return {
+            id: String(id),
+            email,
+            name,
+            nickName,
+            profileImage: profileImageUrl, // ✅ 내부에서 rename
+            petList: pets,
+            recentPosts: [], // 🔸 추가 예정 시 유지
+            // 🟡 추가 필드들
+            petCount: pets.length, // ✅ 펫 카운트 자동 업데이트
+            followerList,
+            followingList,
+            places,
+        };
+
     } catch (error) {
         console.error('❌ 사용자 데이터 로드 실패:', error);
         throw error;

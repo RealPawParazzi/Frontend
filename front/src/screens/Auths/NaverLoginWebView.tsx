@@ -1,33 +1,24 @@
 import React, { useRef } from 'react';
-import {
-    ActivityIndicator,
-    StyleSheet,
-    SafeAreaView,
-    Platform,
-} from 'react-native';
+import { ActivityIndicator, StyleSheet, SafeAreaView, Platform } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useNavigation } from '@react-navigation/native';
-import { useKakaoStore } from '../../context/kakaoStore';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
+import { useNaverStore } from '../../context/naverStore';
 import authStore from '../../context/authStore';
-import {requestKakaoToken} from '../../services/kakaoService';
+import { requestNaverToken } from '../../services/naverService';
 import { loadUserData } from '../../context/userStore';
 
-// ✅ 네비게이션 타입 정의
-type NavigationProp = StackNavigationProp<RootStackParamList, 'KakaoLoginWebView'>;
+type NavigationProp = StackNavigationProp<RootStackParamList, 'NaverLoginWebView'>;
 
-const KakaoLoginWebView: React.FC = () => {
+const NaverLoginWebView: React.FC = () => {
     const navigation = useNavigation<NavigationProp>();
-    const { setToken } = useKakaoStore();
-    const webViewRef = useRef(null); // ✅ access + refresh 저장 함수
+    const webViewRef = useRef(null);
+    const { setToken } = useNaverStore();
 
-    /**
-     * ✅ 카카오 인가 코드 처리 후 백엔드로 요청 → access/refresh 토큰 발급 받기
-     */
-    const handleKakaoLogin = async (code: string) => {
+    const handleNaverLogin = async (code: string, state: string) => {
         try {
-            const { accessToken, refreshToken } = await requestKakaoToken(code);
+            const { accessToken, refreshToken } = await requestNaverToken(code, state);
             await setToken(accessToken, refreshToken);
 
             // ⭐ 유저 데이터 명시적으로 다시 불러오기
@@ -35,7 +26,7 @@ const KakaoLoginWebView: React.FC = () => {
             authStore.setState({ isLoggedIn: true });
             navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
         } catch (err) {
-            console.error('카카오 로그인 처리 실패:', err);
+            console.error('네이버 로그인 처리 실패:', err);
         }
     };
 
@@ -46,15 +37,20 @@ const KakaoLoginWebView: React.FC = () => {
         }
 
         const codeMatch = url.match(/[?&]code=([^&]+)/);
-        if (url.includes('/kakao/callback') && codeMatch) {
+        const stateMatch = url.match(/[?&]state=([^&]+)/);
+
+        if (url.includes('/naver/callback') && codeMatch && stateMatch) {
             const code = decodeURIComponent(codeMatch[1]);
-            handleKakaoLogin(code);
+            const state = decodeURIComponent(stateMatch[1]);
+            handleNaverLogin(code, state);  // ✅ state까지 넘겨야 함
             navigation.goBack();
             return false;
         }
 
         return true;
     };
+
+    const STATE = 'secureRandomState'; // 백엔드와 반드시 일치시켜야 함
 
     return (
         <SafeAreaView style={styles.container}>
@@ -63,12 +59,12 @@ const KakaoLoginWebView: React.FC = () => {
                 originWhitelist={['*']}
                 source={{
                     uri: Platform.OS === 'android'
-                        ? 'http://10.0.2.2:8080/api/auth/login/kakao'
-                        : 'http://localhost:8080/api/auth/login/kakao',
+                        ? `http://10.0.2.2:8080/api/auth/login/naver?state=${STATE}`
+                        : `http://localhost:8080/api/auth/login/naver?state=${STATE}`,
                 }}
                 onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
                 onError={({ nativeEvent }) => console.warn('WebView 에러:', nativeEvent)}
-                onHttpError={({ nativeEvent }) => console.warn('HTTP 에러 발생:', nativeEvent)}
+                onHttpError={({ nativeEvent }) => console.warn('HTTP 에러:', nativeEvent)}
                 startInLoadingState
                 renderLoading={() => (
                     <ActivityIndicator size="large" color="#6A4BBC" style={styles.loader} />
@@ -83,4 +79,5 @@ const styles = StyleSheet.create({
     loader: { flex: 1, justifyContent: 'center' },
 });
 
-export default KakaoLoginWebView;
+export default NaverLoginWebView;
+

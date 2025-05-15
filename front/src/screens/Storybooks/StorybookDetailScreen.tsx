@@ -260,7 +260,7 @@ const StorybookDetailScreen = ({ route, navigation }: { route: StorybookDetailSc
 
                             {/* 게시글 컨텐츠 */}
                             {selectedBoard.contents?.map((content: { type: string; value: string }, index: number) =>
-                                content.type === 'text' ? (
+                                content.type === 'Text' ? (
                                     <Text key={index} style={styles.postText}>{content.value}</Text>
                                 ) : (
                                     <View key={index} style={styles.mediaContainer}>
