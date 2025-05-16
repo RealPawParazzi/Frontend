@@ -8,7 +8,7 @@ import {
     Modal,
     TouchableOpacity,
     Alert,
-    Text,
+    Text, ActionSheetIOS,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useStoryReelsStore } from '../../context/storyReelsStore';
@@ -97,9 +97,38 @@ const StoryReels = () => {
         }
     };
 
+    const handleMenuPress = () => {
+        ActionSheetIOS.showActionSheetWithOptions(
+            {
+                options: ['취소', '수정', '삭제'],
+                destructiveButtonIndex: 2,
+                cancelButtonIndex: 0,
+            },
+            (buttonIndex) => {
+                if (buttonIndex === 1) {
+                    // TODO: 수정 로직
+                    Alert.alert('수정 기능 아직 구현되지 않았습니다.');
+                } else if (buttonIndex === 2) {
+                    // 삭제
+                    Alert.alert('삭제하시겠습니까?', '', [
+                        { text: '취소', style: 'cancel' },
+                        {
+                            text: '삭제',
+                            style: 'destructive',
+                            onPress: () => {
+                                // 실제 삭제 API 호출
+                                Alert.alert('삭제 완료');
+                            },
+                        },
+                    ]);
+                }
+            }
+        );
+    };
+
 
     return (
-        <View>
+        <View style={styles.reelsContainer}> {/* ✅ 상하 간격 추가 */}
             {/* ✅ 수평 스크롤 스토리 목록 */}
             <FlatList
                 horizontal
@@ -156,7 +185,7 @@ const StoryReels = () => {
                             {selectedStory && dayjs(selectedStory.story.createdAt).fromNow()}
                         </Text>
                         <View style={styles.topBarActions}>
-                            <TouchableOpacity>
+                            <TouchableOpacity onPress={handleMenuPress}>
                                 <Icon name="more-vert" size={22} color="white" />
                             </TouchableOpacity>
                             <TouchableOpacity onPress={() => setModalVisible(false)}>
@@ -188,6 +217,10 @@ const StoryReels = () => {
 };
 
 const styles = StyleSheet.create({
+    reelsContainer: {
+        marginTop: 16,
+        marginBottom: 10,
+    },
     storyItem: {
         marginHorizontal: 6,
     },
