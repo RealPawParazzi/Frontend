@@ -4,6 +4,7 @@ import MemoryVideo from '../components/HomePage/MemoryVideo';
 import FollowRecommendations from '../components/HomePage/FollowRecommendations';
 import RecommendShortcutButtons from '../components/HomePage/RecommendShortcutButtons';
 import StoryBooksList from '../components/HomePage/HomePageStoryBooks/StoryBooksList';
+import StoryReels from '../components/HomePage/StoryReels'; // ✅ 스토리 컴포넌트 import
 import boardStore from '../context/boardStore';
 
 /**
@@ -21,6 +22,13 @@ const HomeScreen = () => {
     return (
         <View style={styles.container}>
             <ScrollView showsVerticalScrollIndicator={false}>
+
+                {/* 🔵 스토리 릴 (최상단) */}
+                <StoryReels />
+
+                {/* 👇 디바이더 */}
+                <View style={styles.divider} />
+
                 {/* 🎞️ 오늘의 추억 영상 */}
                 <MemoryVideo />
 
