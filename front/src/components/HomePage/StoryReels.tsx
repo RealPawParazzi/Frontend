@@ -8,12 +8,19 @@ import {
     Modal,
     TouchableOpacity,
     Alert,
+    Text,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useStoryReelsStore } from '../../context/storyReelsStore';
 import Video from 'react-native-video';
 import { launchImageLibrary } from 'react-native-image-picker';
 import userStore from '../../context/userStore';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import 'dayjs/locale/ko';
+
+dayjs.extend(relativeTime);
+dayjs.locale('ko');
 
 
 interface Story {
@@ -74,11 +81,19 @@ const StoryReels = () => {
     // 🟣 내 스토리 프로필 클릭 시
     const handleMyStoryPress = () => {
         if (myStories.length === 0) {
-            handlePickAndUpload(); // 스토리가 없으면 바로 업로드
+            handlePickAndUpload();
         } else {
             const latest = myStories[myStories.length - 1];
-            setSelectedStory(latest);
-            setModalVisible(true); // 있으면 모달로 보기
+            setSelectedStory({
+                story: latest,
+                user: {
+                    memberId: userData.id,
+                    nickname: userData.name,
+                    profileImageUrl: userData.profileImage.uri,
+                    stories: [],
+                },
+            });
+            setModalVisible(true);
         }
     };
 
@@ -88,7 +103,7 @@ const StoryReels = () => {
             {/* ✅ 수평 스크롤 스토리 목록 */}
             <FlatList
                 horizontal
-                data={groupedStories}
+                data={groupedStories.filter((g) => g.memberId !== Number(userData.id))} // ✅ 내 스토리는 제외
                 keyExtractor={(item) => item.memberId.toString()}
                 showsHorizontalScrollIndicator={false}
                 ListHeaderComponent={
@@ -127,32 +142,52 @@ const StoryReels = () => {
             />
 
 
-            {/* 🎬 전체화면 스토리 뷰 */}
+            {/* ✅ 전체화면 모달 */}
             <Modal visible={modalVisible} transparent animationType="slide">
-                <TouchableOpacity style={styles.modalContainer} onPress={() => setModalVisible(false)}>
-                    {selectedStory?.mediaUrl?.endsWith('.mp4') ? (
-                        <Video
-                            source={{ uri: selectedStory.mediaUrl }}
-                            style={styles.fullScreenMedia}
-                            controls
-                            resizeMode="contain"
-                        />
-                    ) : (
+                <View style={styles.modalContainer}>
+                    {/* 🔵 상단 정보바 */}
+                    <View style={styles.topBar}>
                         <Image
-                            source={{ uri: selectedStory?.mediaUrl }}
-                            style={styles.fullScreenMedia}
+                            source={{ uri: selectedStory?.user.profileImageUrl }}
+                            style={styles.topBarProfile}
                         />
-                    )}
-                </TouchableOpacity>
+                        <Text style={styles.topBarText}>
+                            {selectedStory?.user.nickname} ·{' '}
+                            {selectedStory && dayjs(selectedStory.story.createdAt).fromNow()}
+                        </Text>
+                        <View style={styles.topBarActions}>
+                            <TouchableOpacity>
+                                <Icon name="more-vert" size={22} color="white" />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => setModalVisible(false)}>
+                                <Icon name="close" size={26} color="white" />
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+
+                    {/* 📸 이미지 또는 영상 표시 */}
+                    <View style={styles.mediaWrapper}>
+                        {selectedStory?.story.mediaUrl?.endsWith('.mp4') ? (
+                            <Video
+                                source={{ uri: selectedStory.story.mediaUrl }}
+                                style={styles.fullScreenMedia}
+                                controls
+                                resizeMode="contain"
+                            />
+                        ) : (
+                            <Image
+                                source={{ uri: selectedStory?.story.mediaUrl }}
+                                style={styles.fullScreenMedia}
+                            />
+                        )}
+                    </View>
+                </View>
             </Modal>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    storyContainer: {
-        marginHorizontal: 8,
-    },
     storyItem: {
         marginHorizontal: 6,
     },
@@ -161,7 +196,7 @@ const styles = StyleSheet.create({
         height: 60,
         borderRadius: 50,
         borderWidth: 2,
-        borderColor: '#ff69b4', // 다른 유저는 핑크 테두리
+        borderColor: '#ff69b4',
     },
     grayBorder: {
         borderColor: '#bbb',
@@ -181,32 +216,38 @@ const styles = StyleSheet.create({
     modalContainer: {
         flex: 1,
         backgroundColor: 'black',
+    },
+    mediaWrapper: {
+        flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
     },
     fullScreenMedia: {
-        width: '90%',
-        height: '80%',
-        borderRadius: 10,
+        width: '100%',
+        height: '100%',
+        borderRadius: 5,
     },
-    // ✅ 추가 버튼 스타일
-    addStoryButton: {
-        marginLeft: 16,
+    topBar: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingTop: 54,
+        paddingBottom: 10,
+    },
+    topBarProfile: {
+        width: 36,
+        height: 36,
+        borderRadius: 20,
         marginRight: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
     },
-    addStoryCircle: {
-        width: 60,
-        height: 60,
-        marginTop : 10,
-        marginBottom : 10,
-        borderRadius: 50,
-        borderWidth: 2,
-        borderColor: '#ccc',
-        backgroundColor: '#f0f0f0',
-        alignItems: 'center',
-        justifyContent: 'center',
+    topBarText: {
+        color: 'white',
+        fontSize: 16,
+        flex: 1,
+    },
+    topBarActions: {
+        flexDirection: 'row',
+        gap: 16,
     },
 });
 
