@@ -46,22 +46,26 @@ interface UserStoryGroup {
  * - 유저 스토리 클릭 시 전체 화면 StoryModal 컴포넌트 렌더링
  */
 const StoryReels = () => {
-    const [modalVisible, setModalVisible] = useState(false); // 모달 표시 여부
-    const [activeUserIndex, setActiveUserIndex] = useState<number>(-1); // 현재 보고 있는 유저 스토리 인덱스
+    const [modalVisible, setModalVisible] = useState(false); // 모달 열림 여부
+    const [activeUserIndex, setActiveUserIndex] = useState<number>(-1); // 현재 선택된 유저 스토리 인덱스
 
-    const { groupedStories, myStories, loadGroupedStories, uploadNewStory } = useStoryReelsStore();
+    const {
+        groupedStories,
+        myStories,
+        loadGroupedStories,
+        uploadNewStory,
+        loadMyStories,
+    } = useStoryReelsStore();
+
     const { userData } = userStore();
 
-    /**
-     * 🟢 최초 렌더 시 전체 스토리 로드
-     */
+    // 🟢 최초 진입 시 스토리 데이터 로딩
     useEffect(() => {
+        loadMyStories();
         loadGroupedStories();
-    }, [loadGroupedStories]);
+    }, [loadMyStories, loadGroupedStories]);
 
-    /**
-     * 🟠 갤러리에서 이미지 선택 후 스토리 업로드
-     */
+    // 🟠 이미지 선택 후 업로드 → 업로드 완료 시 스토리 목록 재로딩
     const handlePickAndUpload = () => {
         launchImageLibrary({ mediaType: 'photo' }, async (res) => {
             if (res.didCancel || !res.assets || !res.assets[0]) { return; }
@@ -75,6 +79,7 @@ const StoryReels = () => {
                     name: file.fileName,
                     type: file.type,
                 });
+                await loadMyStories(); // 업로드 후 내 스토리 다시 로드
             } catch (e: any) {
                 Alert.alert('업로드 실패', e.message || '알 수 없는 오류');
             }
@@ -82,43 +87,39 @@ const StoryReels = () => {
     };
 
 
-    /**
-     * 🔵 내 스토리 클릭 시
-     * - 스토리가 없으면 업로드
-     * - 있으면 모달로 보기
-     */
+    // 🔵 내 스토리 눌렀을 때: 있으면 보기, 없으면 업로드
     const handleMyStoryPress = () => {
-        console.log('내 스토리 원형 눌림 !', myStories);
+        console.log('⭕️ 내 (',userData.nickName, ') 스토리 눌림 !:', myStories);
         if (myStories.length === 0) {
             handlePickAndUpload();
         } else {
-            const myStoryGroup: UserStoryGroup = {
-                memberId: Number(userData.id),
-                nickname: userData.nickName,
-                profileImageUrl: userData.profileImage?.uri || 'https://default-image-url.com/default-profile.png',
-                stories: myStories,
-            };
-            setActiveUserIndex(0); // 본인 스토리는 항상 첫 번째 인덱스로 설정
+            setActiveUserIndex(0); // 내 스토리는 항상 0번째
             setModalVisible(true);
         }
     };
 
-    /**
-     * 🔵 다른 유저 스토리 클릭 시 모달 표시
-     */
-    const openStoryGroup = (index: number) => {
-        setActiveUserIndex(index + 1); // 내 스토리가 0번째에 있으니까!
+    // 🔵 유저 스토리 눌렀을 때: 인덱스를 1부터 시작 (내 스토리 제외)
+    const handleOtherUserPress = (index: number) => {
+        const selectedUser = groupedStories[index];
+        console.log(`⭕️ ${selectedUser.nickname} 스토리 눌림 !:`, selectedUser.stories);
+
+        setActiveUserIndex(index + 1); // 내 스토리가 0이므로 +1 offset
         setModalVisible(true);
     };
 
-    /**
-     * 🔵 스토리 그룹 필터링
-     * - 내 스토리는 제외하고 나머지 유저 스토리만 표시
-     */
+    // 🔵 내 스토리와 다른 유저 스토리 구분
+    const myStoryGroup: UserStoryGroup = {
+        memberId: Number(userData.id),
+        nickname: userData.nickName,
+        profileImageUrl: userData.profileImage?.uri || 'https://default-image-url.com/default-profile.png',
+        stories: myStories,
+    };
+
     const filteredStories = groupedStories.filter(
         (group) => group.memberId !== Number(userData.id)
     );
 
+    const allStoryGroups: UserStoryGroup[] = [myStoryGroup, ...filteredStories];
 
     return (
         <View style={styles.reelsContainer}> {/* ✅ 상하 간격 추가 */}
@@ -147,7 +148,10 @@ const StoryReels = () => {
                     </View>
                 }
                 renderItem={({ item, index }) => (
-                    <TouchableOpacity onPress={() => openStoryGroup(index)} style={styles.storyItem}>
+                    <TouchableOpacity
+                        style={styles.storyItem}
+                        onPress={() => handleOtherUserPress(index)}
+                    >
                         <Image source={{ uri: item.profileImageUrl }} style={styles.storyImage} />
                     </TouchableOpacity>
                 )}
@@ -155,18 +159,14 @@ const StoryReels = () => {
 
 
 
-            {/* ✅ 전체화면 모달 렌더링 */}
+
+            {/* ✅ 전체화면 스토리 모달 */}
             {modalVisible && activeUserIndex >= 0 && (
                 <StoryReelsModal
                     visible={modalVisible}
                     onClose={() => setModalVisible(false)}
                     userIndex={activeUserIndex}
-                    userStoryGroups={[{
-                        memberId: Number(userData.id),
-                        nickname: userData.nickName,
-                        profileImageUrl: userData.profileImage?.uri || 'https://default-image-url.com/default-profile.png',
-                        stories: myStories,
-                    }, ...groupedStories]}
+                    userStoryGroups={allStoryGroups}
                 />
             )}
         </View>

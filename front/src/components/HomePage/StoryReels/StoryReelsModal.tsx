@@ -10,6 +10,7 @@ import {
     TouchableWithoutFeedback,
     Animated,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Video from 'react-native-video';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import dayjs from 'dayjs';
@@ -54,53 +55,49 @@ const StoryReelsModal = ({ visible, onClose, userIndex, userStoryGroups }: Props
     const currentUser = userStoryGroups[currentUserIndex];
     const currentStory = currentUser?.stories[currentStoryIndex];
 
-    // 🟢 진행바 애니메이션 시작
+    // ✅ 진행바 시작 애니메이션 (10초 후 자동 다음 스토리)
     const startProgress = useCallback(() => {
         progress.setValue(0);
         Animated.timing(progress, {
             toValue: 1,
-            duration: 8000,
+            duration: 10000,
             useNativeDriver: false,
         }).start(({ finished }) => {
             if (finished) {
-                handleNext(); // 진행 끝나면 다음 스토리
+                handleNext(); // 자동 다음 스토리
             }
         });
     }, [progress, handleNext]);
 
+    // ✅ 다음 스토리로 이동 (마지막이면 모달 닫기)
     const handleNext = useCallback(() => {
-        if (!currentUser || !currentUser.stories) {
-            onClose();
-            return;
-        }
+        console.log('❗️현재 출력된 스토리:', currentStory);
+        if (!currentUser || !currentUser.stories) { return onClose(); }
 
         if (currentStoryIndex < currentUser.stories.length - 1) {
             setCurrentStoryIndex((prev) => prev + 1);
-        } else if (currentUserIndex < userStoryGroups.length - 1) {
-            setCurrentUserIndex((prev) => prev + 1);
-            setCurrentStoryIndex(0);
         } else {
-            onClose(); // 마지막 스토리일 경우 닫기
+            onClose(); // 더 이상 스토리 없으면 모달 닫기
         }
-    }, [currentStoryIndex, currentUser, currentUserIndex, userStoryGroups.length, onClose]);
+    }, [currentStory, currentUser, onClose, currentStoryIndex]);
 
-    // 🟣 이전 스토리 or 이전 유저로 이동
+    // ✅ 이전 스토리로 이동
     const handlePrev = () => {
+        console.log('❗️현재 출력된 스토리:', currentStory);
         if (currentStoryIndex > 0) {
             setCurrentStoryIndex((prev) => prev - 1);
-        } else if (currentUserIndex > 0) {
-            const prevUser = userStoryGroups[currentUserIndex - 1];
-            setCurrentUserIndex((prev) => prev - 1);
-            setCurrentStoryIndex(prevUser?.stories.length - 1 || 0);
+        } else {
+            onClose(); // 더 이상 스토리 없으면 모달 닫기
         }
     };
 
-    // 🟡 인덱스 변경 시 자동 애니메이션 재시작
+    // ✅ 유저/스토리 변경될 때마다 애니메이션 재시작
     useEffect(() => {
         if (visible && currentUser?.stories?.length > 0) {
             startProgress();
         }
-    }, [visible, currentStoryIndex, currentUserIndex, startProgress, currentUser?.stories?.length]);
+    }, [visible, currentUserIndex, currentStoryIndex, currentUser?.stories?.length, startProgress]);
+
 
     // ✅ 햄버거 버튼 눌렀을 때 액션 시트 표시
     const handleMenuPress = () => {
@@ -145,7 +142,7 @@ const StoryReelsModal = ({ visible, onClose, userIndex, userStoryGroups }: Props
 
     return (
         <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-            <View style={styles.container}>
+            <SafeAreaView style={styles.container}>
                 {/* 🔷 상단 진행바 (스토리 개수만큼 출력) */}
                 <View style={styles.progressBarRow}>
                     {currentUser.stories.map((_, idx) => (
@@ -153,6 +150,10 @@ const StoryReelsModal = ({ visible, onClose, userIndex, userStoryGroups }: Props
                             <Animated.View
                                 style={[
                                     styles.progressBarForeground,
+                                    {
+                                        backgroundColor:
+                                            idx === currentStoryIndex ? '#3399ff' : 'white',
+                                    },
                                     idx === currentStoryIndex
                                         ? { flex: progress }
                                         : idx < currentStoryIndex
@@ -184,6 +185,7 @@ const StoryReelsModal = ({ visible, onClose, userIndex, userStoryGroups }: Props
                 <View style={styles.mediaWrapper}>
                     {currentStory.mediaUrl.endsWith('.mp4') ? (
                         <Video
+                            key={currentStory.storyId}
                             source={{ uri: currentStory.mediaUrl }}
                             style={styles.media}
                             resizeMode="cover"
@@ -192,6 +194,7 @@ const StoryReelsModal = ({ visible, onClose, userIndex, userStoryGroups }: Props
                         />
                     ) : (
                         <Image
+                            key={currentStory.storyId}
                             source={{ uri: currentStory.mediaUrl }}
                             style={styles.media}
                             resizeMode="cover"
@@ -208,7 +211,7 @@ const StoryReelsModal = ({ visible, onClose, userIndex, userStoryGroups }: Props
                         <View style={styles.touchArea} />
                     </TouchableWithoutFeedback>
                 </View>
-            </View>
+        </SafeAreaView>
         </Modal>
     );
 };
@@ -267,7 +270,7 @@ const styles = StyleSheet.create({
     touchOverlay: {
         position: 'absolute',
         bottom: 0, // 상단바 피해서 아래쪽부터 시작
-        top: 100,  // 예: 상단바 높이 + 여유
+        top: 180,  // 예: 상단바 높이 + 여유
         flexDirection: 'row',
         width: '100%',
         height: '100%',
