@@ -1282,6 +1282,27 @@ PODS:
     - Yoga
   - react-native-maps (1.20.1):
     - React-Core
+  - react-native-pager-view (6.7.1):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.11.18.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
   - react-native-safe-area-context (5.3.0):
     - DoubleConversion
     - glog
@@ -2080,6 +2101,7 @@ DEPENDENCIES:
   - react-native-google-maps (from `../node_modules/react-native-maps`)
   - react-native-image-picker (from `../node_modules/react-native-image-picker`)
   - react-native-maps (from `../node_modules/react-native-maps`)
+  - react-native-pager-view (from `../node_modules/react-native-pager-view`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - "react-native-segmented-control (from `../node_modules/@react-native-segmented-control/segmented-control`)"
   - react-native-video (from `../node_modules/react-native-video`)
@@ -2222,6 +2244,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-image-picker"
   react-native-maps:
     :path: "../node_modules/react-native-maps"
+  react-native-pager-view:
+    :path: "../node_modules/react-native-pager-view"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
   react-native-segmented-control:
@@ -2360,6 +2384,7 @@ SPEC CHECKSUMS:
   react-native-google-maps: c4f5c5b2dda17e7cb2cb2b37a81f140b039b3e7e
   react-native-image-picker: df2b20cdfa981f7288f4019774d9baa26a4772c1
   react-native-maps: 9febd31278b35cd21e4fad2cf6fa708993be5dab
+  react-native-pager-view: 2a1bb8df6992ff4d50aa2e8892ca2eac3f354d87
   react-native-safe-area-context: 0f14bce545abcdfbff79ce2e3c78c109f0be283e
   react-native-segmented-control: bf6e0032726727498e18dd437ae88afcdbc18e99
   react-native-video: ebad7ae64c4d5302fd43ac76821d180adf4febd6
