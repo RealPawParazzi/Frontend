@@ -4,7 +4,7 @@ import MemoryVideo from '../components/HomePage/MemoryVideo';
 import FollowRecommendations from '../components/HomePage/FollowRecommendations';
 import RecommendShortcutButtons from '../components/HomePage/RecommendShortcutButtons';
 import StoryBooksList from '../components/HomePage/HomePageStoryBooks/StoryBooksList';
-import StoryReels from '../components/HomePage/StoryReels'; // ✅ 스토리 컴포넌트 import
+import StoryReels from '../components/HomePage/StoryReels/StoryReels'; // ✅ 스토리 컴포넌트 import
 import boardStore from '../context/boardStore';
 
 /**
