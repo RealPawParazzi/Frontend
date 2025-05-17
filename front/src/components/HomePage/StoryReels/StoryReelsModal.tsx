@@ -16,6 +16,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import dayjs from 'dayjs';
 import { ActionSheetIOS, Alert } from 'react-native';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { useStoryReelsStore } from '../../../context/storyReelsStore';
 
 dayjs.extend(relativeTime);
 
@@ -54,6 +55,8 @@ const StoryReelsModal = ({ visible, onClose, userIndex, userStoryGroups }: Props
 
     const currentUser = userStoryGroups[currentUserIndex];
     const currentStory = currentUser?.stories[currentStoryIndex];
+    // 🔽 스토리 viewed 처리용
+    const { loadStoryDetail } = useStoryReelsStore();
 
     // ✅ 진행바 시작 애니메이션 (10초 후 자동 다음 스토리)
     const startProgress = useCallback(() => {
@@ -98,6 +101,19 @@ const StoryReelsModal = ({ visible, onClose, userIndex, userStoryGroups }: Props
         }
     }, [visible, currentUserIndex, currentStoryIndex, currentUser?.stories?.length, startProgress]);
 
+    useEffect(() => {
+        if (!visible || !currentStory?.storyId) { return; }
+
+        const markStoryViewed = async () => {
+            try {
+                await loadStoryDetail(currentStory.storyId); // 👈 조회 기록 반영
+            } catch (e) {
+                console.warn('스토리 조회 처리 중 오류 발생:', e);
+            }
+        };
+
+        markStoryViewed();
+    }, [currentStory?.storyId, loadStoryDetail, visible]);
 
     // ✅ 햄버거 버튼 눌렀을 때 액션 시트 표시
     const handleMenuPress = () => {

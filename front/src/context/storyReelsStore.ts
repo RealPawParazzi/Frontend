@@ -50,6 +50,7 @@ interface StoryReelsState {
         file: { uri: string; name: string; type: string },
         caption?: string
     ) => Promise<void>;
+    loadStoryDetail: (storyId: number) => Promise<void>;
     deleteMyStory: (storyId: number) => Promise<void>;
     loadStoryViewers: (storyId: number) => Promise<void>;
     resetError: () => void;
@@ -124,6 +125,15 @@ export const useStoryReelsStore = create<StoryReelsState>((set) => ({
             set({ storyViewers: data.viewers, isLoading: false });
         } catch (e: any) {
             set({ error: e.message, isLoading: false });
+        }
+    },
+
+    // ✅ 단일 스토리 상세 정보 조회 및 viewed 처리 (서버 기록 목적)
+    loadStoryDetail: async (storyId) => {
+        try {
+            await fetchStoryDetail(storyId); // 👉 서버에 조회 기록만 반영
+        } catch (e: any) {
+            set({ error: e.message });
         }
     },
 }));
