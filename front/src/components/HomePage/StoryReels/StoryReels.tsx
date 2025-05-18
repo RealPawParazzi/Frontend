@@ -101,7 +101,7 @@ const StoryReels = () => {
 
     // 🔵 유저 스토리 눌렀을 때: 인덱스를 1부터 시작 (내 스토리 제외)
     const handleOtherUserPress = (index: number) => {
-        const selectedUser = groupedStories[activeUserIndex];
+        const selectedUser = filteredStories[index];
         setActiveUserIndex(index + 1); // 내 스토리가 0이므로 +1 offset
         setModalVisible(true);
         console.log(`⭕️ ${selectedUser.nickname} 스토리 눌림 !:`, selectedUser.stories);
