@@ -110,6 +110,10 @@ export const fetchStoryViewers = async (storyId: number) => {
     });
 
     if (!res.ok) { throw new Error('스토리 뷰어 조회 실패'); }
-    return (await res.json()).data;
+
+
+    const json = await res.json(); // ✅ 한 번만
+    console.log(`🔍 [서비스] ${storyId} 조회자 목록:`, json);
+    return json.data.viewers; // ✅ 뷰어 배열 반환
 };
 

@@ -121,8 +121,10 @@ export const useStoryReelsStore = create<StoryReelsState>((set) => ({
     loadStoryViewers: async (storyId) => {
         try {
             set({ isLoading: true });
-            const data = await fetchStoryViewers(storyId); // 조회자 API 호출
-            set({ storyViewers: data.viewers, isLoading: false });
+            const viewers = await fetchStoryViewers(storyId); // 조회자 API 호출
+            set({ storyViewers: viewers, isLoading: false });
+            console.log(`🔍 ${storyId} 의 조회자 목록 (스토어 계층)`, viewers);
+            return viewers; // 👈 이걸 추가해야 caller에서 받아서 쓸 수 있음
         } catch (e: any) {
             set({ error: e.message, isLoading: false });
         }

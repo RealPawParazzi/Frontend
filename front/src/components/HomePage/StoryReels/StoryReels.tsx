@@ -89,22 +89,23 @@ const StoryReels = () => {
 
     // 🔵 내 스토리 눌렀을 때: 있으면 보기, 없으면 업로드
     const handleMyStoryPress = () => {
-        console.log('⭕️ 내 (',userData.nickName, ') 스토리 눌림 !:', myStories);
         if (myStories.length === 0) {
             handlePickAndUpload();
         } else {
             setActiveUserIndex(0); // 내 스토리는 항상 0번째
             setModalVisible(true);
+            console.log('⭕️ 내 (',userData.nickName, ') 스토리 눌림 !:', myStories);
+
         }
     };
 
     // 🔵 유저 스토리 눌렀을 때: 인덱스를 1부터 시작 (내 스토리 제외)
     const handleOtherUserPress = (index: number) => {
-        const selectedUser = groupedStories[index];
-        console.log(`⭕️ ${selectedUser.nickname} 스토리 눌림 !:`, selectedUser.stories);
-
+        const selectedUser = groupedStories[activeUserIndex];
         setActiveUserIndex(index + 1); // 내 스토리가 0이므로 +1 offset
         setModalVisible(true);
+        console.log(`⭕️ ${selectedUser.nickname} 스토리 눌림 !:`, selectedUser.stories);
+
     };
 
     // 🔵 내 스토리와 다른 유저 스토리 구분
@@ -197,8 +198,8 @@ const styles = StyleSheet.create({
         width: 60,
         height: 60,
         borderRadius: 50,
-        borderWidth: 2,
-        borderColor: '#ff69b4',
+        borderWidth: 2.5,
+        borderColor: '#00a1e6',
     },
     grayBorder: {
         borderColor: '#bbb',

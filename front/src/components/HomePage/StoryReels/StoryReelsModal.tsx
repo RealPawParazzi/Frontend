@@ -17,6 +17,8 @@ import dayjs from 'dayjs';
 import { ActionSheetIOS, Alert } from 'react-native';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { useStoryReelsStore } from '../../../context/storyReelsStore';
+import userStore from '../../../context/userStore';
+import StoryViewersModal from './StoryViewersModal';
 
 dayjs.extend(relativeTime);
 
@@ -55,8 +57,17 @@ const StoryReelsModal = ({ visible, onClose, userIndex, userStoryGroups }: Props
 
     const currentUser = userStoryGroups[currentUserIndex];
     const currentStory = currentUser?.stories[currentStoryIndex];
-    // 🔽 스토리 viewed 처리용
-    const { loadStoryDetail } = useStoryReelsStore();
+    const { userData } = userStore();
+
+    // 🔽 스토리 viewe 처리용
+    const [viewersModalVisible, setViewersModalVisible] = useState(false);
+    const {
+        loadStoryDetail,
+        loadStoryViewers,
+        storyViewers,
+    } = useStoryReelsStore();
+
+    const isMyStory = currentUser.memberId === Number(userData.id);
 
     // ✅ 진행바 시작 애니메이션 (10초 후 자동 다음 스토리)
     const startProgress = useCallback(() => {
@@ -146,6 +157,14 @@ const StoryReelsModal = ({ visible, onClose, userIndex, userStoryGroups }: Props
         );
     };
 
+    const handleOpenViewersModal = async () => {
+        if (currentStory) {
+            const viewers = await loadStoryViewers(currentStory.storyId);
+            console.log('✅ handleOpenViewersModal 안:', viewers);
+            setViewersModalVisible(true);
+        }
+    };
+
     useEffect(() => {
         if (!visible) {
             setCurrentUserIndex(userIndex);
@@ -188,9 +207,11 @@ const StoryReelsModal = ({ visible, onClose, userIndex, userStoryGroups }: Props
                         {currentUser.nickname} · {dayjs(currentStory.createdAt).fromNow()}
                     </Text>
                     <View style={{ flexDirection: 'row', gap: 16 }}>
-                        <TouchableOpacity onPress={handleMenuPress}>
-                            <Icon name="more-vert" size={22} color="white" />
-                        </TouchableOpacity>
+                        {isMyStory && (
+                            <TouchableOpacity onPress={handleMenuPress}>
+                                <Icon name="more-vert" size={22} color="white" />
+                            </TouchableOpacity>
+                        )}
                         <TouchableOpacity onPress={onClose}>
                             <Icon name="close" size={26} color="white" />
                         </TouchableOpacity>
@@ -218,6 +239,7 @@ const StoryReelsModal = ({ visible, onClose, userIndex, userStoryGroups }: Props
                     )}
                 </View>
 
+
                 {/* ✅ 상단바를 제외한 아래 영역에만 좌우 터치 적용 */}
                 <View style={styles.touchOverlay}>
                     <TouchableWithoutFeedback onPress={handlePrev}>
@@ -227,7 +249,25 @@ const StoryReelsModal = ({ visible, onClose, userIndex, userStoryGroups }: Props
                         <View style={styles.touchArea} />
                     </TouchableWithoutFeedback>
                 </View>
-        </SafeAreaView>
+
+                {/* 🔹 하단 조회수 영역 (내 스토리일 때만 노출) */}
+                {isMyStory && (
+                    <TouchableOpacity
+                        onPress={handleOpenViewersModal}
+                        style={styles.bottomInfoBar}
+                    >
+                        <Text style={styles.viewCountText}>
+                            {storyViewers.length}명이 봤어요
+                        </Text>
+                    </TouchableOpacity>
+                )}
+
+                {/* 🔹 조회자 모달 */}
+                <StoryViewersModal
+                    visible={viewersModalVisible}
+                    onClose={() => setViewersModalVisible(false)}
+                />
+            </SafeAreaView>
         </Modal>
     );
 };
@@ -280,7 +320,7 @@ const styles = StyleSheet.create({
     },
     media: {
         width: '100%',
-        height: '100%',
+        height: '95%',
     },
     // 🔽 터치 영역은 미디어 위에만 표시
     touchOverlay: {
@@ -291,10 +331,20 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
     },
-
     touchArea: {
         width: '50%',
         height: '100%',
+    },
+    // 하단 추가 스타일
+    bottomInfoBar: {
+        position: 'absolute',
+        bottom: 24,
+        left: 16,
+    },
+    viewCountText: {
+        color: 'white',
+        fontSize: 14,
+        opacity: 0.9,
     },
 });
 
