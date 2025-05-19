@@ -60,7 +60,8 @@ const StoryReelsModal = ({
 }: Props) => {
   const [currentUserIndex, setCurrentUserIndex] = useState(userIndex); // 현재 유저 위치
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0); // 현재 스토리 위치
-  const progress = useRef(new Animated.Value(0)).current; // 진행바 애니메이션 값
+  const [mediaDuration, setMediaDuration] = useState(10); // 기본 10초로 시작
+  const progress = useRef(new Animated.Value(0)).current;
 
   const currentUser = userStoryGroups[currentUserIndex];
   const currentStory = currentUser?.stories[currentStoryIndex];
@@ -88,7 +89,7 @@ const StoryReelsModal = ({
     progress.setValue(0);
     Animated.timing(progress, {
       toValue: 1,
-      duration: 10000,
+      duration: mediaDuration * 1000, // 이미지면 10초, 영상이면 해당 길이
       useNativeDriver: false,
     }).start(({finished}) => {
       if (finished) {
@@ -96,7 +97,7 @@ const StoryReelsModal = ({
       }
     });
     //@ts-ignore
-  }, [progress, handleNext]);
+  }, [progress, mediaDuration, handleNext]);
 
   // ✅ 다음 스토리로 이동 (마지막이면 모달 닫기)
   const handleNext = useCallback(() => {
@@ -122,6 +123,14 @@ const StoryReelsModal = ({
     }
   };
 
+  /**
+   * ✅ 이미지 or 영상 길이에 따라 mediaDuration 설정
+   */
+  useEffect(() => {
+    if (!currentStory) { return; }
+    setMediaDuration(10); // 이미지 or 기본 초기화
+  }, [currentStory, currentStory.mediaUrl]);
+
   // ✅ 유저/스토리 변경될 때마다 애니메이션 재시작
   useEffect(() => {
     if (visible && currentUser?.stories?.length > 0) {
@@ -135,6 +144,18 @@ const StoryReelsModal = ({
     startProgress,
   ]);
 
+  /**
+   * ✅ 영상 길이 추출 (onLoad 콜백)
+   */
+  const handleVideoLoad = (meta: { duration: number }) => {
+    if (meta.duration) {
+      setMediaDuration(meta.duration);
+    }
+  };
+
+  /**
+   * ✅ 뷰어 수 기록용 조회 처리
+   */
   useEffect(() => {
     if (!visible || !currentStory?.storyId) {
       return;
@@ -300,6 +321,7 @@ const StoryReelsModal = ({
               resizeMode="cover"
               paused={false}
               repeat={false}
+              onLoad={handleVideoLoad}
             />
           ) : (
             <Image
