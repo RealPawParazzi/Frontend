@@ -6,20 +6,21 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  // Dimensions,
   TouchableWithoutFeedback,
   Animated,
+  Dimensions,
+  Alert,
+  ActionSheetIOS,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Video from 'react-native-video';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import dayjs from 'dayjs';
-import {ActionSheetIOS, Alert} from 'react-native';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import {useStoryReelsStore} from '../../../context/storyReelsStore';
+import { launchImageLibrary } from 'react-native-image-picker';
+import { useStoryReelsStore } from '../../../context/storyReelsStore';
 import userStore from '../../../context/userStore';
 import StoryViewersModal from './StoryViewersModal';
-import {launchImageLibrary} from 'react-native-image-picker';
 
 dayjs.extend(relativeTime);
 
@@ -65,19 +66,22 @@ const StoryReelsModal = ({
   const currentStory = currentUser?.stories[currentStoryIndex];
   const {userData} = userStore();
 
-  // 🔽 스토리 viewe 처리용
+  // ✅ 조회자 모달 상태
   const [viewersModalVisible, setViewersModalVisible] = useState(false);
+
+  // ✅ Zustand 스토어 함수 호출
   const {
     loadStoryDetail,
     loadStoryViewers,
     storyViewers,
     deleteMyStory,
     editMyStory,
-    loadMyStories,
     loadGroupedStories,
   } = useStoryReelsStore();
 
+  // ✅ 현재 스토리가 내 스토리인지 여부
   const isMyStory = currentUser.memberId === Number(userData.id);
+
 
   // ✅ 진행바 시작 애니메이션 (10초 후 자동 다음 스토리)
   const startProgress = useCallback(() => {
@@ -139,7 +143,6 @@ const StoryReelsModal = ({
     const markStoryViewed = async () => {
       try {
         await loadStoryDetail(currentStory.storyId); // 👈 조회 기록 반영
-        console.log('@ 현재 스토리 아이디 ', currentStory.storyId);
       } catch (e) {
         console.warn('스토리 조회 처리 중 오류 발생:', e);
       }
@@ -243,28 +246,29 @@ const StoryReelsModal = ({
       animationType="fade"
       onRequestClose={onClose}>
       <SafeAreaView style={styles.container}>
-        {/* 🔷 상단 진행바 (스토리 개수만큼 출력) */}
+        {/* 🔹 진행바 */}
         <View style={styles.progressBarRow}>
           {currentUser.stories.map((_, idx) => (
             <View key={idx} style={styles.progressBarBackground}>
-              <Animated.View
-                style={[
-                  styles.progressBarForeground,
-                  {
-                    backgroundColor:
-                      idx === currentStoryIndex ? '#3399ff' : 'white',
-                  },
-                  idx === currentStoryIndex
-                    ? {flex: progress}
-                    : idx < currentStoryIndex
-                    ? {flex: 1}
-                    : {flex: 0},
-                ]}
-              />
+              {idx === currentStoryIndex && (
+                <Animated.View
+                  style={[
+                    styles.progressBarForeground,
+                    {
+                      width: progress.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ['0%', '100%'],
+                      }),
+                    },
+                  ]}
+                />
+              )}
+              {idx < currentStoryIndex && (
+                <View style={[styles.progressBarForeground, { width: '100%' }]} />
+              )}
             </View>
           ))}
         </View>
-
         {/* 🔷 상단 유저 정보 바 */}
         <View style={styles.topBar}>
           <Image
@@ -358,8 +362,11 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   progressBarForeground: {
-    backgroundColor: 'white',
+    backgroundColor: '#3399ff',
     height: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
   },
   topBar: {
     flexDirection: 'row',
