@@ -142,7 +142,7 @@ const OwnerInfo = () => {
                         <TouchableOpacity style={styles.modalOption} onPress={() => {
                             setMenuVisible(false);
                             // @ts-ignore
-                            navigation.navigate('ProfileEditScreen'); // ✅ 프로필 수정 화면으로 이동
+                            navigation.navigate('EditProfileScreen'); // ✅ 프로필 수정 화면으로 이동
                         }}>
                             <Text style={styles.modalText}>프로필 수정</Text>
                         </TouchableOpacity>

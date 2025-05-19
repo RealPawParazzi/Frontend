@@ -12,6 +12,7 @@ import {
 import * as ImagePicker from 'react-native-image-picker';
 import userStore from '../context/userStore';
 import { updateUser } from '../services/userService';
+import { useNavigation } from '@react-navigation/native';
 
 /**
  * ✅ 회원 정보 수정 화면
@@ -26,6 +27,9 @@ const EditProfileScreen = () => {
     const [name, setName] = useState(userData.name);
     const [nickName, setNickName] = useState(userData.nickName);
     const [selectedImage, setSelectedImage] = useState<any>(null);
+
+    const navigation = useNavigation();
+
 
     // 🔍 이미지 선택 핸들러
     const handleImagePick = () => {
@@ -63,6 +67,8 @@ const EditProfileScreen = () => {
             });
 
             Alert.alert('✅ 수정 완료', '회원 정보가 업데이트되었습니다.');
+
+            navigation.goBack();
         } catch (err: any) {
             Alert.alert('❗ 오류', err.message || '프로필 수정 중 오류 발생');
         }
@@ -76,7 +82,7 @@ const EditProfileScreen = () => {
                     source={
                         selectedImage
                             ? { uri: selectedImage.uri }
-                            : userData.profileImage || require('../../assets/images/user-2.png')
+                            : userData.profileImage || require('../assets/images/user-2.png')
                     }
                     style={styles.profileImage}
                 />

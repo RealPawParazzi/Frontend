@@ -14,6 +14,7 @@ import VideoEditorScreen from '../screens/Storybooks/VideoEditorScreen';
 import ImageEditorScreen from '../screens/Storybooks/ImageEditorScreen';
 import PetRegistrationScreen from '../screens/Pets/PetRegistrationScreen';
 import PetEditScreen from '../screens/Pets/PetEditScreen';
+import EditProfileScreen from '../screens/EditProfileScreen';
 import FollowListScreen from '../screens/MiniProfile/FollowListScreen'; // 🆕 팔로워/팔로잉 목록 화면 추가
 import UserPostsScreen from '../screens/MiniProfile/UserPostsScreen'; // 🆕 특정 유저 게시글 목록 추가
 import { loadUserData }  from '../context/userStore';
@@ -35,6 +36,7 @@ export type RootStackParamList = {
     ImageEditorScreen: undefined;
     PetRegistrationScreen: undefined;
     PetEditScreen: { pet: object };
+    EditProfileScreen: undefined;
     FollowListScreen: { type: 'followers' | 'following' }; // 🆕 팔로워/팔로잉 목록 네비게이션 추가
     UserPostsScreen: { userId: number; userName: string }; // 🆕 특정 유저 게시글 목록 추가
 };
@@ -93,6 +95,7 @@ const AppNavigator = () => {
             <Stack.Screen name="PetRegistrationScreen" component={PetRegistrationScreen} />
             <Stack.Screen name="PetEditScreen" component={PetEditScreen} />
             <Stack.Screen name="FollowListScreen" component={FollowListScreen} />
+            <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />
             <Stack.Screen name="UserPostsScreen" component={UserPostsScreen} />
         </Stack.Navigator>
     );
