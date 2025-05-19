@@ -118,6 +118,8 @@ const StoryReelsModal = ({ visible, onClose, userIndex, userStoryGroups }: Props
         const markStoryViewed = async () => {
             try {
                 await loadStoryDetail(currentStory.storyId); // 👈 조회 기록 반영
+                console.log('@ 현재 스토리 아이디 ', currentStory.storyId)
+
             } catch (e) {
                 console.warn('스토리 조회 처리 중 오류 발생:', e);
             }
@@ -157,13 +159,17 @@ const StoryReelsModal = ({ visible, onClose, userIndex, userStoryGroups }: Props
         );
     };
 
-    const handleOpenViewersModal = async () => {
-        if (currentStory) {
-            const viewers = await loadStoryViewers(currentStory.storyId);
-            console.log('✅ handleOpenViewersModal 안:', viewers);
-            setViewersModalVisible(true);
-        }
+    // ✅ 뷰어 모달 열기 버튼은 단순히 true만 처리
+    const handleOpenViewersModal = () => {
+        setViewersModalVisible(true);
     };
+
+    // ✅ 뷰어 모달 열릴 때 + currentStory.storyId 바뀔 때마다 조회자 목록 요청
+    useEffect(() => {
+        if (viewersModalVisible && currentStory?.storyId) {
+            loadStoryViewers(currentStory.storyId);
+        }
+    }, [viewersModalVisible, currentStory?.storyId]);
 
     useEffect(() => {
         if (!visible) {

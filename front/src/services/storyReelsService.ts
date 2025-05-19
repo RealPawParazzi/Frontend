@@ -13,6 +13,7 @@ const BASE_URL =
 
 const getToken = async () => {
     const token = await AsyncStorage.getItem('accessToken');
+    // console.log(token);
     if (!token) { throw new Error('로그인이 필요합니다.'); }
     return token;
 };
@@ -109,11 +110,14 @@ export const fetchStoryViewers = async (storyId: number) => {
         },
     });
 
-    if (!res.ok) { throw new Error('스토리 뷰어 조회 실패'); }
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || '스토리 뷰어 조회 실패');
+    }
 
+    const json = await res.json();
 
-    const json = await res.json(); // ✅ 한 번만
-    console.log(`🔍 [서비스] ${storyId} 조회자 목록:`, json);
-    return json.data.viewers; // ✅ 뷰어 배열 반환
+    return json.data.viewers; // ✅ 오직 배열만 반환하도록!
+
 };
 

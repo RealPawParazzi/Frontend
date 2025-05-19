@@ -127,6 +127,8 @@ export const useStoryReelsStore = create<StoryReelsState>((set) => ({
             return viewers; // 👈 이걸 추가해야 caller에서 받아서 쓸 수 있음
         } catch (e: any) {
             set({ error: e.message, isLoading: false });
+            console.warn('❌ 스토리 뷰어 조회 실패:', e.message);
+            return []; // ✅ 최소한 빈 배열이라도 반환
         }
     },
 
