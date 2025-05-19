@@ -9,6 +9,7 @@ import {
   Alert,
   Modal,
 } from 'react-native';
+import { createThumbnail } from 'react-native-create-thumbnail';
 import userStore from '../../context/userStore';
 import userFollowStore from '../../context/userFollowStore';
 import {useStoryReelsStore} from '../../context/storyReelsStore';
@@ -33,7 +34,7 @@ const OwnerInfo = () => {
   );
 
   const [storyModalVisible, setStoryModalVisible] = useState(false);
-  const [storyUserIndex, setStoryUserIndex] = useState(0); // 모달 초기 유저 index
+  const [singleStoryGroup, setSingleStoryGroup] = useState<any>(null);
 
   const [menuVisible, setMenuVisible] = useState(false); // ✅ 햄버거 메뉴 모달 상태
   const {following, followers, fetchFollowing, fetchFollowers} =
@@ -48,6 +49,43 @@ const OwnerInfo = () => {
   const {userBoardsMap, fetchUserBoards} = boardStore();
 
   const {myStories, loadMyStories} = useStoryReelsStore();
+
+  // ✅ 썸네일 상태
+  const [memoryThumbnails, setMemoryThumbnails] = useState<{ [key: number]: string }>({});
+
+// ✅ 썸네일 생성 함수
+  const generateThumbnailForMedia = async (story: any): Promise<string> => {
+    const isVideo =
+      story.mediaUrl.endsWith('.mp4') || story.mediaUrl.endsWith('.mov');
+
+    if (isVideo) {
+      try {
+        const thumb = await createThumbnail({ url: story.mediaUrl, timeStamp: 1000 });
+        return thumb.path;
+      } catch (error) {
+        console.warn('썸네일 생성 실패:', error);
+        return story.mediaUrl; // 실패 시 원본 반환
+      }
+    } else {
+      return story.mediaUrl;
+    }
+  };
+
+// ✅ 썸네일 로딩 useEffect
+  useEffect(() => {
+    const loadThumbnails = async () => {
+      const thumbs: { [key: number]: string } = {};
+      for (const story of myStories) {
+        const thumbUri = await generateThumbnailForMedia(story);
+        thumbs[story.storyId] = thumbUri;
+      }
+      setMemoryThumbnails(thumbs);
+    };
+
+    if (myStories.length > 0) {
+      loadThumbnails();
+    }
+  }, [myStories]);
 
   // ✅ 처음에 내 스토리 불러오기
   useEffect(() => {
@@ -135,6 +173,17 @@ const OwnerInfo = () => {
         },
       },
     ]);
+  };
+
+  // ✅ 특정 스토리 하나만 모달에 전달하는 함수
+  const openSingleStory = (story: any) => {
+    setSingleStoryGroup({
+      memberId: Number(userData.id), // 현재 사용자 ID
+      nickname: userData.nickName,  // 사용자 닉네임
+      profileImageUrl: userData.profileImage.uri, // 사용자 프로필 이미지
+      stories: [story], // 🔥 단일 스토리만 배열로 전달
+    });
+    setStoryModalVisible(true); // 모달 열기
   };
 
   // useEffect(() => {
@@ -253,15 +302,13 @@ const OwnerInfo = () => {
             data={myStories}
             //@ts-ignore
             keyExtractor={item => item.storyId}
-            renderItem={({item}) => (
+            renderItem={({ item }) => (
               <TouchableOpacity
                 style={styles.memoryCircle}
-                onPress={() => {
-                  setStoryUserIndex(0); // 현재 유저만의 스토리이므로 인덱스 0
-                  setStoryModalVisible(true);
-                }}>
+                onPress={() => openSingleStory(item)}
+              >
                 <Image
-                  source={{uri: item.mediaUrl}}
+                  source={{ uri: memoryThumbnails[item.storyId] || DEFAULT_PROFILE_IMAGE }}
                   style={styles.memoryImage}
                 />
               </TouchableOpacity>
@@ -271,19 +318,15 @@ const OwnerInfo = () => {
         </>
       )}
 
-      <StoryReelsModal
-        visible={storyModalVisible}
-        onClose={() => setStoryModalVisible(false)}
-        userIndex={0} // 내 스토리만이므로 인덱스 0
-        userStoryGroups={[
-          {
-            memberId: Number(userData.id),
-            nickname: userData.nickName,
-            profileImageUrl: userData.profileImage.uri,
-            stories: myStories,
-          },
-        ]}
-      />
+      {/* ✅ 단일 스토리만 재생하는 모달 */}
+      {singleStoryGroup && (
+        <StoryReelsModal
+          visible={storyModalVisible}
+          onClose={() => setStoryModalVisible(false)} // 닫기 핸들러
+          userIndex={0} // 단일 유저이므로 항상 0
+          userStoryGroups={[singleStoryGroup]} // 🔥 단일 스토리 그룹만 전달
+        />
+      )}
 
       {/* ✅ 탭 메뉴 */}
       <View style={styles.tabsContainer}>
