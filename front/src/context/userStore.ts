@@ -127,6 +127,7 @@ const userStore = create<{
         profileImage?: { uri: string; name: string; type: string }
     ) => Promise<void>;
 
+    setUserData: (userData: UserData) => void;
     resetUserData: () => void;
 }>((set) => ({
     /** ✅ 사용자 데이터 (초기값: 기본 더미 데이터) */
@@ -239,8 +240,14 @@ const userStore = create<{
         try {
             const updated = await updateUser(updateData, profileImage);
 
+            // ✅ 응답이 null일 경우 방어
+            if (!updated) {
+                console.warn('⚠️ 서버 응답이 없습니다. 사용자 정보 업데이트 중단');
+                return;
+            }
+
             const normalizedImage = normalizeImage(updated.profileImageUrl);
-            const { updatedPetList, updatedRecentPosts } = transformData();
+            // const { updatedPetList, updatedRecentPosts } = transformData();
 
             set((state) => ({
             userData: {
@@ -248,9 +255,9 @@ const userStore = create<{
                     name: updated.name,
                     nickName: updated.nickName,
                     profileImage: normalizedImage,
-                    petCount: updatedPetList.length,
-                    petList: updatedPetList.length ? updatedPetList : state.userData.petList,
-                    recentPosts: updatedRecentPosts.length ? updatedRecentPosts : state.userData.recentPosts,
+                    // petCount: updatedPetList.length,
+                    // petList: updatedPetList.length ? updatedPetList : state.userData.petList,
+                    // recentPosts: updatedRecentPosts.length ? updatedRecentPosts : state.userData.recentPosts,
                 },
             }));
         } catch (error: any) {
@@ -259,8 +266,11 @@ const userStore = create<{
         }
     },
 
+    setUserData: (userData) => set(() => ({ userData })),
+
     resetUserData: () => set({ userData: defaultUserData }),
 }));
+
 /**
  * ✅ 사용자 정보 자동 로딩 (앱 실행 시)
  */
@@ -278,7 +288,7 @@ export const loadUserData = async () => {
         const { updatedPetList, updatedRecentPosts } = transformData();
 
         // API 응답이 불완전할 경우, 기본값 적용
-        await userStore.getState().updateUserData({
+        userStore.getState().setUserData({
             id: userInfo.id,
             email: userInfo.email,
             nickName: userInfo.nickName,

@@ -12,7 +12,6 @@ import {
 import * as ImagePicker from 'react-native-image-picker';
 import userStore from '../context/userStore';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { updateUser } from '../services/userService';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -59,14 +58,10 @@ const EditProfileScreen = () => {
                 }
                 : undefined;
 
-            const updated = await updateUser(updatePayload, imagePayload);
-
             // ✅ 전역 상태 업데이트
-            updateUserData({
-                name: updated.name,
-                nickName: updated.nickName,
-                profileImage: { uri: updated.profileImageUrl },
-            });
+            const updated = updateUserData(updatePayload, imagePayload);
+
+            console.log('🔍프로필 수정 요청 데이터 (updatePayload, imagePayload): ', updatePayload, imagePayload);
 
             Alert.alert('✅ 수정 완료', '회원 정보가 업데이트되었습니다.');
 
