@@ -237,7 +237,7 @@ const StorybookScreen = ({navigation}: any) => {
         {/* ✅ 등록 버튼 */}
         <TouchableOpacity onPress={handleSavePost} disabled={loading}>
           {loading ? (
-            <ActivityIndicator size="small" color="#FF6F00" />
+            <ActivityIndicator size="small" color="#4D7CFE" />
           ) : (
             <Text style={styles.saveButton}>등록</Text>
           )}

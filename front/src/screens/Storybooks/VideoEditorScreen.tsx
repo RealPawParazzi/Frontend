@@ -152,7 +152,7 @@ const VideoEditorScreen: React.FC = () => {
             {/* ✅ 로딩 중 표시 */}
             {(status === 'PENDING' || status === 'IN_PROGRESS') && (
                 <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#4D7CFEFF" />
+                    <ActivityIndicator size="large" color="#4D7CFE" />
                     <Text style={styles.loadingText}>동영상을 생성하고 있습니다...</Text>
                 </View>
             )}

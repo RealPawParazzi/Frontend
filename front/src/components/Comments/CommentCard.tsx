@@ -370,7 +370,7 @@ const styles = StyleSheet.create({
     },
     replyButton: {
         marginLeft: 10,
-        backgroundColor: '#FF6F00',
+        backgroundColor: '#4D7CFE',
         padding: 8,
         borderRadius: 5,
     },

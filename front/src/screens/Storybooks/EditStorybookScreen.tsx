@@ -217,7 +217,7 @@ const EditStorybookScreen = ({ route, navigation }: { route: EditStorybookScreen
                 </TouchableOpacity>
                 <Text style={styles.navTitle}>게시글 수정</Text>
                 <TouchableOpacity onPress={handleUpdatePost} disabled={loading}>
-                    {loading ? <ActivityIndicator size="small" color="#FF6F00" /> : <Text style={styles.saveButton}>저장</Text>}
+                    {loading ? <ActivityIndicator size="small" color="#4D7CFE" /> : <Text style={styles.saveButton}>저장</Text>}
                 </TouchableOpacity>
             </View>
 

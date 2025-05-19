@@ -39,7 +39,7 @@ const ReplyInput = ({ commentId, onReplyAdded }: ReplyInputProps) => {
                     onChangeText={setReplyText}
                 />
                 <TouchableOpacity onPress={handleSendReply} style={styles.sendButton}>
-                    <MaterialIcons name="send" size={24} color={replyText ? '#FF6F00' : 'gray'} />
+                    <MaterialIcons name="send" size={24} color={replyText ? '#4D7CFE' : 'gray'} />
                 </TouchableOpacity>
             </View>
         </KeyboardAvoidingView>
