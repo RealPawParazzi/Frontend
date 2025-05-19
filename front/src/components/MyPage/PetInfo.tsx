@@ -85,8 +85,6 @@ const PetInfo = () => {
                 visible={modalVisible}
                 onClose={() => setModalVisible(false)}
                 pet={selectedPet}
-                onEdit={(pet) => console.log('수정 화면으로 이동', pet)}
-                onDelete={(petId) => console.log('반려동물 삭제', petId)}
             />
         </View>
     );
