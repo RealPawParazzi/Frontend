@@ -177,6 +177,7 @@ const VideoEditorScreen: React.FC = () => {
                         <TouchableOpacity
                             style={styles.iconButton}
                             onPress={() => {
+                                // @ts-ignore
                                 navigation.navigate('StorybookScreen', { videoUri: finalUrl }); // 이동시 URI 넘김
                             }}>
                             <Text style={styles.iconText}>✍️ 게시글 작성</Text>

@@ -1,7 +1,7 @@
 // userStore.ts
 
 import { create } from 'zustand';
-import { fetchAllUsers, fetchUserData } from '../services/userService';
+import { fetchAllUsers, fetchUserData, updateUser } from '../services/userService';
 import petStore, { loadPetData } from './petStore'; // ✅ 펫 데이터 가져오기
 import boardStore, { loadBoardData } from './boardStore'; // ✅ 게시물 데이터 가져오기
 
@@ -60,6 +60,7 @@ interface StoryReel {
     video?: VideoSource;
 }
 
+/** ✅ 프로필 이미지 정규화 함수 */
 const normalizeImage = (img: any) => {
     if (!img) { return require('../assets/images/user-2.png'); }
     if (typeof img === 'string') { return { uri: img }; }
@@ -120,12 +121,16 @@ const userStore = create<{
     storyBooks: StoryBook[];
     storyReels: StoryReel[];
     activityLog: { [key: string]: Post[] };
-    updateUserData: (newUserData: Partial<UserData>) => void;
+    /** ✅ 이 함수 내부에서 API 호출도 함께 수행 */
+    updateUserData: (
+        updateData: Partial<UserData>,
+        profileImage?: { uri: string; name: string; type: string }
+    ) => Promise<void>;
+
     resetUserData: () => void;
 }>((set) => ({
     /** ✅ 사용자 데이터 (초기값: 기본 더미 데이터) */
     userData: defaultUserData,
-
     allUsers: [],
 
     /** ✅ 전체 유저 데이터 불러오기 */
@@ -227,25 +232,35 @@ const userStore = create<{
     },
 
     /** ✅ 사용자 데이터 업데이트 함수 */
-    updateUserData: (newUserData) => {
-        // ✅ 펫 리스트 변환 (petStore → userStore의 Pet 타입 맞추기)
-        const { updatedPetList, updatedRecentPosts } = transformData();
+    updateUserData: async (
+        updateData: Partial<UserData>,
+        profileImage?: { uri: string; name: string; type: string }
+    ) => {
+        try {
+            const updated = await updateUser(updateData, profileImage);
 
-        set((state) => ({
+            const normalizedImage = normalizeImage(updated.profileImageUrl);
+            const { updatedPetList, updatedRecentPosts } = transformData();
+
+            set((state) => ({
             userData: {
-                ...state.userData,
-                ...newUserData,
-                profileImage: normalizeImage(newUserData.profileImage),
-                petCount: updatedPetList.length,
-                petList: updatedPetList.length ? updatedPetList : state.userData.petList,
-                recentPosts: updatedRecentPosts.length ? updatedRecentPosts : state.userData.recentPosts,
-            },
-        }));
+                    ...state.userData,
+                    name: updated.name,
+                    nickName: updated.nickName,
+                    profileImage: normalizedImage,
+                    petCount: updatedPetList.length,
+                    petList: updatedPetList.length ? updatedPetList : state.userData.petList,
+                    recentPosts: updatedRecentPosts.length ? updatedRecentPosts : state.userData.recentPosts,
+                },
+            }));
+        } catch (error: any) {
+            console.error('❌ 사용자 정보 수정 실패:', error);
+            throw new Error(error.message || '사용자 정보 수정 중 오류 발생');
+        }
     },
 
     resetUserData: () => set({ userData: defaultUserData }),
 }));
-
 /**
  * ✅ 사용자 정보 자동 로딩 (앱 실행 시)
  */
@@ -263,7 +278,7 @@ export const loadUserData = async () => {
         const { updatedPetList, updatedRecentPosts } = transformData();
 
         // API 응답이 불완전할 경우, 기본값 적용
-        userStore.getState().updateUserData({
+        await userStore.getState().updateUserData({
             id: userInfo.id,
             email: userInfo.email,
             nickName: userInfo.nickName,
