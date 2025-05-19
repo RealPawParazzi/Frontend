@@ -169,7 +169,7 @@ const StoryReelsModal = ({ visible, onClose, userIndex, userStoryGroups }: Props
         if (viewersModalVisible && currentStory?.storyId) {
             loadStoryViewers(currentStory.storyId);
         }
-    }, [viewersModalVisible, currentStory?.storyId]);
+    }, [viewersModalVisible, currentStory.storyId, loadStoryViewers]);
 
     useEffect(() => {
         if (!visible) {
