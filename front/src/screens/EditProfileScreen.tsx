@@ -11,8 +11,10 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'react-native-image-picker';
 import userStore from '../context/userStore';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { updateUser } from '../services/userService';
 import { useNavigation } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 /**
  * ✅ 회원 정보 수정 화면
@@ -75,7 +77,8 @@ const EditProfileScreen = () => {
     };
 
     return (
-        <ScrollView contentContainerStyle={styles.container}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+            <ScrollView contentContainerStyle={styles.container}>
             {/* 🔵 프로필 이미지 */}
             <View style={styles.imageContainer}>
                 <Image
@@ -86,8 +89,9 @@ const EditProfileScreen = () => {
                     }
                     style={styles.profileImage}
                 />
-                <TouchableOpacity style={styles.cameraButton} onPress={handleImagePick}>
-                    <Text style={styles.cameraText}>📷</Text>
+                {/* ✅ + 아이콘 */}
+                <TouchableOpacity style={styles.iconContainer} onPress={handleImagePick}>
+                    <Icon name="add-circle" size={28} color="#4D7CFE" />
                 </TouchableOpacity>
             </View>
 
@@ -109,7 +113,8 @@ const EditProfileScreen = () => {
             <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
                 <Text style={styles.saveText}>Save</Text>
             </TouchableOpacity>
-        </ScrollView>
+            </ScrollView>
+        </SafeAreaView>
     );
 };
 
@@ -118,6 +123,7 @@ export default EditProfileScreen;
 const styles = StyleSheet.create({
     container: {
         padding: 24,
+        marginTop: 50,
         alignItems: 'center',
     },
     imageContainer: {
@@ -130,17 +136,14 @@ const styles = StyleSheet.create({
         borderRadius: 65,
         backgroundColor: '#ccc',
     },
-    cameraButton: {
+    iconContainer: {
         position: 'absolute',
         bottom: 0,
         right: 0,
-        backgroundColor: 'white',
-        borderRadius: 20,
-        padding: 6,
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: 2,
         elevation: 3,
-    },
-    cameraText: {
-        fontSize: 18,
     },
     label: {
         alignSelf: 'flex-start',
@@ -163,7 +166,7 @@ const styles = StyleSheet.create({
     },
     saveButton: {
         marginTop: 32,
-        backgroundColor: '#7a4ef2',
+        backgroundColor: '#4d7cfe',
         paddingVertical: 14,
         paddingHorizontal: 50,
         borderRadius: 30,
