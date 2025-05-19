@@ -64,6 +64,15 @@ const PetInfoMiniModal: React.FC<PetInfoMiniModalProps> = ({ visible, onClose, p
         return `${Math.floor(diffMonths / 12)} y ${diffMonths % 12} m`;
     };
 
+  const calculateAgeKor = (birthDate: string) => {
+    const birth = new Date(birthDate);
+    const now = new Date();
+    const diffMonths = (now.getFullYear() - birth.getFullYear()) * 12 + now.getMonth() - birth.getMonth();
+    const years = Math.floor(diffMonths / 12);
+    const months = diffMonths % 12;
+    return `${years}살 ${months}개월`;
+  };
+
     return (
         <Modal visible={visible} animationType="slide" transparent>
             <View style={styles.overlay}>
@@ -111,14 +120,25 @@ const PetInfoMiniModal: React.FC<PetInfoMiniModalProps> = ({ visible, onClose, p
                         </View>
                     </View>
 
-                    {/* 🔹 반려동물 설명 */}
-                    <View style={styles.petBio}>
-                        <Text style={styles.bioTitle}>우리 {pet.name}에 대하여...!</Text>
-                        <Text style={styles.bioText}>
-
-                            {pet.description || '이 반려동물에 대한 설명이 없습니다.'}
-                        </Text>
-                    </View>
+                  {/* 🔹 반려동물 설명 */}
+                  <View style={styles.petBio}>
+                    <Text style={styles.bioTitle}>저 {pet.name}에 대하여...!</Text>
+                    <Text style={styles.bioText}>
+                      {pet.description
+                        ? pet.description
+                        : `안녕하세요 ! 저는 ${pet.name} 라고 해요 ! ${new Date(
+                          pet.birthDate,
+                        ).toLocaleDateString('ko-KR', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })}에 태어난 ${calculateAgeKor(pet.birthDate)}의 귀여운 ${
+                          pet.type === 'DOG' ? '멍멍이' : '야옹이'
+                        }에요 ! ${pet.member.name} 집사랑 재미나게 살고 있어요 ! 잘 부탁해요 ! ${
+                          pet.type === 'DOG' ? '🐶' : '🐱'
+                        }`}
+                    </Text>
+                  </View>
                 </View>
             </View>
         </Modal>
