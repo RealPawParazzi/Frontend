@@ -1,7 +1,8 @@
 // 📦 components/HomePage/RecommendShortcutButtons.tsx
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons'; // ✅ 유지
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import {useNavigation} from '@react-navigation/native'; // ✅ 유지
 
 const shortcuts = [
     {
@@ -32,9 +33,33 @@ const shortcuts = [
 ];
 
 const RecommendShortcutButtons = () => {
+    const navigation = useNavigation();
+
     const handlePress = (key: string) => {
-        console.log(`🔗 ${key} 버튼 클릭됨`);
-        // TODO: 네비게이션 또는 기능 연결
+        switch (key) {
+            case 'myPet':
+              // @ts-ignore
+              navigation.navigate('MyPage', { defaultTab: 0 }); // 0은 펫 탭
+                break;
+            case 'aiPhoto':
+              // @ts-ignore
+              navigation.navigate('VideoEditorScreen');
+                break;
+            case 'question':
+              // @ts-ignore
+              navigation.navigate('Curious');
+                break;
+            case 'hallOfFame':
+              // @ts-ignore
+              navigation.navigate('HallOfFame');
+                break;
+            case 'todo':
+              // @ts-ignore
+              navigation.navigate('TodoScreen');
+                break;
+            default:
+                console.warn(`❌ 알 수 없는 키: ${key}`);
+        }
     };
 
     return (

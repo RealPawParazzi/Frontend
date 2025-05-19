@@ -17,6 +17,9 @@ import PetEditScreen from '../screens/Pets/PetEditScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import FollowListScreen from '../screens/MiniProfile/FollowListScreen'; // 🆕 팔로워/팔로잉 목록 화면 추가
 import UserPostsScreen from '../screens/MiniProfile/UserPostsScreen'; // 🆕 특정 유저 게시글 목록 추가
+import CuriousScreen from '../screens/CuriousScreen'; // ❇️ 새로 만들 화면
+import HallOfFameScreen from '../screens/HallOfFameScreen'; // ❇️ 새로 만들 화면
+import TodoScreen from '../screens/TodoScreen'; // ❇️ 새로 만들 화면
 import { loadUserData }  from '../context/userStore';
 import authStore from '../context/authStore'; // ✅ authStore 추가
 import { ActivityIndicator, View } from 'react-native';
@@ -37,6 +40,9 @@ export type RootStackParamList = {
     PetRegistrationScreen: undefined;
     PetEditScreen: { pet: object };
     EditProfileScreen: undefined;
+    Curious: undefined; // ❇️ 새로 만들 화면
+    HallOfFame: undefined; // ❇️ 새로 만들 화면
+    TodoScreen: undefined; // ❇️ 새로 만들 화면
     FollowListScreen: { type: 'followers' | 'following' }; // 🆕 팔로워/팔로잉 목록 네비게이션 추가
     UserPostsScreen: { userId: number; userName: string }; // 🆕 특정 유저 게시글 목록 추가
 };
@@ -97,6 +103,9 @@ const AppNavigator = () => {
             <Stack.Screen name="FollowListScreen" component={FollowListScreen} />
             <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />
             <Stack.Screen name="UserPostsScreen" component={UserPostsScreen} />
+            <Stack.Screen name="Curious" component={CuriousScreen} />
+            <Stack.Screen name="HallOfFame" component={HallOfFameScreen} />
+            <Stack.Screen name="TodoScreen" component={TodoScreen} />
         </Stack.Navigator>
     );
 };
