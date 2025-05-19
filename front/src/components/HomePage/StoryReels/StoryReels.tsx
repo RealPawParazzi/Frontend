@@ -67,7 +67,7 @@ const StoryReels = () => {
 
     // 🟠 이미지 선택 후 업로드 → 업로드 완료 시 스토리 목록 재로딩
     const handlePickAndUpload = () => {
-        launchImageLibrary({ mediaType: 'photo' }, async (res) => {
+        launchImageLibrary({ mediaType: 'mixed' }, async (res) => {
             if (res.didCancel || !res.assets || !res.assets[0]) { return; }
 
             const file = res.assets[0];
