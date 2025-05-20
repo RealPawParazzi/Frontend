@@ -12,6 +12,7 @@ import { Calendar } from 'react-native-calendars';
 import userStore from '../context/userStore';
 import walkStore from '../context/walkStore';
 import boardStore from '../context/boardStore';
+import Footer from '../components/Footer';
 
 const CalendarScreen = () => {
     const { userData } = userStore();
@@ -75,8 +76,9 @@ const CalendarScreen = () => {
 
 
     return (
-        <View style={styles.container}>
+      <ScrollView style={{ flex: 1, backgroundColor: '#ffffff' }}>
             <Calendar
+                style={{ padding: 20 }}
                 onDayPress={(day: { dateString: React.SetStateAction<string>; }) => setSelectedDate(day.dateString)}
                 markedDates={markedDates}
                 theme={{
@@ -99,7 +101,7 @@ const CalendarScreen = () => {
                 </TouchableOpacity>
             </View>
 
-            <ScrollView>
+            <ScrollView style={{ flex: 1, paddingHorizontal: 20 }}>
                 {/* 🐾 산책 기록 */}
                 {filteredWalks.length > 0 && (
                     <>
@@ -129,13 +131,13 @@ const CalendarScreen = () => {
                     </>
                 )}
             </ScrollView>
-        </View>
+          <Footer/>
+      </ScrollView>
     );
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#ffffff', padding: 15 },
-    searchContainer: { flexDirection: 'row', alignItems: 'center', marginVertical: 10 },
+    searchContainer: { flexDirection: 'row', alignItems: 'center', marginVertical: 10 , paddingHorizontal : 10},
     searchInput: { flex: 1, borderWidth: 1, borderColor: '#ccc', padding: 10, borderRadius: 8 },
     searchButton: { backgroundColor: '#4D7CFE', padding: 10, marginLeft: 10, borderRadius: 8 },
     searchButtonText: { color: 'white', fontWeight: 'bold' },

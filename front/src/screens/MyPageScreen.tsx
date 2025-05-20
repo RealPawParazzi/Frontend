@@ -3,6 +3,7 @@ import { StyleSheet, FlatList } from 'react-native';
 import SegmentedControl from '@react-native-segmented-control/segmented-control';
 
 import UserInfo from '../components/MyPage/UserInfo';
+import Footer from '../components/Footer';
 /**
  * 📌 MyPageScreen (마이페이지 화면)
  * - "펫" / "집사" 탭을 선택할 수 있는 Segmented Control 포함
@@ -26,11 +27,13 @@ const MyPageScreen = () => {
                     />
                     {/* ✅ 선택된 탭에 따라 UI 변경 */}
                     <UserInfo selectedTab={selectedTab} />
+                  <Footer />
                 </>
             )}
             data={[]} // ✅ 빈 배열 전달 (게시글 데이터는 `OwnerInfo` 내부에서 관리)
             renderItem={null}
         />
+
     );
 };
 
@@ -39,8 +42,6 @@ const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#ffffff' },
     segmentControl: { marginHorizontal: 20, marginVertical: 15 },
     footer: { alignItems: 'center', marginTop: 20, marginBottom: 30 },
-    logoutButton: { backgroundColor: '#6A5ACD', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 5 },
-    logoutText: { color: 'white', fontWeight: 'bold' },
 });
 
 export default MyPageScreen;

@@ -56,8 +56,8 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#f7f7f7',
     alignItems: 'center',
-    marginTop: 20,
-    height: 250,
+    marginTop: 50,
+    height: 350,
   },
   linkRow: {
     flexDirection: 'row',
