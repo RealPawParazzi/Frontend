@@ -47,7 +47,7 @@ const RecommendShortcutButtons = () => {
                 break;
             case 'question':
               // @ts-ignore
-              navigation.navigate('Curious');
+              navigation.navigate('CuriousScreen');
                 break;
             case 'hallOfFame':
               // @ts-ignore

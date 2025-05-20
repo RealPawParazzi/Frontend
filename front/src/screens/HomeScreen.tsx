@@ -6,6 +6,7 @@ import RecommendShortcutButtons from '../components/HomePage/RecommendShortcutBu
 import StoryBooksList from '../components/HomePage/HomePageStoryBooks/StoryBooksList';
 import StoryReels from '../components/HomePage/StoryReels/StoryReels'; // ✅ 스토리 컴포넌트 import
 import boardStore from '../context/boardStore';
+import Footer from '../components/Footer';
 
 /**
  * 📌 HomeScreen (홈 화면)
@@ -51,6 +52,7 @@ const HomeScreen = () => {
                 {/* 📖 StoryBooks for Today */}
                 <Text style={styles.sectionTitle}> 📖 오늘의 게시물 </Text>
                 <StoryBooksList />
+              <Footer />
             </ScrollView>
         </View>
     );
