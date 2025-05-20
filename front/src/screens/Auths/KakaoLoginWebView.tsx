@@ -13,6 +13,7 @@ import { RootStackParamList } from '../../navigation/AppNavigator';
 import authStore from '../../context/authStore';
 import {requestKakaoToken} from '../../services/kakaoService';
 import { loadUserData } from '../../context/userStore';
+import { API_ROOT_URL } from '../../config/apiConfig';
 
 // ✅ 네비게이션 타입 정의
 type NavigationProp = StackNavigationProp<RootStackParamList, 'KakaoLoginWebView'>;
@@ -41,9 +42,9 @@ const KakaoLoginWebView: React.FC = () => {
 
     const handleShouldStartLoadWithRequest = (request: any) => {
         let { url } = request;
-        if (Platform.OS === 'android' && url.includes('localhost')) {
-            url = url.replace('localhost', '10.0.2.2');
-        }
+        // if (Platform.OS === 'android' && url.includes('localhost')) {
+        //     url = url.replace('localhost', '10.0.2.2');
+        // }
 
         const codeMatch = url.match(/[?&]code=([^&]+)/);
         if (url.includes('/kakao/callback') && codeMatch) {
@@ -62,9 +63,7 @@ const KakaoLoginWebView: React.FC = () => {
                 ref={webViewRef}
                 originWhitelist={['*']}
                 source={{
-                    uri: Platform.OS === 'android'
-                        ? 'http://10.0.2.2:8080/api/auth/login/kakao'
-                        : 'http://localhost:8080/api/auth/login/kakao',
+                  uri: `${API_ROOT_URL}/auth/login/kakao`,
                 }}
                 onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
                 onError={({ nativeEvent }) => console.warn('WebView 에러:', nativeEvent)}
