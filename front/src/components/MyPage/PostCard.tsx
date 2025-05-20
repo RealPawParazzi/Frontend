@@ -1,11 +1,11 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {View, Text, Image, TouchableOpacity, StyleSheet} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../navigation/AppNavigator';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import Video from 'react-native-video';
 import {getImageSource} from '../../utils/imageUtils';
+import {createThumbnail} from 'react-native-create-thumbnail';
 
 const DEFAULT_PROFILE_IMAGE = require('../../assets/images/user-2.png');
 
@@ -35,6 +35,32 @@ type NavigationProp = StackNavigationProp<
 const PostCard: React.FC<{post: Post}> = ({post}) => {
   const navigation = useNavigation<NavigationProp>();
 
+  // 썸네일 상태 추가
+  const [thumbnailUri, setThumbnailUri] = useState<string | null>(null);
+
+  const isVideo =
+    post.titleImage.toLowerCase().endsWith('.mp4') ||
+    post.titleImage.toLowerCase().includes('video');
+
+  // 썸네일 생성
+  useEffect(() => {
+    const generateThumbnail = async () => {
+      if (isVideo) {
+        try {
+          const { path } = await createThumbnail({
+            url: post.titleImage,
+            timeStamp: 1000,
+          });
+          setThumbnailUri(path);
+        } catch (error) {
+          console.warn('썸네일 생성 실패:', error);
+        }
+      }
+    };
+    generateThumbnail();
+  }, [isVideo, post.titleImage]);
+
+
   return (
     <View style={styles.card}>
       {/* 🔹 상단 프로필 정보 + 작성 시간 + 옵션 버튼 */}
@@ -62,19 +88,20 @@ const PostCard: React.FC<{post: Post}> = ({post}) => {
       </View>
 
       {/* 🔹 게시글 메인 이미지 또는 동영상 */}
+      {/* 🔹 게시글 메인 이미지 or 썸네일 이미지 */}
       <TouchableOpacity
         onPress={() =>
-          navigation.navigate('StorybookDetailScreen', {boardId: post.id})
+          navigation.navigate('StorybookDetailScreen', { boardId: post.id })
         }>
-        {post.titleImage.toLowerCase().endsWith('.mp4') ||
-        post.titleImage.toLowerCase().includes('video') ? (
-          <Video
-            source={{uri: post.titleImage}}
-            style={styles.postImage}
-            resizeMode="cover"
-            paused={true}
-            controls={true}
-          />
+        {isVideo ? (
+          thumbnailUri ? (
+            <Image
+              source={{ uri: thumbnailUri }}
+              style={styles.postImage}
+            />
+          ) : (
+            <View style={[styles.postImage, { backgroundColor: '#000' }]} />
+          )
         ) : (
           <Image
             source={getImageSource(post.titleImage, DEFAULT_PROFILE_IMAGE)}
