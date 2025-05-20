@@ -117,8 +117,8 @@ const HomeScreen = () => {
             height:
               isPulling
                 ? pullY.interpolate({
-                  inputRange: [50, 200],
-                  outputRange: [100, 200],
+                  inputRange: [100, 150],
+                  outputRange: [75, 150],
                   extrapolate: 'clamp',
                 })
                 : refreshing
@@ -209,8 +209,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   lottie: {
-    width: 100,
-    height: 100,
+    width: 60,
+    height: 60,
   },
 });
 

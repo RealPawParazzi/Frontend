@@ -1,13 +1,11 @@
 // 📁 services/questionService.ts
 import axios from 'axios';
-import {Platform} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_ROOT_URL } from '../config/apiConfig';
 
+// 🔹 백엔드 API 기본 URL
+const API_BASE_URL = `${API_ROOT_URL}/inquiry`;
 
-// ✅ 플랫폼에 따라 API 기본 주소 설정 (Android vs iOS/웹)
-const API_BASE_URL = Platform.OS === 'android'
-  ? 'http://10.0.2.2:8080/api/inquiry'
-  : 'http://localhost:8080/api/inquiry';
 
 // ✅ 인증 토큰을 AsyncStorage에서 가져오는 함수
 const getAuthHeader = async () => {

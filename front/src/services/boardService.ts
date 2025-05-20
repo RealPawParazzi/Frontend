@@ -1,12 +1,11 @@
 // 📦 boardService.ts (변경된 S3 multipart 연동에 따른 수정)
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform } from 'react-native';
+import { API_ROOT_URL } from '../config/apiConfig';
 
 // 🔹 백엔드 API 기본 URL
-const API_BASE_URL = Platform.OS === 'android'
-    ? 'http://10.0.2.2:8080/api/boards'  // 안드로이드용
-    : 'http://localhost:8080/api/boards'; // iOS용
+const API_BASE_URL = `${API_ROOT_URL}/boards`;
+
 
 /** ✅ 게시글 등록 API (FormData 기반) */
 export const createBoard = async (

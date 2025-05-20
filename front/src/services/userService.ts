@@ -1,13 +1,11 @@
 // userService.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform } from 'react-native';
 import { reissueAccessToken } from './authService';
-
+import { API_ROOT_URL } from '../config/apiConfig';
 
 // 🔹 백엔드 API 기본 URL
-const API_BASE_URL = Platform.OS === 'android'
-    ? 'http://10.0.2.2:8080/api/auth'  // 안드로이드용
-    : 'http://localhost:8080/api/auth'; // iOS용
+const API_BASE_URL = `${API_ROOT_URL}/auth`;
+
 
 export interface UserData {
     id: string;

@@ -1,12 +1,10 @@
 // 📁 services/placeService.ts
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform } from 'react-native';
+import { API_ROOT_URL } from '../config/apiConfig';
 
-// ✅ 플랫폼에 따라 API 기본 주소 설정
-const API_BASE_URL = Platform.OS === 'android'
-    ? 'http://10.0.2.2:8080/api/place'
-    : 'http://localhost:8080/api/place';
+// 🔹 백엔드 API 기본 URL
+const API_BASE_URL = `${API_ROOT_URL}/place`;
 
 // ✅ 인증 헤더 생성 함수
 const getAuthHeaders = async () => {

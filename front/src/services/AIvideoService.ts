@@ -1,10 +1,10 @@
 // services/AIvideoService.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform } from 'react-native';
+import { API_ROOT_URL } from '../config/apiConfig';
 
-const API_BASE_URL = Platform.OS === 'android'
-    ? 'http://10.0.2.2:8080/api/videos'
-    : 'http://localhost:8080/api/videos';
+
+const API_BASE_URL = `${API_ROOT_URL}/videos`;
+
 
 interface CreateResponse {
     requestId: number;

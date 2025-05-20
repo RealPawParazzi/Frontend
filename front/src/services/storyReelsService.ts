@@ -1,12 +1,10 @@
 // 📁 services/storyReelsService.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {Platform} from 'react-native';
+import { API_ROOT_URL } from '../config/apiConfig';
 
-// ✅ API Base URL 설정
-const BASE_URL =
-  Platform.OS === 'android'
-    ? 'http://10.0.2.2:8080/api/stories'
-    : 'http://localhost:8080/api/stories';
+// 🔹 백엔드 API 기본 URL
+const API_BASE_URL = `${API_ROOT_URL}/stories`;
+
 
 const getToken = async () => {
   const token = await AsyncStorage.getItem('accessToken');
@@ -34,7 +32,7 @@ export const uploadStory = async (
     formData.append('caption', caption);
   }
 
-  const res = await fetch(BASE_URL, {
+  const res = await fetch(API_BASE_URL, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${await getToken()}`,
@@ -68,7 +66,7 @@ export const updateStory = async (
     formData.append('caption', caption);
   }
 
-  const res = await fetch(`${BASE_URL}/${storyId}`, {
+  const res = await fetch(`${API_BASE_URL}/${storyId}`, {
     method: 'PUT',
     headers: {
       Authorization: `Bearer ${await getToken()}`,
@@ -87,7 +85,7 @@ export const updateStory = async (
 
 // ✅ 전체 사용자들의 스토리 그룹 조회 (스토리 보유한 사용자만 대상)
 export const fetchGroupedStories = async () => {
-  const res = await fetch(`${BASE_URL}`, {
+  const res = await fetch(`${API_BASE_URL}`, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${await getToken()}`,
@@ -102,7 +100,7 @@ export const fetchGroupedStories = async () => {
 
 // ✅ 스토리 상세 조회 (보면서 viewed 처리됨)
 export const fetchStoryDetail = async (storyId: number) => {
-  const res = await fetch(`${BASE_URL}/${storyId}`, {
+  const res = await fetch(`${API_BASE_URL}/${storyId}`, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${await getToken()}`,
@@ -117,7 +115,7 @@ export const fetchStoryDetail = async (storyId: number) => {
 
 // ✅ 스토리 삭제
 export const deleteStory = async (storyId: number) => {
-  const res = await fetch(`${BASE_URL}/${storyId}`, {
+  const res = await fetch(`${API_BASE_URL}/${storyId}`, {
     method: 'DELETE',
     headers: {
       Authorization: `Bearer ${await getToken()}`,
@@ -131,7 +129,7 @@ export const deleteStory = async (storyId: number) => {
 
 // ✅ 나의 스토리 목록 조회
 export const fetchMyStories = async () => {
-  const res = await fetch(`${BASE_URL}/my`, {
+  const res = await fetch(`${API_BASE_URL}/my`, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${await getToken()}`,
@@ -146,7 +144,7 @@ export const fetchMyStories = async () => {
 
 // ✅ 스토리 뷰어 목록 조회
 export const fetchStoryViewers = async (storyId: number) => {
-  const res = await fetch(`${BASE_URL}/${storyId}/viewers`, {
+  const res = await fetch(`${API_BASE_URL}/${storyId}/viewers`, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${await getToken()}`,
