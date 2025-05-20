@@ -20,6 +20,7 @@ import UserPostsScreen from '../screens/MiniProfile/UserPostsScreen'; // 🆕 �
 import CuriousScreen from '../screens/CuriousScreen'; // ❇️ 새로 만들 화면
 import HallOfFameScreen from '../screens/HallOfFameScreen'; // ❇️ 새로 만들 화면
 import TodoScreen from '../screens/TodoScreen'; // ❇️ 새로 만들 화면
+import CuriousQuestionScreen from '../screens/CuriousQuestionScreen';
 import { loadUserData }  from '../context/userStore';
 import authStore from '../context/authStore'; // ✅ authStore 추가
 import { ActivityIndicator, View } from 'react-native';
@@ -43,6 +44,7 @@ export type RootStackParamList = {
     Curious: undefined; // ❇️ 새로 만들 화면
     HallOfFame: undefined; // ❇️ 새로 만들 화면
     TodoScreen: undefined; // ❇️ 새로 만들 화면
+  CuriousQuestionScreen: undefined; // ❇️ 새로 만들 화면
     FollowListScreen: { type: 'followers' | 'following' }; // 🆕 팔로워/팔로잉 목록 네비게이션 추가
     UserPostsScreen: { userId: number; userName: string }; // 🆕 특정 유저 게시글 목록 추가
 };
@@ -106,6 +108,7 @@ const AppNavigator = () => {
             <Stack.Screen name="Curious" component={CuriousScreen} />
             <Stack.Screen name="HallOfFame" component={HallOfFameScreen} />
             <Stack.Screen name="TodoScreen" component={TodoScreen} />
+            <Stack.Screen name="CuriousQuestionScreen" component={CuriousQuestionScreen} />
         </Stack.Navigator>
     );
 };
