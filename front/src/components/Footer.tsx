@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#f7f7f7',
     alignItems: 'center',
-    marginTop: 50,
+    marginTop: 30,
     height: 350,
   },
   linkRow: {
