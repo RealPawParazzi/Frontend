@@ -6,7 +6,10 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  ScrollView, RefreshControl,
+  ScrollView,
+  RefreshControl,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import {Calendar} from 'react-native-calendars';
 import userStore from '../context/userStore';
@@ -87,6 +90,11 @@ const CalendarScreen = () => {
   );
 
   return (
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+    >
     <ScrollView
       style={{ flex: 1, backgroundColor: '#ffffff' }}
       refreshControl={
@@ -97,6 +105,7 @@ const CalendarScreen = () => {
           tintColor="#4D7CFE"
         />
       }
+      keyboardShouldPersistTaps="handled" // ✅ 키보드 닫힘 방지
     >
       <Calendar
         style={{padding: 20}}
@@ -161,6 +170,7 @@ const CalendarScreen = () => {
       </ScrollView>
       <Footer />
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
