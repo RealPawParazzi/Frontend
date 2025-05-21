@@ -1,7 +1,7 @@
 // 📁 components/Footer.tsx
 
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
+import {View, Text, StyleSheet, TouchableOpacity, Linking} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 
 const Footer = () => {
@@ -14,15 +14,15 @@ const Footer = () => {
     <View style={styles.container}>
       {/* ✅ 상단 링크 버튼 라인 */}
       <View style={styles.linkRow}>
-        {/*<TouchableOpacity onPress={() => navigation.navigate('CuriousScreen')}>*/}
-        {/*  <Text style={styles.link}>1:1 문의</Text>*/}
-        {/*</TouchableOpacity>*/}
-        {/*<Text style={styles.separator}>|</Text>*/}
-        <TouchableOpacity onPress={() => navigation.navigate('CuriousScreen')}>
-          <Text style={styles.link}>고객센터</Text>
+        <TouchableOpacity
+          //@ts-ignore
+          onPress={() => navigation.navigate('CuriousQuestionScreen')}>
+          <Text style={styles.link}>고객문의</Text>
         </TouchableOpacity>
         <Text style={styles.separator}>|</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('CuriousScreen')}>
+        <TouchableOpacity
+          //@ts-ignore
+          onPress={() => navigation.navigate('CuriousScreen')}>
           <Text style={styles.link}>서비스 안내</Text>
         </TouchableOpacity>
       </View>
@@ -34,18 +34,19 @@ const Footer = () => {
           <Text style={styles.terms}>GitHub</Text>
         </TouchableOpacity>
         <Text style={styles.separator}>|</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('TeamInfoScreen')}>
+        <TouchableOpacity
+          //@ts-ignore
+          onPress={() => navigation.navigate('TeamInfoScreen')}>
           <Text style={styles.terms}>운영진 정보</Text>
         </TouchableOpacity>
       </View>
 
       {/* ✅ 고지 문구 */}
       <Text style={styles.notice}>
-        PawParazzi는 사용자 업로드 기반 콘텐츠를 포함하고 있으며,
-        본 앱은 콘텐츠 중개 플랫폼으로서 직접적인 거래에 대한 책임을 지지 않습니다.
-        또한, 부적절한 콘텐츠 제작에 대한 책임 또한 사용자에게 있으며,
-        운영진으로부터 제재를 받을 수 있습니다.
-
+        PawParazzi는 사용자 업로드 기반 콘텐츠를 포함하고 있으며, 본 앱은 콘텐츠
+        중개 플랫폼으로서 직접적인 거래에 대한 책임을 지지 않습니다. 또한,
+        부적절한 콘텐츠 제작에 대한 책임 또한 사용자에게 있으며, 운영진으로부터
+        제재를 받을 수 있습니다.
       </Text>
     </View>
   );
