@@ -1,15 +1,11 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  Animated,
   RefreshControl,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
 } from 'react-native';
-import LottieView from 'lottie-react-native';
 import MemoryVideo from '../components/HomePage/MemoryVideo';
 import FollowRecommendations from '../components/HomePage/FollowRecommendations';
 import RecommendShortcutButtons from '../components/HomePage/RecommendShortcutButtons';
@@ -33,40 +29,31 @@ const HomeScreen = () => {
   const {loadFollowRecommendations, userData} = userStore();
   const {fetchFollowing} = userFollowStore();
 
-  // ✅ 새로고침 상태
+  // 🔄 새로고침 상태
   const [refreshing, setRefreshing] = useState(false);
 
-  // ✅ 위로 당긴 거리 추적용 애니메이션 값
-  const pullY = useRef(new Animated.Value(0)).current;
-
-  // ✅ Lottie 컨트롤용 ref
-  const lottieRef = useRef<LottieView>(null);
-
-  const [isPulling, setIsPulling] = useState(false); // 🔵 당기는 중 여부
-
-  // 로티 로딩 여유 시간 주기
-  const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-  // ✅ 마운트 시 게시물 불러오기
+  // ✅ 최초 마운트 시 게시물 로드
   useEffect(() => {
     fetchBoardList();
   }, [fetchBoardList]);
 
+  // ✅ 최소 로딩 시간 유지를 위한 대기 함수
+  const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
   /**
-   * ✅ 새로고침 시 데이터 재요청
-   * - 게시물, 내 스토리, 전체 스토리, 팔로우 추천, 팔로잉 목록
+   * 🔄 새로고침 시 실행되는 함수
+   * - 모든 주요 데이터 fetch + 최소 1초 대기
    */
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
 
-    // ✅ API 요청 + 최소 대기 동시에 실행
     await Promise.all([
       fetchBoardList(),
       loadMyStories(),
       loadGroupedStories(),
       loadFollowRecommendations(),
       fetchFollowing(Number(userData.id)),
-      wait(3000), // 최소 3초 대기
+      wait(1000), // ✅ 최소 로딩 시간 1초 확보
     ]);
 
     setRefreshing(false);
@@ -79,72 +66,20 @@ const HomeScreen = () => {
     userData.id,
   ]);
 
-  /**
-   * ✅ 스크롤 감지하여 pullY 값 조정
-   * - 위로 당긴 정도를 기준으로 애니메이션 위치 설정
-   */
-  const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const offset = e.nativeEvent.contentOffset.y;
-    if (offset < 0) {
-      pullY.setValue(Math.abs(offset));
-      setIsPulling(true);
-    } else {
-      setIsPulling(false); // 손을 놓은 상태
-    }
-  };
-
-  // ✅ 당기기 시작 시 Lottie 재생
-  useEffect(() => {
-    if (isPulling && !refreshing) {
-      lottieRef.current?.play();
-    }
-  }, [isPulling, refreshing]);
-
-  // ✅ 로딩 완료 시 Lottie 정지 및 초기화
-  useEffect(() => {
-    if (!refreshing && !isPulling) {
-      lottieRef.current?.reset();
-    }
-  }, [refreshing, isPulling]);
-
   return (
     <View style={styles.container}>
-      {/* ✅ Lottie 로딩 애니메이션 (위로 당길 때 표시됨) */}
-      <Animated.View
-        style={[
-          styles.lottieWrapper,
-          {
-            height:
-              isPulling
-                ? pullY.interpolate({
-                  inputRange: [100, 150],
-                  outputRange: [75, 150],
-                  extrapolate: 'clamp',
-                })
-                : refreshing
-                  ? 120 // ✅ 로딩 중이면 고정 높이 확보
-                  : 0,  // ✅ 평소에는 감춰둠
-          },
-        ]}>
-        <LottieView
-          ref={lottieRef}
-          source={require('../assets/animations/circle_cat.json')}
-          style={styles.lottie}
-          loop
-        />
-      </Animated.View>
       {/* ✅ 메인 콘텐츠 스크롤 */}
+      {/* ✅ ScrollView + RefreshControl */}
       <ScrollView
         showsVerticalScrollIndicator={false}
-        scrollEventThrottle={16}
-        onScroll={handleScroll}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="transparent" // ✅ 기본 인디케이터 감춤
-            colors={['transparent']}
-            progressViewOffset={-100}
+            colors={['#4D7CFE']}       // ✅ Android용 로딩 색상
+            tintColor="#4D7CFE"        // ✅ iOS용 로딩 색상
+            // title="새로운 소식을 불러오고 있어요..."
+            // titleColor="#4D7CFE"
           />
         }>
         {/* 🔵 스토리 릴 (최상단) */}
