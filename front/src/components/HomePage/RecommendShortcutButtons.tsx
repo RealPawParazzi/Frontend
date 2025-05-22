@@ -24,10 +24,10 @@ const shortcuts = [
     color: '#FFD700',
   },
   {
-    key: 'todo',
-    label: '오늘 할 일',
-    iconName: 'check-circle-outline',
-    color: '#03A9F4',
+    key: 'miniGame', // ✅ key 변경
+    label: '미니게임',
+    iconName: 'sports-esports', // ✅ 게임 컨트롤러 아이콘
+    color: '#9C27B0', // ✅ 보라색 계열
   },
   {
     key: 'question',
@@ -58,9 +58,9 @@ const RecommendShortcutButtons = () => {
         // @ts-ignore
         navigation.navigate('HallOfFame');
         break;
-      case 'todo':
+      case 'miniGame':
         // @ts-ignore
-        navigation.navigate('TodoScreen');
+        navigation.navigate('MiniGameScreen');
         break;
       default:
         console.warn(`❌ 알 수 없는 키: ${key}`);

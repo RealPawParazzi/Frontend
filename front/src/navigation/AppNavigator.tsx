@@ -19,7 +19,7 @@ import FollowListScreen from '../screens/MiniProfile/FollowListScreen'; // 🆕 
 import UserPostsScreen from '../screens/MiniProfile/UserPostsScreen'; // 🆕 특정 유저 게시글 목록 추가
 import CuriousScreen from '../screens/CuriousScreen'; // ❇️ 새로 만들 화면
 import HallOfFameScreen from '../screens/HallOfFameScreen'; // ❇️ 새로 만들 화면
-import TodoScreen from '../screens/TodoScreen'; // ❇️ 새로 만들 화면
+import MiniGameScreen from '../screens/MiniGameScreen'; // ❇️ 새로 만들 화면
 import CuriousQuestionScreen from '../screens/CuriousQuestionScreen';
 import TeamInfoScreen from '../screens/TeamInfoScreen';
 import {loadUserData} from '../context/userStore';
@@ -44,7 +44,7 @@ export type RootStackParamList = {
   EditProfileScreen: undefined;
   CuriousScreen: undefined; // ❇️ 새로 만들 화면
   HallOfFame: undefined; // ❇️ 새로 만들 화면
-  TodoScreen: undefined; // ❇️ 새로 만들 화면
+  MiniGameScreen: undefined; // ❇️ 새로 만들 화면
   CuriousQuestionScreen: undefined; // ❇️ 새로 만들 화면
   TeamInfoScreen: undefined; // ❇️ 새로 만들 화면
   FollowListScreen: {type: 'followers' | 'following'}; // 🆕 팔로워/팔로잉 목록 네비게이션 추가
@@ -122,7 +122,7 @@ const AppNavigator = () => {
       <Stack.Screen name="UserPostsScreen" component={UserPostsScreen} />
       <Stack.Screen name="CuriousScreen" component={CuriousScreen} />
       <Stack.Screen name="HallOfFame" component={HallOfFameScreen} />
-      <Stack.Screen name="TodoScreen" component={TodoScreen} />
+      <Stack.Screen name="MiniGameScreen" component={MiniGameScreen} />
       <Stack.Screen
         name="CuriousQuestionScreen"
         component={CuriousQuestionScreen}
