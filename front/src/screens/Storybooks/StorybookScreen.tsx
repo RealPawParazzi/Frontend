@@ -1,4 +1,4 @@
-import React, {useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,9 @@ import {
   Switch,
   ScrollView,
   KeyboardAvoidingView,
+  Keyboard,
+  Animated,
+  Easing,
   Platform,
 } from 'react-native';
 import Video from 'react-native-video';
@@ -39,6 +42,49 @@ const StorybookScreen = ({navigation}: any) => {
   const scrollRef = useRef<ScrollView>(null);
   const inputRefs = useRef<Array<TextInput | null>>([]);
   const createNewBoard = boardStore(state => state.createNewBoard); // Zustand에서 게시글 생성 함수 가져오기
+
+  const bottomBarAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardWillShow', e => {
+      Animated.timing(bottomBarAnim, {
+        toValue: e.endCoordinates.height,
+        duration: 300,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: false,
+      }).start();
+    });
+
+    const hide = Keyboard.addListener('keyboardWillHide', () => {
+      Animated.timing(bottomBarAnim, {
+        toValue: 0,
+        duration: 300,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: false,
+      }).start();
+    });
+
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, [bottomBarAnim]);
+
+  // // ✅ 키보드 올라올 때 ScrollView 살짝 올리기
+  // useEffect(() => {
+  //   const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+  //     scrollRef.current?.scrollTo({y: 100, animated: true}); // 🔥 약간 위로 스크롤
+  //   });
+  //
+  //   const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+  //     scrollRef.current?.scrollTo({y: 0, animated: true}); // 🔄 복구
+  //   });
+  //
+  //   return () => {
+  //     keyboardDidShowListener.remove();
+  //     keyboardDidHideListener.remove();
+  //   };
+  // }, []);
 
   // ✅ 현재 날짜 가져오기
   const getCurrentDate = () => {
@@ -335,7 +381,8 @@ const StorybookScreen = ({navigation}: any) => {
       </KeyboardAvoidingView>
 
       {/* 하단 네비게이션 바 */}
-      <View style={styles.bottomBar}>
+      <Animated.View style={[styles.bottomBar, { bottom: bottomBarAnim }]}>
+        {/* 버튼들 */}
         <TouchableOpacity
           style={styles.bottomIcon}
           onPress={() =>
@@ -353,7 +400,7 @@ const StorybookScreen = ({navigation}: any) => {
           }>
           <Text style={styles.iconText}>✨</Text>
         </TouchableOpacity>
-      </View>
+      </Animated.View>
     </SafeAreaView>
   );
 };
@@ -410,7 +457,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 15,
     left: 5,
-    backgroundColor: '#00C853',
+    backgroundColor: '#4D7CFE',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 5,
