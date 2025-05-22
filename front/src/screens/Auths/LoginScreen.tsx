@@ -87,7 +87,7 @@ const LoginScreen: React.FC<Props> = ({navigation}) => {
     } catch (error: any) {
       Alert.alert(
         '로그인 실패',
-        error.message || '로그안 중 문제가 발생했습니다.',
+        error.message || '로그인 중 문제가 발생했습니다.',
       );
     } finally {
       setLoading(false);
