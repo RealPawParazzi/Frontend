@@ -285,7 +285,7 @@ const StoryReelsModal = ({
                 />
               )}
               {idx < currentStoryIndex && (
-                <View style={[styles.progressBarForeground, { width: '100%' }]} />
+                <View style={[styles.progressBarForeground, {width: '100%'}]} />
               )}
             </View>
           ))}
@@ -348,9 +348,10 @@ const StoryReelsModal = ({
           <TouchableOpacity
             onPress={handleOpenViewersModal}
             style={styles.bottomInfoBar}>
-            <Text style={styles.viewCountText}>
-              {storyViewers.length}명이 봤어요
-            </Text>
+            <View style={styles.viewerRow}>
+              <Icon name="visibility" size={18} color="#DDD" />
+              <Text style={styles.viewCountText}>{storyViewers.length}</Text>
+            </View>
           </TouchableOpacity>
         )}
 
@@ -411,10 +412,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 30,
   },
   media: {
     width: '100%',
-    height: '95%',
+    height: '100%',
   },
   // 🔽 터치 영역은 미디어 위에만 표시
   touchOverlay: {
@@ -429,16 +431,26 @@ const styles = StyleSheet.create({
     width: '50%',
     height: '100%',
   },
-  // 하단 추가 스타일
   bottomInfoBar: {
     position: 'absolute',
-    bottom: 24,
-    left: 16,
+    bottom: 20,
+    left: 30,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
   },
+
+  viewerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+
   viewCountText: {
-    color: 'white',
+    color: '#FFF',
     fontSize: 14,
-    opacity: 0.9,
+    fontWeight: '500',
   },
 });
 
