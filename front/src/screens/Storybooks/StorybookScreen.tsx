@@ -24,18 +24,21 @@ import boardStore from '../../context/boardStore';
 
 // 🧩 콘텐츠 블록 타입 정의
 interface BlockItem {
-  type: 'text' | 'File'; // File 타입으로 통일
+  type: 'Text' | 'File'; // File 타입으로 통일
   value: string;
 }
 
 /**
  * 📝 네이버 블로그 스타일 게시물 작성 화면 (드래그 앤 드롭, 대표 이미지 지정 포함)
  */
-const StorybookScreen = ({navigation}: any) => {
+const StorybookScreen = ({navigation, route}: any) => {
+  const videoUri = route?.params?.videoUri ?? null; // 🔥 생성된 영상 URI 받아오기
+
+
   const [title, setTitle] = useState('');
   const [titleImage, setTitleImage] = useState<string | null>(null); // ✅ 대표 이미지 URI 저장
   const [blocks, setBlocks] = useState<BlockItem[]>([
-    {type: 'text', value: ''},
+    {type: 'Text', value: ''},
   ]);
   const [isPublic, setIsPublic] = useState(true); // ✅ 게시물 공개 여부 (기본값: 공개)
   const [loading, setLoading] = useState(false);
@@ -44,6 +47,17 @@ const StorybookScreen = ({navigation}: any) => {
   const createNewBoard = boardStore(state => state.createNewBoard); // Zustand에서 게시글 생성 함수 가져오기
 
   const bottomBarAnim = useRef(new Animated.Value(0)).current;
+
+  // 🔥 전달받은 영상이 있을 경우 블록 초기화
+  useEffect(() => {
+    if (videoUri) {
+      setBlocks([
+        { type: 'File', value: videoUri },
+        { type: 'Text', value: '' },
+      ]);
+      setTitleImage(videoUri); // 자동으로 대표 미디어 설정
+    }
+  }, [videoUri]);
 
   useEffect(() => {
     const show = Keyboard.addListener('keyboardWillShow', e => {
@@ -117,7 +131,7 @@ const StorybookScreen = ({navigation}: any) => {
               const nextBlocks = [...prev];
               if (
                 nextBlocks.length === 1 &&
-                nextBlocks[0].type === 'text' &&
+                nextBlocks[0].type === 'Text' &&
                 nextBlocks[0].value.trim() === ''
               ) {
                 nextBlocks.pop();
@@ -125,7 +139,7 @@ const StorybookScreen = ({navigation}: any) => {
               return [
                 ...nextBlocks,
                 {type: 'File', value: mediaUri},
-                {type: 'text', value: ''},
+                {type: 'Text', value: ''},
               ];
             });
             setTimeout(() => {
@@ -160,13 +174,13 @@ const StorybookScreen = ({navigation}: any) => {
             // 👇 삭제된 블록이 이미지이고, 앞뒤가 모두 텍스트일 경우 병합
             if (
               removed.type === 'File' &&
-              newBlocks[index - 1]?.type === 'text' &&
-              newBlocks[index]?.type === 'text'
+              newBlocks[index - 1]?.type === 'Text' &&
+              newBlocks[index]?.type === 'Text'
             ) {
               const mergedValue =
                 newBlocks[index - 1].value + '\n' + newBlocks[index].value;
               newBlocks.splice(index - 1, 2, {
-                type: 'text',
+                type: 'Text',
                 value: mergedValue,
               });
             }
@@ -181,7 +195,7 @@ const StorybookScreen = ({navigation}: any) => {
   // ✅ 게시글 저장하기
   const handleSavePost = async () => {
     const validBlocks = blocks.filter(b => b.value.trim() !== '');
-    const textBlocks = validBlocks.filter(b => b.type === 'text');
+    const textBlocks = validBlocks.filter(b => b.type === 'Text');
     const firstText = textBlocks[0]?.value || '내용 없음';
 
     // 🔒 텍스트 블록이 하나도 없을 경우 저장 방지
@@ -322,7 +336,7 @@ const StorybookScreen = ({navigation}: any) => {
           contentContainerStyle={styles.storyContainer}>
           {blocks.map((block, index) => (
             <View key={index} style={{marginBottom: 16}}>
-              {block.type === 'text' ? (
+              {block.type === 'Text' ? (
                 <TextInput
                   ref={ref => (inputRefs.current[index] = ref)}
                   multiline
@@ -381,7 +395,7 @@ const StorybookScreen = ({navigation}: any) => {
       </KeyboardAvoidingView>
 
       {/* 하단 네비게이션 바 */}
-      <Animated.View style={[styles.bottomBar, { bottom: bottomBarAnim }]}>
+      <Animated.View style={[styles.bottomBar, {bottom: bottomBarAnim}]}>
         {/* 버튼들 */}
         <TouchableOpacity
           style={styles.bottomIcon}
