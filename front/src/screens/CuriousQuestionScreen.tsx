@@ -11,11 +11,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import useQuestionStore from '../context/questionStore';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import { Picker } from '@react-native-picker/picker'; // ✅ 드롭다운 Picker 추가
+import {Picker} from '@react-native-picker/picker';
+import Footer from '../components/Footer';
 
 
 const CuriousQuestionScreen = () => {
@@ -50,9 +52,12 @@ const CuriousQuestionScreen = () => {
   return (
     <SafeAreaView edges={['top']} style={styles.wrapper}>
       <KeyboardAvoidingView
-        style={styles.wrapper}
+        style={{flex: 1}}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={styles.container}>
+        <ScrollView
+          contentContainerStyle={styles.container}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}>
           {/* ✅ 상단 안내 문구 */}
           <Text style={styles.title}>운영진에게 직접 질문해주세요 !</Text>
 
@@ -113,7 +118,13 @@ const CuriousQuestionScreen = () => {
               <Text style={styles.buttonText}>문의 보내기</Text>
             )}
           </TouchableOpacity>
-        </View>
+
+          {/* ✅ Footer는 좌우 패딩 제거한 별도 Wrapper로 감쌈 */}
+          <View style={styles.footerWrapper}>
+            <Footer />
+          </View>
+
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -129,8 +140,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   container: {
-    flex: 1,
+    minHeight: '100%',
     padding: 20,
+    backgroundColor: '#fff',
   },
   title: {
     fontSize: 18,
@@ -182,6 +194,10 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  footerWrapper: {
+    marginTop: 30,
+    marginHorizontal: -20, // 스크롤뷰의 padding: 20을 무효화
   },
 });
 
