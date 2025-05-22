@@ -32,7 +32,7 @@
 		<true/>
 		<key>NSExceptionDomains</key>
 		<dict>
-            <key>43.202.62.32</key>
+            <key>www.pawparazzibackoffice.online</key>
             <dict>
               <key>NSIncludesSubdomains</key>
               <true/>
