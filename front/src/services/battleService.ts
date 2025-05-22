@@ -34,7 +34,7 @@ export interface BattleDetail {
   };
 }
 
-// ✅ 배틀 신청 (기존 펫끼리)
+// 🟡 기본 배틀 요청
 export async function requestBattle(
   myPetId: number,
   targetPetId: number,
@@ -43,12 +43,9 @@ export async function requestBattle(
   if (!token) {
     throw new Error('로그인이 필요합니다.');
   }
-
   const res = await fetch(`${API_BASE_URL}/${targetPetId}?myPetId=${myPetId}`, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    headers: {Authorization: `Bearer ${token}`},
   });
 
   if (!res.ok) {
@@ -59,7 +56,7 @@ export async function requestBattle(
   return await res.json();
 }
 
-// ✅ 배틀 상세 조회
+// 🟡 배틀 상세 조회
 export async function fetchBattleDetail(
   battleId: number,
 ): Promise<BattleDetail> {
@@ -67,12 +64,9 @@ export async function fetchBattleDetail(
   if (!token) {
     throw new Error('로그인이 필요합니다.');
   }
-
   const res = await fetch(`${API_BASE_URL}/${battleId}`, {
     method: 'GET',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    headers: {Authorization: `Bearer ${token}`},
   });
 
   if (!res.ok) {
@@ -80,5 +74,72 @@ export async function fetchBattleDetail(
     throw new Error(`배틀 상세 조회 실패: ${errorText}`);
   }
 
+  return await res.json();
+}
+
+// 🟡 1명 즉석 생성 배틀
+export async function requestOneInstanceBattle(
+  targetPetId: number, // ✅ 상대 펫 ID
+  petData: {name: string; type: string; petDetail: string},
+  imageFile: {uri: string; name: string; type: string},
+): Promise<BattleResponse> {
+  const token = await AsyncStorage.getItem('accessToken');
+  if (!token) {
+    throw new Error('로그인이 필요합니다.');
+  }
+  const form = new FormData();
+  form.append('petData', JSON.stringify(petData));
+  form.append('petImage', {
+    uri: imageFile.uri,
+    name: imageFile.name,
+    type: imageFile.type,
+  } as any);
+
+  const res = await fetch(
+    `${API_BASE_URL}/instance/createOne/${targetPetId}`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: form,
+    },
+  );
+
+  if (!res.ok) {
+    throw new Error(await res.text());
+  }
+  return await res.json();
+}
+
+// 🟡 2명 즉석 생성 배틀
+export async function requestTwoInstanceBattle(
+  petData1: {name: string; type: string; petDetail: string},
+  imageFile1: {uri: string; name: string; type: string},
+  petData2: {name: string; type: string; petDetail: string},
+  imageFile2: {uri: string; name: string; type: string},
+): Promise<BattleResponse> {
+  const token = await AsyncStorage.getItem('accessToken');
+  if (!token) {
+    throw new Error('로그인이 필요합니다.');
+  }
+
+  const form = new FormData();
+  form.append('petData1', JSON.stringify(petData1));
+  form.append('petImage1', imageFile1 as any);
+  form.append('petData2', JSON.stringify(petData2));
+  form.append('petImage2', imageFile2 as any);
+
+  const res = await fetch(`${API_BASE_URL}/instance/createTwo`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: form,
+  });
+
+  if (!res.ok) {
+    throw new Error(await res.text());
+  }
   return await res.json();
 }
