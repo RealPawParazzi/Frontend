@@ -13,7 +13,7 @@ import { getBoardsByMember } from '../services/boardService';
 import { getImageSource } from '../utils/imageUtils';
 
 // ✅ 기본 프로필 이미지
-const DEFAULT_PROFILE_IMAGE = require('../assets/images/profile-1.png');
+const DEFAULT_PROFILE_IMAGE = require('../assets/images/user-2.png');
 
 
 interface MiniProfileModalProps {

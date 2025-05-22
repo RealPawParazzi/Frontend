@@ -74,10 +74,16 @@ const FollowRecommendations = () => {
             <FlatList
                 data={filteredRecommendations}
                 horizontal
-                keyExtractor={(item) => item.id.toString()}
+                keyExtractor={(item) => {
+                  console.log('🧩 keyExtractor item:', item);
+                  console.log('🧠 selectedUser가 바뀜:', selectedUser);
+                  return item?.id?.toString?.() ?? 'unknown';
+                }}
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ paddingHorizontal: 10 }}
-                renderItem={({ item }) => (
+                renderItem={({ item }) => {
+                  console.log('🧩 renderItem item:', item);
+                  return (
                     <ShadowWrapper style={styles.cardWrapper}>
                         <View style={styles.card}>
                             <TouchableOpacity
@@ -119,7 +125,8 @@ const FollowRecommendations = () => {
                             </TouchableOpacity>
                         </View>
                     </ShadowWrapper>
-                )}
+                  );
+                }}
             />
             {selectedUser && (
                 <MiniProfileModal
@@ -128,7 +135,7 @@ const FollowRecommendations = () => {
                     user={{
                         id: Number(selectedUser.id),
                         name: selectedUser.name,
-                        profileImage: selectedUser.profileImage.toString(),
+                        profileImage: selectedUser.profileImage || DEFAULT_PROFILE_IMAGE,
                     }}
                 />
             )}
