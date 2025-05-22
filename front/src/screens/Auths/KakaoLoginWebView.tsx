@@ -70,7 +70,7 @@ const KakaoLoginWebView: React.FC = () => {
                 onHttpError={({ nativeEvent }) => console.warn('HTTP 에러 발생:', nativeEvent)}
                 startInLoadingState
                 renderLoading={() => (
-                    <ActivityIndicator size="large" color="#6A4BBC" style={styles.loader} />
+                    <ActivityIndicator size="large" color="#4D7CFE" style={styles.loader} />
                 )}
             />
         </SafeAreaView>
