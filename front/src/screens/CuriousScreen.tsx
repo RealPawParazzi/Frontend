@@ -9,6 +9,7 @@ import {
 import {useNavigation} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import Footer from '../components/Footer';
 
 interface FAQ {
   question: string;
@@ -108,6 +109,7 @@ const CuriousScreen = () => {
           onPress={() => navigation.navigate('CuriousQuestionScreen')}>
           <Text style={styles.askButtonText}>1:1 문의하기</Text>
         </TouchableOpacity>
+        <Footer/>
       </ScrollView>
     </SafeAreaView>
   );
@@ -115,11 +117,11 @@ const CuriousScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
     paddingBottom: 32,
     backgroundColor: '#fff',
   },
   header: {
+    padding: 16,
     fontSize: 25,
     fontWeight: 'bold',
     textAlign: 'center',
@@ -127,11 +129,13 @@ const styles = StyleSheet.create({
     color: '#222',
   },
   faqItem: {
+    padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
     paddingVertical: 14,
   },
   questionRow: {
+    padding: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -150,6 +154,8 @@ const styles = StyleSheet.create({
   },
   askButton: {
     marginTop: 10,
+    marginBottom: 50,
+    marginHorizontal: 20,
     backgroundColor: '#4d7cfe',
     paddingVertical: 14,
     borderRadius: 10,
@@ -161,7 +167,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   noResultText: {
-    marginTop: 30,
+    marginTop: 40,
     marginBottom: 5,
     fontSize: 15,
     color: '#555',
