@@ -1,11 +1,6 @@
 // 📦 components/HomePage/RecommendShortcutButtons.tsx
 import React, {useState} from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-} from 'react-native';
+import {View, Text, StyleSheet, Pressable} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import {useNavigation} from '@react-navigation/native'; // ✅ 유지
 
@@ -14,26 +9,31 @@ const shortcuts = [
     key: 'myPet',
     label: '내 펫',
     iconName: 'pets',
+    color: '#4CAF50',
   },
   {
     key: 'aiPhoto',
-    label: 'AI 사진 생성',
+    label: 'AI 동영상 생성',
     iconName: 'brush',
+    color: '#FF9800',
   },
   {
     key: 'hallOfFame',
     label: '명예의 전당',
     iconName: 'emoji-events',
+    color: '#FFD700',
   },
   {
     key: 'todo',
     label: '오늘 할 일',
     iconName: 'check-circle-outline',
+    color: '#03A9F4',
   },
   {
     key: 'question',
     label: '궁금해요',
     iconName: 'help-outline',
+    color: '#FF5722',
   },
 ];
 
@@ -69,7 +69,7 @@ const RecommendShortcutButtons = () => {
 
   return (
     <View style={styles.container}>
-      {shortcuts.map((item) => {
+      {shortcuts.map(item => {
         // eslint-disable-next-line react-hooks/rules-of-hooks
         const [isPressed, setIsPressed] = useState(false);
 
@@ -79,15 +79,14 @@ const RecommendShortcutButtons = () => {
             onPressIn={() => setIsPressed(true)}
             onPressOut={() => setIsPressed(false)}
             onPress={() => handlePress(item.key)}
-            style={styles.button}
-          >
+            style={styles.button}>
             <Icon
               name={item.iconName}
               size={30}
-              color={isPressed ? '#4D7CFE' : '#555'}
-              style={[styles.icon, isPressed && { transform: [{ scale: 1.1 }] }]}
+              color={isPressed ? '#555' : item.color}
+              style={[styles.icon, isPressed && {transform: [{scale: 1.1}]}]}
             />
-            <Text style={[styles.label, isPressed && { color: '#4D7CFE' }]}>
+            <Text style={[styles.label, isPressed && {color: '#555'}]}>
               {item.label}
             </Text>
           </Pressable>
@@ -101,8 +100,8 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginTop: 30,
-    marginBottom: 30,
+    marginTop: 25,
+    marginBottom: 25,
   },
   button: {
     alignItems: 'center',
@@ -112,7 +111,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   label: {
-    fontSize: 12,
+    fontSize: 10,
     color: '#333',
     textAlign: 'center',
   },
