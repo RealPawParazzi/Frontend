@@ -369,6 +369,22 @@ const EditStorybookScreen = ({
               )}
             </View>
           ))}
+
+          {/* 🔽 마지막 빈 공간을 누르면 새 텍스트 블록 추가 */}
+          <TouchableOpacity
+            activeOpacity={1}
+            style={{minHeight: 100}}
+            onPress={() => {
+              // 이미 마지막이 빈 텍스트 블록이면 추가 안 함
+              const last = blocks[blocks.length - 1];
+              if (!(last?.type === 'Text' && last.value === '')) {
+                setBlocks(prev => [...prev, {type: 'Text', value: ''}]);
+                setTimeout(() => {
+                  scrollRef.current?.scrollToEnd({animated: true});
+                }, 100);
+              }
+            }}
+          />
         </ScrollView>
       </KeyboardAvoidingView>
 
