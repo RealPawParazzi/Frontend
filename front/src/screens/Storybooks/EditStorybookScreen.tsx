@@ -9,7 +9,6 @@ import {
   Alert,
   SafeAreaView,
   ActivityIndicator,
-  Switch,
   ScrollView,
   KeyboardAvoidingView,
   Keyboard,
@@ -288,20 +287,6 @@ const EditStorybookScreen = ({
         </TouchableOpacity>
       </View>
 
-      {/* ✅ 공개 여부 토글 */}
-      <View style={styles.visibilityContainer}>
-        <Text style={styles.visibilityText}>
-          {isPublic ? '공개' : '팔로워 전용'}
-        </Text>
-        <Switch
-          value={isPublic}
-          onValueChange={setIsPublic}
-          trackColor={{false: '#767577', true: 'rgba(127,148,159,0.57)'}}
-          thumbColor={isPublic ? '#4D7CFE' : '#f4f3f4'}
-          style={{transform: [{scale: 0.8}]}}
-        />
-      </View>
-
       {/* 제목 입력 */}
       <TextInput
         style={styles.titleInput}
@@ -392,20 +377,24 @@ const EditStorybookScreen = ({
         {/* 버튼들 */}
         <TouchableOpacity
           style={styles.bottomIcon}
-          onPress={() =>
-            Alert.alert('😎 준비 중!', '이모티콘 기능은 곧 추가됩니다.')
-          }>
-          <Text style={styles.iconText}>😊</Text>
+          onPress={() => setIsPublic(prev => !prev)}>
+          <MaterialIcons
+            name={isPublic ? 'public' : 'lock'}
+            size={28}
+            color={isPublic ? '#4D7CFE' : '#aaa'}
+          />
         </TouchableOpacity>
+        {/* 🖼️ 미디어 추가 */}
         <TouchableOpacity style={styles.bottomIcon} onPress={pickMedia}>
-          <Text style={styles.iconText}>🖼️</Text>
+          <MaterialIcons name="add-photo-alternate" size={28} color="#4D7CFE" />
         </TouchableOpacity>
+        {/* 🤖 AI 기능 자리 */}
         <TouchableOpacity
           style={styles.bottomIcon}
           onPress={() =>
-            Alert.alert('✨ 준비 중!', 'AI 기능은 곧 추가됩니다.')
+            Alert.alert('준비 중!', 'AI 기능은 곧 추가될 예정입니다.')
           }>
-          <Text style={styles.iconText}>✨</Text>
+          <MaterialIcons name="smart-toy" size={28} color="#aaa" />
         </TouchableOpacity>
       </Animated.View>
     </SafeAreaView>
@@ -427,13 +416,6 @@ const styles = StyleSheet.create({
   backButton: {padding: 8},
   navTitle: {fontSize: 18, fontWeight: 'bold', textAlign: 'center', flex: 1},
   saveButton: {fontSize: 16, color: '#4D7CFE', fontWeight: 'bold'},
-  visibilityContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-  },
-  visibilityText: {fontSize: 16, fontWeight: 'bold'},
   titleInput: {
     fontSize: 30,
     fontWeight: 'bold',
@@ -485,7 +467,13 @@ const styles = StyleSheet.create({
     width: '100%',
     zIndex: 99,
   },
-  bottomIcon: {padding: 10},
+  bottomIcon: {
+    width: 60,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 5,
+  },
   iconText: {fontSize: 22},
   loader: {flex: 1, justifyContent: 'center', alignItems: 'center'},
 });

@@ -21,6 +21,7 @@ import Video from 'react-native-video';
 import {launchImageLibrary} from 'react-native-image-picker';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import boardStore from '../../context/boardStore';
+import TagInputModal from '../../components/TagInputModal';
 
 // 🧩 콘텐츠 블록 타입 정의
 interface BlockItem {
@@ -34,12 +35,13 @@ interface BlockItem {
 const StorybookScreen = ({navigation, route}: any) => {
   const videoUri = route?.params?.videoUri ?? null; // 🔥 생성된 영상 URI 받아오기
 
-
   const [title, setTitle] = useState('');
   const [titleImage, setTitleImage] = useState<string | null>(null); // ✅ 대표 이미지 URI 저장
   const [blocks, setBlocks] = useState<BlockItem[]>([
     {type: 'Text', value: ''},
   ]);
+  const [tagModalVisible, setTagModalVisible] = useState(false); // 모달 열기/닫기 상태
+  const [tags, setTags] = useState<string[]>([]); // 태그 리스트
   const [isPublic, setIsPublic] = useState(true); // ✅ 게시물 공개 여부 (기본값: 공개)
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
@@ -52,8 +54,8 @@ const StorybookScreen = ({navigation, route}: any) => {
   useEffect(() => {
     if (videoUri) {
       setBlocks([
-        { type: 'File', value: videoUri },
-        { type: 'Text', value: '' },
+        {type: 'File', value: videoUri},
+        {type: 'Text', value: ''},
       ]);
       setTitleImage(videoUri); // 자동으로 대표 미디어 설정
     }
@@ -303,21 +305,6 @@ const StorybookScreen = ({navigation, route}: any) => {
           )}
         </TouchableOpacity>
       </View>
-
-      {/* 공개 범위 토글 버튼 */}
-      <View style={styles.visibilityContainer}>
-        <Text style={styles.visibilityText}>
-          {isPublic ? '공개' : '팔로워 전용'}
-        </Text>
-        <Switch
-          value={isPublic}
-          onValueChange={setIsPublic} // ✅ 공개 여부 토글
-          trackColor={{false: '#767577', true: 'rgba(127,148,159,0.57)'}}
-          thumbColor={isPublic ? '#4D7CFE' : '#f4f3f4'}
-          style={{transform: [{scale: 0.8}]}} // ✅ 토글 크기 조절
-        />
-      </View>
-
       {/* 제목 입력 필드 */}
       <TextInput
         style={styles.titleInput}
@@ -326,6 +313,25 @@ const StorybookScreen = ({navigation, route}: any) => {
         value={title}
         onChangeText={setTitle}
       />
+
+      {tags.length > 0 && (
+        <View style={styles.tagWrapper}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.tagContainer}>
+            {tags.map((tag, index) => (
+              <View key={index} style={styles.tagChip}>
+                <Text style={styles.tagText}>#{tag}</Text>
+                <TouchableOpacity onPress={() =>
+                  setTags(prev => prev.filter((_, i) => i !== index))}>
+                  <MaterialIcons name="close" size={16} color="#aaa" />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+      )}
 
       {/* 콘텐츠 영역 */}
       <KeyboardAvoidingView
@@ -394,25 +400,50 @@ const StorybookScreen = ({navigation, route}: any) => {
         </ScrollView>
       </KeyboardAvoidingView>
 
+      {/* ➕ Floating Action Button (태그 추가용) */}
+      <TouchableOpacity style={styles.fab} onPress={() => setTagModalVisible(true)}>
+        <MaterialIcons name="add" size={30} color="#fff" />
+      </TouchableOpacity>
+
+      <TagInputModal
+        visible={tagModalVisible}
+        onClose={() => setTagModalVisible(false)}
+        onAddTag={(newTag) => {
+          if (!tags.includes(newTag)) {
+            setTags([...tags, newTag]);
+          }
+        }}
+      />
+
       {/* 하단 네비게이션 바 */}
       <Animated.View style={[styles.bottomBar, {bottom: bottomBarAnim}]}>
         {/* 버튼들 */}
+        {/* 🔁 공개 범위 토글 버튼으로 변경 */}
         <TouchableOpacity
           style={styles.bottomIcon}
-          onPress={() =>
-            Alert.alert('😎 준비 중!', '이모티콘 기능은 곧 추가됩니다.')
-          }>
-          <Text style={styles.iconText}>😊</Text>
+          onPress={() => setIsPublic(prev => !prev)}>
+          <MaterialIcons
+            name={isPublic ? 'public' : 'lock'}
+            size={28}
+            color={isPublic ? '#4D7CFE' : '#aaa'}
+          />
+          {/*<Text style={[styles.iconLabel, {color: isPublic ? '#4D7CFE' : '#aaa'}]}>*/}
+          {/*  {isPublic ? '공개' : '팔로워'}*/}
+          {/*</Text>*/}
         </TouchableOpacity>
+        {/* 🖼️ 미디어 추가 */}
         <TouchableOpacity style={styles.bottomIcon} onPress={pickMedia}>
-          <Text style={styles.iconText}>🖼️</Text>
+          <MaterialIcons name="add-photo-alternate" size={28} color="#4D7CFE" />
+          {/*<Text style={styles.iconLabel}>미디어</Text>*/}
         </TouchableOpacity>
+        {/* ✨ AI 기능 자리 */}
         <TouchableOpacity
           style={styles.bottomIcon}
           onPress={() =>
-            Alert.alert('✨ 준비 중!', 'AI 기능은 곧 추가됩니다.')
+            Alert.alert('준비 중!', 'AI 일기 생성 기능은 곧 추가됩니다.')
           }>
-          <Text style={styles.iconText}>✨</Text>
+          <MaterialIcons name="smart-toy" size={28} color="#aaa" />
+          {/*<Text style={[styles.iconLabel, {color: '#aaa'}]}>AI</Text>*/}
         </TouchableOpacity>
       </Animated.View>
     </SafeAreaView>
@@ -427,29 +458,50 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 15,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
+    paddingVertical: 7,
+    borderBottomWidth: 1.5,
     borderColor: '#EEE',
   },
   backButton: {padding: 8},
   navTitle: {fontSize: 18, fontWeight: 'bold', textAlign: 'center', flex: 1},
-  saveButton: {fontSize: 16, color: '#4D7CFE', fontWeight: 'bold'},
-  visibilityContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-  },
-  visibilityText: {fontSize: 16, fontWeight: 'bold'},
+  saveButton: {fontSize: 18, color: '#4D7CFE', fontWeight: 'bold'},
   titleInput: {
     fontSize: 30,
     fontWeight: 'bold',
     paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
+    paddingVertical: 20,
+    borderBottomWidth: 1.5,
     borderColor: '#EEE',
     marginBottom: 8,
   },
+    tagWrapper: {
+      paddingHorizontal: 16,
+      paddingTop: 10,
+      paddingBottom: 10,
+    },
+
+    tagContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+
+    tagChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#f0f0f0',
+      borderRadius: 20,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      marginRight: 8,
+    },
+
+    tagText: {
+      fontSize: 14,
+      fontWeight: 'bold',
+      color: '#333',
+      marginRight: 4,
+    },
   storyContainer: {paddingHorizontal: 20, paddingBottom: 80},
   storyInput: {
     fontSize: 16,
@@ -489,16 +541,42 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     paddingVertical: 10,
-    borderTopWidth: 1,
+    borderTopWidth: 3,
     borderColor: '#EEE',
     backgroundColor: '#FFF',
     position: 'absolute',
-    bottom: 0,
     width: '100%',
-    zIndex: 99,
+    height: 75,
   },
-  bottomIcon: {padding: 10},
-  iconText: {fontSize: 22},
+  bottomIcon: {
+    width: 60,
+    height: 40,
+    marginBottom: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 5,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 95, // 하단바 위에 떠 있도록
+    right: 20,
+    width: 57,
+    height: 57,
+    borderRadius: 30,
+    backgroundColor: '#4D7CFE',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+  },
+  iconText: {
+    fontSize: 14,
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
 });
 
 export default StorybookScreen;
