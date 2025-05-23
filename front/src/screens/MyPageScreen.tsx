@@ -12,6 +12,15 @@ import userFollowStore from '../context/userFollowStore';
 import boardStore from '../context/boardStore';
 import { useStoryReelsStore } from '../context/storyReelsStore';
 
+import { RouteProp, useRoute } from '@react-navigation/native'; // 추가
+
+// 🧩 라우트 타입 정의
+type RouteParams = {
+  MyPage: {
+    defaultTab?: number; // 선택할 탭 index (0: 펫, 1: 집사)
+  };
+};
+
 
 /**
  * 📌 MyPageScreen (마이페이지 화면)
@@ -20,8 +29,11 @@ import { useStoryReelsStore } from '../context/storyReelsStore';
  * - 유저 프로필 및 반려동물 게시물 리스트 표시
  */
 const MyPageScreen = () => {
+  const route = useRoute<RouteProp<RouteParams, 'MyPage'>>();
+
+  // 초기값을 라우트에서 가져오도록 수정된 부분
   // 🟢 현재 선택된 탭 ("펫" = 0, "집사" = 1)
-  const [selectedTab, setSelectedTab] = useState(0);
+  const [selectedTab, setSelectedTab] = useState(route.params?.defaultTab ?? 0);
   const [refreshing, setRefreshing] = useState(false); // 🔄 새로고침 상태
 
   // ✅ 최소 로딩 시간 확보용 wait 함수

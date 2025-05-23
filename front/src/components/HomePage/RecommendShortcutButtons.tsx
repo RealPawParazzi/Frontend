@@ -44,7 +44,7 @@ const RecommendShortcutButtons = () => {
     switch (key) {
       case 'myPet':
         // @ts-ignore
-        navigation.navigate('MyPage', {defaultTab: 0}); // 0은 펫 탭
+        navigation.navigate('MyPage', { defaultTab: 0 });
         break;
       case 'aiPhoto':
         // @ts-ignore
