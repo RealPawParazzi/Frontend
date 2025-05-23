@@ -107,38 +107,30 @@ const StoryBookCard: React.FC<{story: StoryBookCardProps}> = ({story}) => {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#fff',
-    borderRadius: 50,
-    padding: 25,
-    marginVertical: 10,
-    marginHorizontal: 5,
-
-    // iOS
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-
-    // Android
-    elevation: 10,
+    paddingHorizontal: 15,
+    paddingTop: 18,
+    paddingBottom: 12,
+    borderBottomWidth: 1.5,
+    borderColor: '#eee',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
-    justifyContent: 'space-between',
+    marginBottom: 8,
   },
   avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    marginRight: 10,
   },
   info: {
     flex: 1,
-    marginLeft: 10,
   },
   username: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 'bold',
+    marginBottom: 2,
   },
   meta: {
     fontSize: 12,
@@ -146,20 +138,20 @@ const styles = StyleSheet.create({
   },
   storyImage: {
     width: '100%',
-    height: 200,
+    height: 220,
     borderRadius: 12,
-    marginBottom: 10,
-    backgroundColor: '#000',
+    marginTop: 8,
   },
   content: {
     fontSize: 14,
-    color: '#444',
-    marginBottom: 10,
+    color: '#333',
+    marginTop: 10,
+    marginBottom: 8,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingTop: 4,
+    marginTop: 4,
   },
   iconGroup: {
     flexDirection: 'row',
@@ -168,7 +160,7 @@ const styles = StyleSheet.create({
   iconText: {
     fontSize: 13,
     marginLeft: 4,
-    color: '#555',
+    color: '#777',
   },
 });
 
