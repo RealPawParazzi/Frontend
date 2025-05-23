@@ -9,7 +9,7 @@ import {
   Alert,
   Modal,
 } from 'react-native';
-import { createThumbnail } from 'react-native-create-thumbnail';
+import {createThumbnail} from 'react-native-create-thumbnail';
 import userStore from '../../context/userStore';
 import userFollowStore from '../../context/userFollowStore';
 import {useStoryReelsStore} from '../../context/storyReelsStore';
@@ -51,16 +51,21 @@ const OwnerInfo = () => {
   const {myStories, loadMyStories} = useStoryReelsStore();
 
   // ✅ 썸네일 상태
-  const [memoryThumbnails, setMemoryThumbnails] = useState<{ [key: number]: string }>({});
+  const [memoryThumbnails, setMemoryThumbnails] = useState<{
+    [key: number]: string;
+  }>({});
 
-// ✅ 썸네일 생성 함수
+  // ✅ 썸네일 생성 함수
   const generateThumbnailForMedia = async (story: any): Promise<string> => {
     const isVideo =
       story.mediaUrl.endsWith('.mp4') || story.mediaUrl.endsWith('.mov');
 
     if (isVideo) {
       try {
-        const thumb = await createThumbnail({ url: story.mediaUrl, timeStamp: 1000 });
+        const thumb = await createThumbnail({
+          url: story.mediaUrl,
+          timeStamp: 1000,
+        });
         return thumb.path;
       } catch (error) {
         console.warn('썸네일 생성 실패:', error);
@@ -71,10 +76,10 @@ const OwnerInfo = () => {
     }
   };
 
-// ✅ 썸네일 로딩 useEffect
+  // ✅ 썸네일 로딩 useEffect
   useEffect(() => {
     const loadThumbnails = async () => {
-      const thumbs: { [key: number]: string } = {};
+      const thumbs: {[key: number]: string} = {};
       for (const story of myStories) {
         const thumbUri = await generateThumbnailForMedia(story);
         thumbs[story.storyId] = thumbUri;
@@ -179,7 +184,7 @@ const OwnerInfo = () => {
   const openSingleStory = (story: any) => {
     setSingleStoryGroup({
       memberId: Number(userData.id), // 현재 사용자 ID
-      nickname: userData.nickName,  // 사용자 닉네임
+      nickname: userData.nickName, // 사용자 닉네임
       profileImageUrl: userData.profileImage.uri, // 사용자 프로필 이미지
       stories: [story], // 🔥 단일 스토리만 배열로 전달
     });
@@ -209,9 +214,13 @@ const OwnerInfo = () => {
             }}
           />
           <View style={styles.userInfo}>
-            <Text style={styles.username}>
-              {userData.nickName || userData.name}
-            </Text>
+            {/* 🔹 닉네임 + 이름 (한 줄에 배치) */}
+            <View style={styles.nameRow}>
+              <Text style={styles.userNickname}>{userData.nickName}</Text>
+              <Text style={styles.userRealName}>@{userData.name}</Text>
+            </View>
+
+            {/* 🔹 반려동물 수 */}
             <Text style={styles.petCount}>{userData.petCount}마리</Text>
           </View>
         </View>
@@ -259,7 +268,7 @@ const OwnerInfo = () => {
             //@ts-ignore
             navigation.navigate('UserPostsScreen', {
               userId: userData.id,
-              userName: userData.name,
+              userName: userData.nickName,
             })
           }>
           <Text style={styles.statNumber}>{postCount}</Text>
@@ -272,7 +281,7 @@ const OwnerInfo = () => {
             navigation.navigate('FollowListScreen', {
               type: 'followers',
               userId: userData.id,
-              userName: userData.name,
+              userName: userData.nickName
             })
           }>
           <Text style={styles.statNumber}>{followerCount}</Text>
@@ -285,7 +294,7 @@ const OwnerInfo = () => {
             navigation.navigate('FollowListScreen', {
               type: 'following',
               userId: userData.id,
-              userName: userData.name,
+              userName: userData.nickName,
             })
           }>
           <Text style={styles.statNumber}>{followingCount}</Text>
@@ -302,13 +311,15 @@ const OwnerInfo = () => {
             data={myStories}
             //@ts-ignore
             keyExtractor={item => item.storyId}
-            renderItem={({ item }) => (
+            renderItem={({item}) => (
               <TouchableOpacity
                 style={styles.memoryCircle}
-                onPress={() => openSingleStory(item)}
-              >
+                onPress={() => openSingleStory(item)}>
                 <Image
-                  source={{ uri: memoryThumbnails[item.storyId] || DEFAULT_PROFILE_IMAGE }}
+                  source={{
+                    uri:
+                      memoryThumbnails[item.storyId] || DEFAULT_PROFILE_IMAGE,
+                  }}
                   style={styles.memoryImage}
                 />
               </TouchableOpacity>
@@ -462,13 +473,27 @@ const styles = StyleSheet.create({
   userInfo: {
     marginLeft: 12,
   },
-  username: {
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  userNickname: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: '#000',
+    marginRight: 6, // 닉네임과 이름 사이 여백
   },
+
+  userRealName: {
+    fontSize: 13,
+    color: '#777',
+  },
+
   petCount: {
-    fontSize: 14,
-    color: 'gray',
+    fontSize: 13,
+    color: '#777',
+    marginTop: 2,
   },
 
   /** ✅ 점 세 개(더보기) 버튼 */
