@@ -8,6 +8,7 @@ import { useNaverStore } from '../../context/naverStore';
 import authStore from '../../context/authStore';
 import { requestNaverToken } from '../../services/naverService';
 import { loadUserData } from '../../context/userStore';
+import { API_ROOT_URL } from '../../config/apiConfig';
 
 type NavigationProp = StackNavigationProp<RootStackParamList, 'NaverLoginWebView'>;
 
@@ -32,9 +33,9 @@ const NaverLoginWebView: React.FC = () => {
 
     const handleShouldStartLoadWithRequest = (request: any) => {
         let { url } = request;
-        if (Platform.OS === 'android' && url.includes('localhost')) {
-            url = url.replace('localhost', '10.0.2.2');
-        }
+        // if (Platform.OS === 'android' && url.includes('localhost')) {
+        //     url = url.replace('localhost', '10.0.2.2');
+        // }
 
         const codeMatch = url.match(/[?&]code=([^&]+)/);
         const stateMatch = url.match(/[?&]state=([^&]+)/);
@@ -58,16 +59,14 @@ const NaverLoginWebView: React.FC = () => {
                 ref={webViewRef}
                 originWhitelist={['*']}
                 source={{
-                    uri: Platform.OS === 'android'
-                        ? `http://10.0.2.2:8080/api/auth/login/naver?state=${STATE}`
-                        : `http://localhost:8080/api/auth/login/naver?state=${STATE}`,
+                  uri: `${API_ROOT_URL}/auth/login/naver?state=${STATE}`,
                 }}
                 onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
                 onError={({ nativeEvent }) => console.warn('WebView 에러:', nativeEvent)}
                 onHttpError={({ nativeEvent }) => console.warn('HTTP 에러:', nativeEvent)}
                 startInLoadingState
                 renderLoading={() => (
-                    <ActivityIndicator size="large" color="#6A4BBC" style={styles.loader} />
+                    <ActivityIndicator size="large" color="#4D7CFE" style={styles.loader} />
                 )}
             />
         </SafeAreaView>

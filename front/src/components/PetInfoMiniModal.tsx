@@ -5,6 +5,7 @@ import {
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import petStore, { Pet } from '../context/petStore';
 import { getImageSource } from '../utils/imageUtils';
+import {useNavigation} from '@react-navigation/native';
 
 
 // ✅ 기본 이미지 설정
@@ -14,26 +15,44 @@ interface PetInfoMiniModalProps {
     visible: boolean;
     onClose: () => void;
     pet: Pet | null;
-    onEdit: (pet: Pet) => void;
-    onDelete: (petId: number) => void;
 }
 
-const PetInfoMiniModal: React.FC<PetInfoMiniModalProps> = ({ visible, onClose, pet, onEdit, onDelete }) => {
-    if (!pet) { return null; }
+const PetInfoMiniModal: React.FC<PetInfoMiniModalProps> = ({ visible, onClose, pet }) => {
+  const navigation = useNavigation();
+  const { removePet } = petStore(); // 🟢 삭제 스토어 함수 사용
+
+  if (!pet) { return null; }
 
     /**
      * 🗑️ 반려동물 삭제 처리
      */
-    const handleDelete = () => {
-        Alert.alert('삭제 확인', '이 반려동물을 삭제하시겠습니까?', [
-            { text: '취소', style: 'cancel' },
-            {
-                text: '삭제',
-                onPress: () => onDelete(pet.petId),
-                style: 'destructive',
-            },
-        ]);
+    const handleDelete = async () => {
+      Alert.alert('삭제 확인', '이 반려동물을 삭제하시겠습니까?', [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '삭제',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await removePet(pet.petId); // ✅ Zustand에서 삭제
+              onClose(); // ✅ 모달 닫기
+            } catch (error) {
+              Alert.alert('삭제 실패', '반려동물을 삭제하는 중 오류가 발생했습니다.');
+              console.error('🐶❌ 삭제 오류:', error);
+            }
+          },
+        },
+      ]);
     };
+
+  /**
+   * ✏ 수정 페이지 이동
+   */
+  const handleEdit = () => {
+    // @ts-ignore
+    navigation.navigate('PetEditScreen', { pet }); // ✅ 수정 화면으로 이동
+    onClose(); // ✅ 모달 닫기
+  };
 
     /**
      * 📅 반려동물 나이를 개월 수로 변환
@@ -44,6 +63,15 @@ const PetInfoMiniModal: React.FC<PetInfoMiniModalProps> = ({ visible, onClose, p
         const diffMonths = (now.getFullYear() - birth.getFullYear()) * 12 + now.getMonth() - birth.getMonth();
         return `${Math.floor(diffMonths / 12)} y ${diffMonths % 12} m`;
     };
+
+  const calculateAgeKor = (birthDate: string) => {
+    const birth = new Date(birthDate);
+    const now = new Date();
+    const diffMonths = (now.getFullYear() - birth.getFullYear()) * 12 + now.getMonth() - birth.getMonth();
+    const years = Math.floor(diffMonths / 12);
+    const months = diffMonths % 12;
+    return `${years}살 ${months}개월`;
+  };
 
     return (
         <Modal visible={visible} animationType="slide" transparent>
@@ -61,7 +89,7 @@ const PetInfoMiniModal: React.FC<PetInfoMiniModalProps> = ({ visible, onClose, p
                     <View style={styles.headerButtons}>
                         <TouchableOpacity
                             style={styles.iconButton}
-                            onPress={() => onEdit(pet)}
+                            onPress={handleEdit}
                         >
                             <MaterialIcons name="edit" size={24} color="black" />
                         </TouchableOpacity>
@@ -92,13 +120,25 @@ const PetInfoMiniModal: React.FC<PetInfoMiniModalProps> = ({ visible, onClose, p
                         </View>
                     </View>
 
-                    {/* 🔹 반려동물 설명 */}
-                    <View style={styles.petBio}>
-                        <Text style={styles.bioTitle}>🐾 Pet Biography</Text>
-                        <Text style={styles.bioText}>
-                            {pet.description || '이 반려동물에 대한 설명이 없습니다.'}
-                        </Text>
-                    </View>
+                  {/* 🔹 반려동물 설명 */}
+                  <View style={styles.petBio}>
+                    <Text style={styles.bioTitle}>저 {pet.name}에 대하여...!</Text>
+                    <Text style={styles.bioText}>
+                      {pet.description
+                        ? pet.description
+                        : `안녕하세요 ! 저는 ${pet.name} 라고 해요 ! ${new Date(
+                          pet.birthDate,
+                        ).toLocaleDateString('ko-KR', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })}에 태어난 ${calculateAgeKor(pet.birthDate)}의 귀여운 ${
+                          pet.type === 'DOG' ? '멍멍이' : '야옹이'
+                        }에요 ! ${pet.member.name} 집사랑 재미나게 살고 있어요 ! 잘 부탁해요 ! ${
+                          pet.type === 'DOG' ? '🐶' : '🐱'
+                        }`}
+                    </Text>
+                  </View>
                 </View>
             </View>
         </Modal>
@@ -119,6 +159,7 @@ const styles = StyleSheet.create({
         borderTopRightRadius: 20,
         padding: 20,
         alignItems: 'center',
+        height: '78%',
     },
 
     closeButton: {
@@ -130,7 +171,7 @@ const styles = StyleSheet.create({
         width: '100%',
         height: 200,
         borderRadius: 12,
-        marginBottom: 15,
+        marginVertical: 15,
     },
 
     headerButtons: {

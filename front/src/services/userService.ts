@@ -1,13 +1,11 @@
 // userService.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform } from 'react-native';
 import { reissueAccessToken } from './authService';
-
+import { API_ROOT_URL } from '../config/apiConfig';
 
 // 🔹 백엔드 API 기본 URL
-const API_BASE_URL = Platform.OS === 'android'
-    ? 'http://10.0.2.2:8080/api/auth'  // 안드로이드용
-    : 'http://localhost:8080/api/auth'; // iOS용
+const API_BASE_URL = `${API_ROOT_URL}/auth`;
+
 
 export interface UserData {
     id: string;
@@ -74,8 +72,8 @@ export const fetchAllUsers = async (): Promise<UserData[]> => {
             petList: [], // 빈 배열로 기본값 설정
             petCount: 0, // 기본값 추가
             recentPosts: [], // 빈 배열로 기본값 설정
-            // followerList: [], // 빈 배열로 기본값 설정
-            // followingList: [], // 빈 배열로 기본값 설정
+            followerList: [], // 빈 배열로 기본값 설정
+            followingList: [], // 빈 배열로 기본값 설정
             places: [], // 빈 배열로 기본값 설정
         }));
     } catch (error) {
@@ -165,7 +163,6 @@ export const updateUser = async (
 ) => {
     try {
         const headers = await getAuthorizedHeaders();
-
         const formData = new FormData();
 
         // ✅ JSON 데이터를 문자열로 변환하여 form-data에 추가
@@ -187,12 +184,18 @@ export const updateUser = async (
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
+            const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.message || '사용자 정보 수정 실패');
         }
 
-        return await response.json();
+        // ✅ response body가 있을 경우에만 파싱
+        const text = await response.text();
+        const result = text ? JSON.parse(text) : null;
+
+        console.log('🟢 updateUser 응답 결과:', result);
+
+        return result;
     } catch (error: any) {
-        throw new Error(error.message);
+        throw new Error(error.message || '사용자 정보 수정 중 오류 발생');
     }
 };

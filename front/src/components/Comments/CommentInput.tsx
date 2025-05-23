@@ -36,7 +36,7 @@ const CommentInput = ({ boardId }: CommentInputProps) => {
                     onChangeText={setCommentText}
                 />
                 <TouchableOpacity onPress={handleSendComment} style={styles.sendButton}>
-                    <MaterialIcons name="send" size={24} color={commentText ? '#FF6F00' : 'gray'} />
+                    <MaterialIcons name="send" size={24} color={commentText ? '#4D7CFE' : 'gray'} />
                 </TouchableOpacity>
             </View>
         </KeyboardAvoidingView>
