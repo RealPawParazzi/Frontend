@@ -18,9 +18,9 @@ const DEFAULT_PROFILE_IMAGE = require('../../assets/images/user-2.png');
 /** ✅ 유저 타입 정의 */
 interface User {
     id: string;
-    name: string;
-    //nickName: string;
-    profileImage: string;
+    name: string | null;
+    nickName: string | null;
+    profileImage: string | null;
 }
 
 /**
@@ -96,7 +96,7 @@ const FollowRecommendations = () => {
                                     setSelectedUser({
                                         id: item.id,
                                         name: item.name,
-                                        //nickName: item.nickName, // 닉네임도 달라고 하기
+                                        nickName: item.nickName, // 닉네임도 달라고 하기
                                         profileImage: item.profileImage.uri,
                                     });
                                     setIsModalVisible(true);
@@ -106,7 +106,7 @@ const FollowRecommendations = () => {
                                     style={styles.profileImage}
                                 />
                             </TouchableOpacity>
-                            <Text style={styles.nameText}>{item.name}</Text>
+                            <Text style={styles.nameText}>{item.nickName}</Text>
                             <TouchableOpacity
                                 style={[
                                     styles.followButton,
@@ -135,6 +135,7 @@ const FollowRecommendations = () => {
                     user={{
                         id: Number(selectedUser.id),
                         name: selectedUser.name,
+                        nickName: selectedUser.nickName,
                         profileImage: selectedUser.profileImage || DEFAULT_PROFILE_IMAGE,
                     }}
                 />
