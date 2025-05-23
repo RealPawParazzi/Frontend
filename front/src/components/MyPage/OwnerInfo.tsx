@@ -281,7 +281,9 @@ const OwnerInfo = () => {
             navigation.navigate('FollowListScreen', {
               type: 'followers',
               userId: userData.id,
-              userName: userData.nickName
+              userName: userData.name,
+              userNickName: userData.nickName,
+
             })
           }>
           <Text style={styles.statNumber}>{followerCount}</Text>
@@ -294,7 +296,8 @@ const OwnerInfo = () => {
             navigation.navigate('FollowListScreen', {
               type: 'following',
               userId: userData.id,
-              userName: userData.nickName,
+              userName: userData.name,
+              userNickName: userData.nickName,
             })
           }>
           <Text style={styles.statNumber}>{followingCount}</Text>

@@ -101,7 +101,7 @@ const EditProfileScreen = () => {
                 editable={false}
             />
 
-            <Text style={styles.label}>User Name</Text>
+            <Text style={styles.label}>Your Nickname</Text>
             <TextInput style={styles.input} value={nickName} onChangeText={setNickName} />
 
             {/* 🔵 저장 버튼 */}
