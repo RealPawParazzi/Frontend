@@ -1,6 +1,6 @@
 // 📁 screens/CuriousQuestionScreen.tsx
 
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -13,16 +13,51 @@ import {
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
 import useQuestionStore from '../context/questionStore';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {Picker} from '@react-native-picker/picker';
 import Footer from '../components/Footer';
 
+// 타입 설정
+type RouteParams = {
+  CuriousQuestionScreen: {
+    prefill?: {
+      titleOption?: string;
+      customTitle?: string;
+      content?: string;
+    };
+  };
+};
 
 const CuriousQuestionScreen = () => {
   const navigation = useNavigation();
   const {submitInquiry, isLoading} = useQuestionStore();
+
+  const route = useRoute<RouteProp<RouteParams, 'CuriousQuestionScreen'>>();
+
+  // 초깃값 주입
+  useEffect(() => {
+    if (route.params?.prefill) {
+      const {titleOption, customTitle, content} = route.params.prefill;
+      if (titleOption) setTitleOption(titleOption);
+      if (customTitle) setCustomTitle(customTitle);
+      if (content) setContent(content);
+    }
+  }, [route.params]);
+
+  useEffect(() => {
+    if (route.params?.prefill) {
+      const { titleOption, customTitle, content } = route.params.prefill;
+
+      // ✅ 0.1초 후 적용 (Picker 내부 렌더 타이밍 고려)
+      setTimeout(() => {
+        if (titleOption) setTitleOption(titleOption);
+        if (customTitle) setCustomTitle(customTitle);
+        if (content) setContent(content);
+      }, 100);
+    }
+  }, [route.params]);
 
   // ✅ 상태 관리
   const [titleOption, setTitleOption] = useState(''); // 선택된 제목 옵션
@@ -42,7 +77,7 @@ const CuriousQuestionScreen = () => {
     try {
       await submitInquiry(finalTitle, content);
       Alert.alert('문의 완료', '문의가 성공적으로 등록되었습니다.', [
-        { text: '확인', onPress: () => navigation.goBack() },
+        {text: '확인', onPress: () => navigation.goBack()},
       ]);
     } catch (err) {
       Alert.alert('오류', '문의 등록 중 문제가 발생했습니다.');
@@ -66,11 +101,18 @@ const CuriousQuestionScreen = () => {
           <View style={styles.pickerWrapper}>
             <Picker
               selectedValue={titleOption}
-              onValueChange={(itemValue) => setTitleOption(itemValue)}>
-              <Picker.Item label="문의 제목을 선택해주세요" value="" enabled={false} />
+              onValueChange={itemValue => setTitleOption(itemValue)}>
+              <Picker.Item
+                label="문의 제목을 선택해주세요"
+                value=""
+                enabled={false}
+              />
               <Picker.Item label="AI 오류 문의" value="AI 오류 문의" />
               <Picker.Item label="기능 요청" value="기능 요청" />
-              <Picker.Item label="사용법이 궁금해요" value="사용법이 궁금해요" />
+              <Picker.Item
+                label="사용법이 궁금해요"
+                value="사용법이 궁금해요"
+              />
               <Picker.Item label="버그 제보" value="버그 제보" />
               <Picker.Item label="기타 문의" value="기타 문의" />
               <Picker.Item label="제안 및 피드백" value="제안 및 피드백" />
@@ -109,7 +151,7 @@ const CuriousQuestionScreen = () => {
 
           {/* ✅ 제출 버튼 */}
           <TouchableOpacity
-            style={[styles.button, isLoading && { opacity: 0.5 }]}
+            style={[styles.button, isLoading && {opacity: 0.5}]}
             onPress={handleSubmit}
             disabled={isLoading}>
             {isLoading ? (
@@ -123,7 +165,6 @@ const CuriousQuestionScreen = () => {
           <View style={styles.footerWrapper}>
             <Footer />
           </View>
-
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
