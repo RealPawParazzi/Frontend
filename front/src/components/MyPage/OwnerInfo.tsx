@@ -20,7 +20,9 @@ import authStore from '../../context/authStore';
 import {getImageSource} from '../../utils/imageUtils';
 import boardStore from '../../context/boardStore';
 import Video from 'react-native-video';
-import StoryReelsModal from '../../components/HomePage/StoryReels/StoryReelsModal'; // 위치에 따라 경로 조정
+import StoryReelsModal from '../../components/HomePage/StoryReels/StoryReelsModal';
+import MyVideos from './MyVideos';
+import MyPhotos from './MyPhotos'; // 위치에 따라 경로 조정
 
 // ✅ 기본 프로필 이미지
 const DEFAULT_PROFILE_IMAGE = require('../../assets/images/user-2.png');
@@ -283,7 +285,6 @@ const OwnerInfo = () => {
               userId: userData.id,
               userName: userData.name,
               userNickName: userData.nickName,
-
             })
           }>
           <Text style={styles.statNumber}>{followerCount}</Text>
@@ -378,71 +379,8 @@ const OwnerInfo = () => {
 
       {/* ✅ 선택된 탭에 따라 다른 컴포넌트 출력 */}
       {selectedTab === 'posts' && <PostList userId={Number(userData.id)} />}
-      {selectedTab === 'photos' && (
-        <FlatList
-          data={myBoards
-            .filter(post => !!post.titleImage)
-            .map(post => post.titleImage)}
-          keyExtractor={(item, index) => index.toString()}
-          numColumns={3} // 🔹 사진을 3열로 출력
-          renderItem={({item}) => (
-            <View style={styles.photoContainer}>
-              <Image
-                source={getImageSource(item, DEFAULT_PROFILE_IMAGE)}
-                style={styles.photo}
-              />
-            </View>
-          )}
-        />
-      )}
-      {selectedTab === 'videos' && (
-        <>
-          {myBoards.filter(post =>
-            post.contents?.some(
-              c =>
-                c.type === 'File' &&
-                typeof c.value === 'string' &&
-                (c.value.endsWith('.mp4') || c.value.endsWith('.mov')),
-            ),
-          ).length > 0 ? (
-            <FlatList
-              data={myBoards.filter(post =>
-                post.contents?.some(
-                  c =>
-                    c.type === 'File' &&
-                    typeof c.value === 'string' &&
-                    (c.value.endsWith('.mp4') || c.value.endsWith('.mov')),
-                ),
-              )}
-              keyExtractor={item => item.id.toString()}
-              renderItem={({item}) => (
-                <View style={styles.videoCard}>
-                  <Text style={styles.videoTitle}>{item.titleContent}</Text>
-                  <Video
-                    source={{
-                      uri:
-                        item.contents?.find(
-                          c => c.type === 'File' && c.value.endsWith('.mp4'),
-                        )?.value || '',
-                    }}
-                    style={styles.videoPlayer}
-                    resizeMode="cover"
-                    repeat
-                    muted
-                    controls={true}
-                  />
-                </View>
-              )}
-            />
-          ) : (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>
-                아직 업로드된 비디오가 없습니다.
-              </Text>
-            </View>
-          )}
-        </>
-      )}
+      {selectedTab === 'photos' && <MyPhotos userId={Number(userData.id)} />}
+      {selectedTab === 'videos' && <MyVideos userId={Number(userData.id)} />}
     </View>
   );
 };
