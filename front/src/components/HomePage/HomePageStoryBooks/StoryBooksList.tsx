@@ -50,55 +50,43 @@ const StoryBooksList = () => {
         <Icon
           name="calendar-today"
           size={20}
-          color="#4D7CFE"
+          color="#999"
           style={{marginRight: 6}}
         />
         <Text style={styles.sectionTitle}> 오늘의 추천 일기 </Text>
       </View>
-      {/* 🔘 좋아요순 / 조회수순 토글 버튼 */}
-      <View style={styles.toggleContainer}>
-        <TouchableOpacity
-          style={[
-            styles.toggleButton,
-            sortBy === 'favoriteCount' && styles.activeButton,
-          ]}
-          onPress={() => setSortBy('favoriteCount')}>
+      <View style={styles.tabRow}>
+        <TouchableOpacity onPress={() => setSortBy('favoriteCount')}>
           <Text
-            style={
-              sortBy === 'favoriteCount'
-                ? styles.activeText
-                : styles.inactiveText
-            }>
-            ❤️ 좋아요순
+            style={[
+              styles.tabText,
+              sortBy === 'favoriteCount' && styles.activeTabText,
+            ]}>
+            좋아요순
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[
-            styles.toggleButton,
-            sortBy === 'viewCount' && styles.activeButton,
-          ]}
-          onPress={() => setSortBy('viewCount')}>
+        <Text style={styles.separator}>|</Text>
+
+        <TouchableOpacity onPress={() => setSortBy('viewCount')}>
           <Text
-            style={
-              sortBy === 'viewCount' ? styles.activeText : styles.inactiveText
-            }>
-            👀 조회수순
+            style={[
+              styles.tabText,
+              sortBy === 'viewCount' && styles.activeTabText,
+            ]}>
+            조회수순
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.toggleButton,
-            sortBy === 'writeDatetime' && styles.activeButton,
-          ]}
-          onPress={() => setSortBy('writeDatetime')}>
+
+        <Text style={styles.separator}>|</Text>
+
+        <TouchableOpacity onPress={() => setSortBy('writeDatetime')}>
           <Text
-            style={
-              sortBy === 'writeDatetime'
-                ? styles.activeText
-                : styles.inactiveText
-            }>
-            🗓️ 최신순
+            style={[
+              styles.tabText,
+              sortBy === 'writeDatetime' && styles.activeTabText,
+            ]}>
+            최신순
           </Text>
         </TouchableOpacity>
       </View>
@@ -133,29 +121,31 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#4D7CFE',
+    color: '#000000',
   },
-  toggleContainer: {
+  tabRow: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 10,
+    justifyContent: 'flex-end', // 👉 오른쪽 끝으로 정렬
+    alignItems: 'center',
+    marginBottom: 12,
+    marginTop: 2,
+    paddingRight: 4, // 오른쪽 간격 살짝 여유
   },
-  toggleButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    marginHorizontal: 5,
-    backgroundColor: '#F0F0F0',
+  tabText: {
+    fontSize: 14,
+    color: '#aaa', // 🔹 기본 회색
+    fontWeight: '400',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
   },
-  activeButton: {
-    backgroundColor: '#4D7CFE',
+  separator: {
+    fontSize: 14,
+    color: '#ccc',
   },
-  activeText: {
-    color: '#fff',
+  activeTabText: {
+    color: '#4D7CFE', // 🔵 선택된 탭만 파란색
     fontWeight: 'bold',
-  },
-  inactiveText: {
-    color: '#444',
+    textDecorationLine: 'underline',
   },
   emptyText: {
     textAlign: 'center',

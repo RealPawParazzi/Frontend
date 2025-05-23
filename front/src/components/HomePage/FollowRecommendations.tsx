@@ -75,7 +75,7 @@ const FollowRecommendations = () => {
         <Icon
           name="group-add"
           size={20}
-          color="#4D7CFE"
+          color="#999"
           style={{marginRight: 6}}
         />
         <Text style={styles.sectionTitle}> 팔로우 추천 </Text>
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#4D7CFE',
+    color: '#000000',
   },
   cardWrapper: {
     width: 150,

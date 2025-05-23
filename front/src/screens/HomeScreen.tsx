@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(237,236,236,0.99)',
   },
   sectionWrapper: {
-    marginVertical: 2, // 섹션 간 여백
+    marginVertical: 1, // 섹션 간 여백
     paddingHorizontal: 10, // 좌우 패딩
     paddingVertical: 12,
     backgroundColor: '#fff',

@@ -177,7 +177,7 @@ const StoryReels = () => {
 const styles = StyleSheet.create({
     reelsContainer: {
         marginTop: 5,
-        marginBottom: 2,
+        marginBottom: 4,
     },
     myStoryWrapper: {
         marginHorizontal: 8,
