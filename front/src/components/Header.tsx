@@ -24,7 +24,7 @@ const Header = () => {
     if (!pets?.length || isDummyPet) { return DEFAULT_IMAGE; }
 
 
-    const petImage = pets[1]?.petImg;
+    const petImage = pets[0]?.petImg;
     if (!petImage) {
       return DEFAULT_IMAGE;
     }
@@ -56,7 +56,7 @@ const Header = () => {
       <TouchableOpacity style={styles.petContainer}>
         <Image source={getImageSource()} style={styles.petImage} />
         <Text style={styles.petName}>
-          {isDummyPet ? '반려동물을 등록해 주세요!' : pets[1]?.name}
+          {isDummyPet ? '반려동물을 등록해 주세요!' : pets[0]?.name}
         </Text>
         <Icon
           name={

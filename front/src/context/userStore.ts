@@ -91,21 +91,8 @@ const defaultUserData: UserData = {
   nickName: '더미 닉네임', // 기본 닉네임 추가
   name: '더미 사용자',
   profileImage: require('../assets/images/user-2.png'), //  require 유지
-  petCount: 2,
-  petList: [
-    {
-      id: '1',
-      name: '김초코',
-      species: '강아지',
-      image: require('../assets/images/pets-3.gif'),
-    },
-    {
-      id: '2',
-      name: '딸기',
-      species: '고양이',
-      image: require('../assets/images/pets-2.jpg'),
-    },
-  ],
+  petCount: 0,
+  petList: [],
   recentPosts: [
     {
       id: '1',

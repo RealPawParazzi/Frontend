@@ -378,9 +378,11 @@ const OwnerInfo = () => {
       </View>
 
       {/* ✅ 선택된 탭에 따라 다른 컴포넌트 출력 */}
-      {selectedTab === 'posts' && <PostList userId={Number(userData.id)} />}
-      {selectedTab === 'photos' && <MyPhotos userId={Number(userData.id)} />}
-      {selectedTab === 'videos' && <MyVideos userId={Number(userData.id)} />}
+      <View style={styles.tabContentWrapper}>
+        {selectedTab === 'posts' && <PostList userId={Number(userData.id)} />}
+        {selectedTab === 'photos' && <MyPhotos userId={Number(userData.id)} />}
+        {selectedTab === 'videos' && <MyVideos userId={Number(userData.id)} />}
+      </View>
     </View>
   );
 };
@@ -553,29 +555,9 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 5,
   },
-  videoCard: {
-    marginBottom: 20,
-    borderRadius: 10,
-    overflow: 'hidden',
-    backgroundColor: '#000',
-  },
-  videoTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#fff',
-    padding: 8,
-    backgroundColor: '#222',
-  },
-  videoPlayer: {
-    width: '100%',
-    height: 300,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  emptyText: {
-    color: 'gray',
+  tabContentWrapper: {
+    marginTop: 8,
+    paddingBottom: 300, // 📌 탭 아래 여백
   },
 });
 
