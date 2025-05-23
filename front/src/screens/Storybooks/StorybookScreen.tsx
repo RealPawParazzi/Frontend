@@ -264,6 +264,7 @@ const StorybookScreen = ({navigation, route}: any) => {
         mediaFiles as any[],
         coverImage as any,
         firstText,
+        tags.join(', ') // ✅ 콤마로 연결된 문자열로 변환하여 tag 파라미터에 전달
       );
 
       console.log('🟡 게시글 등록 요청 데이터:');
@@ -271,6 +272,7 @@ const StorybookScreen = ({navigation, route}: any) => {
       console.log('🖼️ mediaFiles:', mediaFiles);
       console.log('🏞️ coverImage:', coverImage);
       console.log('📌 titleContent:', firstText);
+      console.log('🏷️ tags:', tags);
 
       Alert.alert('✅ 등록 완료', '게시글이 성공적으로 등록되었습니다.', [
         {text: '확인', onPress: () => navigation.goBack()},
@@ -323,8 +325,10 @@ const StorybookScreen = ({navigation, route}: any) => {
             {tags.map((tag, index) => (
               <View key={index} style={styles.tagChip}>
                 <Text style={styles.tagText}>#{tag}</Text>
-                <TouchableOpacity onPress={() =>
-                  setTags(prev => prev.filter((_, i) => i !== index))}>
+                <TouchableOpacity
+                  onPress={() =>
+                    setTags(prev => prev.filter((_, i) => i !== index))
+                  }>
                   <MaterialIcons name="close" size={16} color="#aaa" />
                 </TouchableOpacity>
               </View>
@@ -401,14 +405,16 @@ const StorybookScreen = ({navigation, route}: any) => {
       </KeyboardAvoidingView>
 
       {/* ➕ Floating Action Button (태그 추가용) */}
-      <TouchableOpacity style={styles.fab} onPress={() => setTagModalVisible(true)}>
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => setTagModalVisible(true)}>
         <MaterialIcons name="add" size={30} color="#fff" />
       </TouchableOpacity>
 
       <TagInputModal
         visible={tagModalVisible}
         onClose={() => setTagModalVisible(false)}
-        onAddTag={(newTag) => {
+        onAddTag={newTag => {
           if (!tags.includes(newTag)) {
             setTags([...tags, newTag]);
           }
@@ -424,7 +430,7 @@ const StorybookScreen = ({navigation, route}: any) => {
           onPress={() => setIsPublic(prev => !prev)}>
           <MaterialIcons
             name={isPublic ? 'public' : 'lock'}
-            size={28}
+            size={30}
             color={isPublic ? '#4D7CFE' : '#aaa'}
           />
           {/*<Text style={[styles.iconLabel, {color: isPublic ? '#4D7CFE' : '#aaa'}]}>*/}
@@ -433,7 +439,7 @@ const StorybookScreen = ({navigation, route}: any) => {
         </TouchableOpacity>
         {/* 🖼️ 미디어 추가 */}
         <TouchableOpacity style={styles.bottomIcon} onPress={pickMedia}>
-          <MaterialIcons name="add-photo-alternate" size={28} color="#4D7CFE" />
+          <MaterialIcons name="add-photo-alternate" size={30} color="#4D7CFE" />
           {/*<Text style={styles.iconLabel}>미디어</Text>*/}
         </TouchableOpacity>
         {/* ✨ AI 기능 자리 */}
@@ -442,7 +448,7 @@ const StorybookScreen = ({navigation, route}: any) => {
           onPress={() =>
             Alert.alert('준비 중!', 'AI 일기 생성 기능은 곧 추가됩니다.')
           }>
-          <MaterialIcons name="smart-toy" size={28} color="#aaa" />
+          <MaterialIcons name="smart-toy" size={30} color="#aaa" />
           {/*<Text style={[styles.iconLabel, {color: '#aaa'}]}>AI</Text>*/}
         </TouchableOpacity>
       </Animated.View>
@@ -474,34 +480,34 @@ const styles = StyleSheet.create({
     borderColor: '#EEE',
     marginBottom: 8,
   },
-    tagWrapper: {
-      paddingHorizontal: 16,
-      paddingTop: 10,
-      paddingBottom: 10,
-    },
+  tagWrapper: {
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 10,
+  },
 
-    tagContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-    },
+  tagContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
 
-    tagChip: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: '#f0f0f0',
-      borderRadius: 20,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      marginRight: 8,
-    },
+  tagChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginRight: 8,
+  },
 
-    tagText: {
-      fontSize: 14,
-      fontWeight: 'bold',
-      color: '#333',
-      marginRight: 4,
-    },
+  tagText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+    marginRight: 4,
+  },
   storyContainer: {paddingHorizontal: 20, paddingBottom: 80},
   storyInput: {
     fontSize: 16,
@@ -550,8 +556,8 @@ const styles = StyleSheet.create({
   },
   bottomIcon: {
     width: 60,
-    height: 40,
-    marginBottom: 10,
+    height: 60,
+    marginBottom: 5,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 5,

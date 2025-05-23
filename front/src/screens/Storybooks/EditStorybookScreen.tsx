@@ -22,6 +22,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import boardStore from '../../context/boardStore';
 import {RouteProp} from '@react-navigation/native';
 import {RootStackParamList} from '../../navigation/AppNavigator';
+import TagInputModal from '../../components/TagInputModal';
 
 /**
  * 📄 스토리북 게시글 수정 화면
@@ -61,6 +62,9 @@ const EditStorybookScreen = ({
   const [isPublic, setIsPublic] = useState(true); // 공개 여부
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<ScrollView>(null);
+
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagModalVisible, setTagModalVisible] = useState(false);
 
   const bottomBarAnim = useRef(new Animated.Value(0)).current;
 
@@ -123,6 +127,7 @@ const EditStorybookScreen = ({
       );
       setTitleImage(selectedBoard.titleImage || null);
       setIsPublic(selectedBoard.visibility === 'PUBLIC');
+      setTags(selectedBoard.tag ? selectedBoard.tag.split(', ') : []);
     }
 
     console.log('❗️현재 선택된 게시글: ', selectedBoard);
@@ -247,7 +252,20 @@ const EditStorybookScreen = ({
         mediaFiles as any[],
         coverImage as any,
         firstText,
+        tags.join(', '), // ✅ 여기에 tag 추가!
       );
+
+      // 🔸 게시글 수정 요청 콘솔 찍어보기
+      console.log('게시글 수정 요청:', {
+        title,
+        visibility: isPublic ? 'PUBLIC' : 'FOLLOWERS',
+        contents: validBlocks,
+        mediaFiles,
+        coverImage,
+        firstText,
+        tags: tags.join(', '),
+      });
+
       await fetchBoardDetail(boardId); // 수정 후 다시 데이터 불러오기
       Alert.alert('✅ 수정 완료', '게시글이 성공적으로 수정되었습니다.', [
         {text: '확인', onPress: () => navigation.goBack()},
@@ -294,6 +312,27 @@ const EditStorybookScreen = ({
         value={title}
         onChangeText={setTitle}
       />
+
+      {tags.length > 0 && (
+        <View style={styles.tagWrapper}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.tagContainer}>
+            {tags.map((tag, index) => (
+              <View key={index} style={styles.tagChip}>
+                <Text style={styles.tagText}>#{tag}</Text>
+                <TouchableOpacity
+                  onPress={() =>
+                    setTags(prev => prev.filter((_, i) => i !== index))
+                  }>
+                  <MaterialIcons name="close" size={16} color="#aaa" />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+      )}
 
       {/* 본문 입력 */}
       <KeyboardAvoidingView
@@ -373,8 +412,24 @@ const EditStorybookScreen = ({
         </ScrollView>
       </KeyboardAvoidingView>
 
+      {/* ➕ Floating Action Button (태그 추가용) */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => setTagModalVisible(true)}>
+        <MaterialIcons name="add" size={30} color="#fff" />
+      </TouchableOpacity>
+
+      <TagInputModal
+        visible={tagModalVisible}
+        onClose={() => setTagModalVisible(false)}
+        onAddTag={newTag => {
+          if (!tags.includes(newTag)) {
+            setTags([...tags, newTag]);
+          }
+        }}
+      />
+
       <Animated.View style={[styles.bottomBar, {bottom: bottomBarAnim}]}>
-        {/* 버튼들 */}
         <TouchableOpacity
           style={styles.bottomIcon}
           onPress={() => setIsPublic(prev => !prev)}>
@@ -384,11 +439,11 @@ const EditStorybookScreen = ({
             color={isPublic ? '#4D7CFE' : '#aaa'}
           />
         </TouchableOpacity>
-        {/* 🖼️ 미디어 추가 */}
+
         <TouchableOpacity style={styles.bottomIcon} onPress={pickMedia}>
           <MaterialIcons name="add-photo-alternate" size={28} color="#4D7CFE" />
         </TouchableOpacity>
-        {/* 🤖 AI 기능 자리 */}
+
         <TouchableOpacity
           style={styles.bottomIcon}
           onPress={() =>
@@ -420,10 +475,36 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: 'bold',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 20,
     borderBottomWidth: 1,
     borderColor: '#EEE',
     marginBottom: 8,
+  },
+  // 추가된 스타일 정의
+  tagWrapper: {
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 10,
+  },
+  tagContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  tagChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginRight: 8,
+  },
+  tagText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+    marginRight: 4,
   },
   storyContainer: {paddingHorizontal: 20, paddingBottom: 80},
   textArea: {fontSize: 16, color: '#333', minHeight: 40, paddingVertical: 8},
@@ -459,20 +540,37 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     paddingVertical: 10,
-    borderTopWidth: 1,
+    borderTopWidth: 3,
     borderColor: '#EEE',
     backgroundColor: '#FFF',
     position: 'absolute',
-    bottom: 0,
     width: '100%',
-    zIndex: 99,
+    height: 75,
   },
   bottomIcon: {
     width: 60,
-    height: 40,
+    height: 60,
+    marginBottom: 5,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 5,
+  },
+  // 스타일 추가
+  fab: {
+    position: 'absolute',
+    bottom: 95, // 하단바 위에 떠 있도록
+    right: 20,
+    width: 57,
+    height: 57,
+    borderRadius: 30,
+    backgroundColor: '#4D7CFE',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
   },
   iconText: {fontSize: 22},
   loader: {flex: 1, justifyContent: 'center', alignItems: 'center'},
