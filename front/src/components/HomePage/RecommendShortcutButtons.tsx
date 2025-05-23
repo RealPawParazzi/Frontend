@@ -82,7 +82,7 @@ const RecommendShortcutButtons = () => {
             style={styles.button}>
             <Icon
               name={item.iconName}
-              size={30}
+              size={32}
               color={isPressed ? '#555' : item.color}
               style={[styles.icon, isPressed && {transform: [{scale: 1.1}]}]}
             />
@@ -100,8 +100,8 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginTop: 25,
-    marginBottom: 25,
+    marginTop: 15,
+    marginBottom: 15,
   },
   button: {
     alignItems: 'center',
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   label: {
-    fontSize: 10,
+    fontSize: 10.2,
     color: '#333',
     textAlign: 'center',
   },

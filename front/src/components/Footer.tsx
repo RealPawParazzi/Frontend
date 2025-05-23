@@ -57,13 +57,13 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#f7f7f7',
     alignItems: 'center',
-    marginTop: 30,
+    marginTop: 2,
     height: 350,
   },
   linkRow: {
     flexDirection: 'row',
     marginBottom: 10,
-    marginTop: 10,
+    marginTop: 30,
   },
   link: {
     color: '#4d7cfe',

@@ -1,7 +1,6 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   ScrollView,
   RefreshControl,
@@ -83,33 +82,42 @@ const HomeScreen = () => {
           />
         }>
         {/* 🔵 스토리 릴 (최상단) */}
-        <StoryReels />
+        <View style={styles.sectionWrapper}>
+          <StoryReels />
+        </View>
 
         {/* 👇 디바이더 */}
-        <View style={styles.divider} />
+        {/*<View style={styles.divider} />*/}
 
         {/* 🎞️ 오늘의 추억 영상 */}
-        <MemoryVideo />
+        <View style={styles.sectionWrapper}>
+          <MemoryVideo />
+        </View>
 
         {/* 👇 디바이더 추가 */}
-        <View style={styles.divider} />
+        {/*<View style={styles.divider} />*/}
 
         {/* 추천 컨텐츠 아이콘들 */}
-        <RecommendShortcutButtons />
+        <View style={styles.sectionWrapper}>
+          <RecommendShortcutButtons />
+        </View>
 
         {/* 👇 디바이더 추가 */}
-        <View style={styles.divider} />
+        {/*<View style={styles.divider} />*/}
 
         {/* 👥 팔로우 추천 */}
-        <Text style={styles.sectionTitle}> 👥 팔로우 추천 </Text>
-        <FollowRecommendations />
+        <View style={styles.sectionWrapper}>
+          <FollowRecommendations />
+        </View>
 
         {/* 👇 디바이더 추가 */}
-        <View style={styles.divider} />
+        {/*<View style={styles.divider} />*/}
 
         {/* 📖 StoryBooks for Today */}
-        <Text style={styles.sectionTitle}> 📖 오늘의 게시물 </Text>
-        <StoryBooksList />
+        <View style={styles.sectionWrapper}>
+          <StoryBooksList />
+        </View>
+
         <Footer />
       </ScrollView>
     </View>
@@ -119,20 +127,21 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'rgba(237,236,236,0.99)',
+  },
+  sectionWrapper: {
+    marginVertical: 2, // 섹션 간 여백
+    paddingHorizontal: 10, // 좌우 패딩
+    paddingVertical: 12,
     backgroundColor: '#fff',
-    paddingHorizontal: 10,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 20,
-  },
-  divider: {
-    height: 2,
-    width: '100%', // 👉 전체 너비
-    backgroundColor: '#e0e0e0',
-    marginVertical: 1,
-  },
+  // divider: {
+  //   height: 2,
+  //   width: '100%', // 👉 전체 너비
+  //   backgroundColor: '#e0e0e0',
+  //   marginHorizontal: -0,
+  //   marginVertical: 5,
+  // },
   lottieWrapper: {
     position: 'absolute',
     top: 0,
