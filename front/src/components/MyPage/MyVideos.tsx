@@ -10,6 +10,8 @@ import {
 import {useNavigation} from '@react-navigation/native';
 import {createThumbnail} from 'react-native-create-thumbnail';
 import boardStore from '../../context/boardStore';
+import EmptyPostPrompt from '../../common/EmptyPostPrompt';
+
 
 const DEFAULT_THUMBNAIL = require('../../assets/images/user-2.png');
 
@@ -93,6 +95,7 @@ const MyVideos: React.FC<Props> = ({userId}) => {
     generateThumbnails();
   }, [videoBoards]);
 
+
   return (
     <FlatList
       data={videoWithThumbs}
@@ -116,6 +119,20 @@ const MyVideos: React.FC<Props> = ({userId}) => {
           </View>
         </TouchableOpacity>
       )}
+      ListEmptyComponent={
+        <View style={styles.emptyContainer}>
+          <Text style={styles.noPosts}>🎥 영상이 포함된 게시글이 없습니다!</Text>
+          <Text style={styles.suggestion}>첫 게시글을 업로드 해볼까요?</Text>
+          <TouchableOpacity
+            style={styles.uploadButton}
+            onPress={() => {
+              // @ts-ignore
+              navigation.navigate('StorybookScreen');
+            }}>
+            <Text style={styles.uploadButtonText}>+ 새 게시글 작성</Text>
+          </TouchableOpacity>
+        </View>
+      }
     />
   );
 };
@@ -140,7 +157,7 @@ const styles = StyleSheet.create({
   thumbnail: {
     width: '100%',
     height: 200,
-    backgroundColor: '#000',
+    backgroundColor: 'rgba(245,245,245,0.75)',
   },
   caption: {
     backgroundColor: '#eee',
@@ -151,6 +168,31 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
     fontWeight: '500',
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    padding: 20,
+    margin: 10,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 10,
+  },
+  noPosts: {fontSize: 18, fontWeight: 'bold', color: '#444', marginBottom: 5},
+  suggestion: {fontSize: 14, color: 'gray', marginBottom: 15},
+  uploadButton: {
+    backgroundColor: '#4D7CFE',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  uploadButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  fullHeightCenter: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    padding: 20,
   },
 });
 
