@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,9 @@ import {
   ActivityIndicator,
   ActionSheetIOS,
   Platform,
+  Keyboard,
+  Animated,
+  Easing,
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Video from 'react-native-video'; // Video 컴포넌트 추가
@@ -54,6 +57,34 @@ const StorybookDetailScreen = ({
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  // 🔥 댓글 입력창 위치 애니메이션용
+  const inputBarAnim = useRef(new Animated.Value(30)).current;
+
+  useEffect(() => {
+    const showSub = Keyboard.addListener('keyboardWillShow', e => {
+      Animated.timing(inputBarAnim, {
+        toValue: e.endCoordinates.height + 10,
+        duration: 250,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: false,
+      }).start();
+    });
+
+    const hideSub = Keyboard.addListener('keyboardWillHide', () => {
+      Animated.timing(inputBarAnim, {
+        toValue: 30,
+        duration: 250,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: false,
+      }).start();
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [inputBarAnim]);
 
   /**
    * ✅ 초기 데이터 로드 (게시글 상세 및 좋아요 정보)
@@ -272,7 +303,7 @@ const StorybookDetailScreen = ({
         {/* 본문 스크롤뷰 */}
         <ScrollView
           style={styles.contentContainer}
-          contentContainerStyle={{paddingBottom: 60}}
+          contentContainerStyle={{paddingBottom: 300}}
           keyboardShouldPersistTaps="handled">
           {/* 작성자 정보 */}
           <View style={styles.authorContainer}>
@@ -376,10 +407,9 @@ const StorybookDetailScreen = ({
           <CommentList boardId={boardId} />
         </ScrollView>
       </View>
-      {/* 🔥 댓글 입력 바 - 하단에 고정 */}
-      <View style={styles.commentInputContainer}>
+      <Animated.View style={[styles.commentInputContainer, { bottom: inputBarAnim }]}>
         <CommentInput boardId={boardId} />
-      </View>
+      </Animated.View>
     </SafeAreaView>
   );
 };
@@ -469,7 +499,7 @@ const styles = StyleSheet.create({
   bottomBar: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginTop : 3,
+    marginTop: 3,
     paddingVertical: 12,
     backgroundColor: '#FFF',
     borderTopWidth: 2,
@@ -484,11 +514,10 @@ const styles = StyleSheet.create({
   /* 🔥 댓글 입력 바를 하단에 고정 */
   commentInputContainer: {
     position: 'absolute',
-    bottom: 30,
     left: 0,
     right: 0,
     backgroundColor: '#FFF',
-    paddingVertical: 10,
+    paddingVertical: 0,
     borderTopWidth: 5,
     borderColor: '#EEE',
   },

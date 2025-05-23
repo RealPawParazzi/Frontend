@@ -23,11 +23,7 @@ const CommentInput = ({ boardId }: CommentInputProps) => {
     };
 
     return (
-        <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-            style={styles.container}
-        >
+      <View style={styles.container}>
             <View style={styles.inputWrapper}>
                 <TextInput
                     style={styles.input}
@@ -39,14 +35,14 @@ const CommentInput = ({ boardId }: CommentInputProps) => {
                     <MaterialIcons name="send" size={24} color={commentText ? '#4D7CFE' : 'gray'} />
                 </TouchableOpacity>
             </View>
-        </KeyboardAvoidingView>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         position: 'absolute',
-        bottom: 0,
+        bottom: -10,
         width: '100%',
         backgroundColor: '#FFF',
         paddingVertical: 8,
@@ -54,11 +50,11 @@ const styles = StyleSheet.create({
         borderColor: '#EEE',
     },
     inputWrapper: {
-        marginLeft: 25,
-        marginRight: 10,
+        marginLeft: 8,
+        marginRight: 8,
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 15,
+        paddingHorizontal: 10,
     },
     input: {
         flex: 1,
@@ -68,8 +64,8 @@ const styles = StyleSheet.create({
         borderRadius: 20,
     },
     sendButton: {
-        marginLeft: 10,
-        padding: 8,
+        marginLeft: 5,
+        padding: 5,
     },
 });
 
