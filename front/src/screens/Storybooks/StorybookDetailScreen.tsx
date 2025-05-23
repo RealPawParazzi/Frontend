@@ -239,17 +239,18 @@ const StorybookDetailScreen = ({
 
   // ✅ 게시글 날짜 포맷팅 함수
   const formatDate = (dateString: string) => {
-    if (!dateString) {
-      return '';
-    }
+    if (!dateString) return '';
 
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString('ko-KR', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      });
+
+      // ✅ 오전/오후 시간 포맷 생성
+      const isAM = date.getHours() < 12;
+      const hour12 = date.getHours() % 12 || 12;
+      const ampm = isAM ? '오전' : '오후';
+      const minute = date.getMinutes().toString().padStart(2, '0');
+
+      return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일 ${ampm} ${hour12}시 ${minute}분`;
     } catch (error) {
       console.error('날짜 포맷팅 오류:', error);
       return dateString;
@@ -503,6 +504,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     backgroundColor: '#FFF',
     borderTopWidth: 2,
+    // borderBottomWidth: 2,
     borderColor: '#EEE',
   },
   bottomIcon: {flexDirection: 'row', alignItems: 'center'},

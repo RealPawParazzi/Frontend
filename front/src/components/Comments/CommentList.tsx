@@ -28,7 +28,7 @@ const CommentList = ({ boardId }: CommentListProps) => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, paddingHorizontal: 10, paddingTop: 5 },
+    container: { flex: 1,  paddingTop: 10 },
     listContainer: { paddingBottom: 20 },
 });
 
