@@ -1,11 +1,22 @@
 import React, {useEffect, useState} from 'react';
-import {View, Text, Image, TouchableOpacity, StyleSheet} from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  ActionSheetIOS,
+  Platform,
+} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../navigation/AppNavigator';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import {getImageSource} from '../../utils/imageUtils';
 import {createThumbnail} from 'react-native-create-thumbnail';
+import boardStore from '../../context/boardStore';
+import userStore from '../../context/userStore';
 
 const DEFAULT_PROFILE_IMAGE = require('../../assets/images/user-2.png');
 
@@ -34,6 +45,8 @@ type NavigationProp = StackNavigationProp<
 /** ✅ 게시물 카드 컴포넌트 */
 const PostCard: React.FC<{post: Post}> = ({post}) => {
   const navigation = useNavigation<NavigationProp>();
+  const {userData} = userStore(); // 로그인 유저
+  const {deleteExistingBoard, fetchUserBoards} = boardStore(); // 삭제 및 새로고침
 
   // 썸네일 상태 추가
   const [thumbnailUri, setThumbnailUri] = useState<string | null>(null);
@@ -47,7 +60,7 @@ const PostCard: React.FC<{post: Post}> = ({post}) => {
     const generateThumbnail = async () => {
       if (isVideo) {
         try {
-          const { path } = await createThumbnail({
+          const {path} = await createThumbnail({
             url: post.titleImage,
             timeStamp: 1000,
           });
@@ -60,6 +73,69 @@ const PostCard: React.FC<{post: Post}> = ({post}) => {
     generateThumbnail();
   }, [isVideo, post.titleImage]);
 
+  // ✅ 삭제 로직
+  const handleDelete = () => {
+    Alert.alert('삭제 확인', '정말 삭제하시겠습니까?', [
+      {text: '취소', style: 'cancel'},
+      {
+        text: '삭제',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deleteExistingBoard(post.id);
+            await fetchUserBoards(Number(userData.id)); // 삭제 후 새로고침
+            Alert.alert('삭제 완료', '게시글이 삭제되었습니다.');
+          } catch (err) {
+            Alert.alert('오류', '게시글 삭제 중 오류가 발생했습니다.');
+            console.error('❌ 삭제 오류:', err);
+          }
+        },
+      },
+    ]);
+  };
+
+  // ✅ 햄버거 메뉴 옵션
+  const handleOptions = () => {
+    const isAuthor = post.author.nickname === userData.nickName;
+
+    if (!isAuthor) {
+      return;
+    }
+
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['수정하기 ✏️', '삭제하기 ❌', '취소'],
+          cancelButtonIndex: 2,
+          destructiveButtonIndex: 1,
+        },
+        buttonIndex => {
+          if (buttonIndex === 0) {
+            // @ts-ignore
+            navigation.navigate('EditStorybookScreen', {boardId: post.id});
+          } else if (buttonIndex === 1) {
+            handleDelete();
+          }
+        },
+      );
+    } else {
+      Alert.alert('게시글 관리', '수정 또는 삭제하시겠습니까?', [
+        {
+          text: '수정하기',
+          onPress: () => {
+            // @ts-ignore
+            navigation.navigate('EditStorybookScreen', {boardId: post.id});
+          },
+        },
+        {
+          text: '삭제하기',
+          style: 'destructive',
+          onPress: handleDelete,
+        },
+        {text: '취소', style: 'cancel'},
+      ]);
+    }
+  };
 
   return (
     <View style={styles.card}>
@@ -82,25 +158,25 @@ const PostCard: React.FC<{post: Post}> = ({post}) => {
         </View>
 
         {/* 🔹 옵션 버튼 (게시글 수정/삭제) */}
-        <TouchableOpacity>
-          <Icon name="more-vert" size={24} color="gray" />
-        </TouchableOpacity>
+        {/* ✅ 로그인 유저가 작성자일 때만 햄버거 메뉴 출력 */}
+        {post.author.nickname === userData.nickName && (
+          <TouchableOpacity onPress={handleOptions}>
+            <Icon name="more-vert" size={24} color="gray" />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* 🔹 게시글 메인 이미지 또는 동영상 */}
       {/* 🔹 게시글 메인 이미지 or 썸네일 이미지 */}
       <TouchableOpacity
         onPress={() =>
-          navigation.navigate('StorybookDetailScreen', { boardId: post.id })
+          navigation.navigate('StorybookDetailScreen', {boardId: post.id})
         }>
         {isVideo ? (
           thumbnailUri ? (
-            <Image
-              source={{ uri: thumbnailUri }}
-              style={styles.postImage}
-            />
+            <Image source={{uri: thumbnailUri}} style={styles.postImage} />
           ) : (
-            <View style={[styles.postImage, { backgroundColor: '#000' }]} />
+            <View style={[styles.postImage, {backgroundColor: '#000'}]} />
           )
         ) : (
           <Image
@@ -111,7 +187,9 @@ const PostCard: React.FC<{post: Post}> = ({post}) => {
       </TouchableOpacity>
 
       {/* 🔹 타이틀 콘텐츠 */}
-      <Text style={styles.titleContent}>{post.titleContent}</Text>
+      <Text style={styles.title}>{post.title}</Text>
+      <Text style={styles.contentText}>{post.titleContent}</Text>
+
 
       {/* 🔹 하단 아이콘: 좋아요, 댓글 */}
       <View style={styles.footer}>
@@ -133,64 +211,83 @@ const PostCard: React.FC<{post: Post}> = ({post}) => {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 12,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderBottomColor: '#eee',
+    borderBottomWidth: 1.5,
   },
+
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 12,
     marginBottom: 8,
   },
+
   profileContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
+
   profileImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     marginRight: 10,
   },
+
   authorName: {
     fontSize: 14,
     fontWeight: 'bold',
+    color: '#111',
   },
+
   postTime: {
     fontSize: 12,
-    color: 'gray',
+    color: '#999',
   },
+
   postImage: {
     width: '100%',
-    height: 200,
-    borderRadius: 10,
-    marginBottom: 8,
-    backgroundColor: '#000', // 동영상 대비 배경
+    height: 260,
+    backgroundColor: '#000',
+    borderRadius: 12,
+  },
 
+  title: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#111',
+    paddingHorizontal: 12,
+    paddingTop: 10,
   },
-  titleContent: {
-    fontSize: 14,
-    color: '#444',
-    marginBottom: 10,
+
+  contentText: {
+    fontSize: 13,
+    color: '#333',
+    paddingHorizontal: 12,
+    paddingTop: 4,
+    paddingBottom: 10,
+    lineHeight: 18,
   },
+
   footer: {
     flexDirection: 'row',
     justifyContent: 'flex-start',
-    gap: 20,
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 10,
   },
+
   iconContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginRight: 16,
   },
+
   iconText: {
-    fontSize: 14,
-    color: '#444',
+    fontSize: 13,
+    color: '#555',
     marginLeft: 4,
   },
 });
