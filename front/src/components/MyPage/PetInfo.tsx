@@ -30,12 +30,18 @@ const PetInfo = () => {
         return type.toLowerCase() === 'dog' ? '🐶' : '🐱';
     };
 
-    // ✅ 그리드 데이터 (펫 리스트 + 추가 버튼 포함)
-    const gridData: PetItem[] = [...pets, ...(isAddButton ? [{ isAddButton: true }] : [])];
+  // 🔄 gridData 설정 부분 수정
+  const realPets = pets.filter(p => p.petId !== 0); // ✅ 더미 제외
+  const hasRealPet = realPets.length > 0;
+
+  const gridData: PetItem[] = hasRealPet
+    ? [...realPets, { isAddButton: true }]
+    : [{ isAddButton: true }];
+
 
     return (
         <View style={styles.container}>
-            <Text style={styles.sectionTitle}>Your Buddies {pets.length}</Text>
+            <Text style={styles.sectionTitle}>Your Buddies {realPets.length}</Text>
 
             {/* ✅ 반려동물 리스트 (2열 그리드) */}
             <FlatList
@@ -46,8 +52,12 @@ const PetInfo = () => {
                     (item as AddPetButton).isAddButton ? (
                         // 🔹 반려동물 추가 버튼
                         <TouchableOpacity
-                            style={[styles.petCard, styles.addPetCard]}
-                            //@ts-ignore
+                          style={[
+                            styles.petCard,
+                            styles.addPetCard,
+                            !hasRealPet && styles.fullWidthAddCard, // 👉 한 마리도 없으면 카드 크게!
+                          ]}
+                          //@ts-ignore
                             onPress={() => navigation.navigate('PetRegistrationScreen')}
                         >
                             <MaterialIcons name="add" size={35} color="gray" />
@@ -95,6 +105,7 @@ const styles = StyleSheet.create({
     container: {
         paddingHorizontal: 15,
         paddingVertical: 10,
+      paddingBottom: 1300,
     },
 
     sectionTitle: {
@@ -172,6 +183,11 @@ const styles = StyleSheet.create({
         color: 'gray',
         marginTop: 5,
     },
+  fullWidthAddCard: {
+    width: SCREEN_WIDTH - 30, // 한 줄 전체
+    height: 200,
+    alignSelf: 'center',
+  },
 });
 
 export default PetInfo;
