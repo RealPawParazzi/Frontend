@@ -10,6 +10,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import {useNavigation} from '@react-navigation/native';
 
 interface Pet {
   id: string;
@@ -38,16 +39,46 @@ const PetSelectorModal: React.FC<Props> = ({
   onConfirm,
   onClose,
 }) => {
+  const navigation = useNavigation();
+
+  const filteredPets = pets.filter(p => p.id !== '0'); // ✅ 더미 데이터 제외
+  const isOnlyDummy = pets.length === 1 && pets[0].id === '0';
+
+
   return (
     <Modal visible={isVisible} transparent animationType="slide">
       <View style={styles.container}>
         <View style={styles.content}>
+          {/* 🔺 닫기 버튼 */}
+          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+            <Icon name="close" size={22} color="#999" />
+          </TouchableOpacity>
           <Text style={styles.title}>
             🤔 <Text style={{color: '#4D7CFE'}}>누구랑</Text> 산책할까요?
           </Text>
+
+          {isOnlyDummy ? (
+              <View style={{alignItems: 'center', marginVertical: 24}}>
+                <Text style={{color: '#777', marginBottom: 16}}>
+                  아직 등록된 반려동물이 없습니다.
+                </Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    onClose(); // ✅ 모달 닫기 먼저
+                    //@ts-ignore
+                    navigation.navigate('PetRegistrationScreen');
+                  }}
+                  style={styles.registerButton}>
+                  <Icon name="add" size={18} color="#fff" style={styles.icon} />
+                  <Text style={styles.registerButtonText}>등록하러 가기</Text>
+                </TouchableOpacity>
+              </View>
+
+          ) : (
+            <>
           <FlatList
             horizontal
-            data={pets}
+            data={filteredPets}
             keyExtractor={item => item.id}
             renderItem={({item}) => (
               <TouchableOpacity
@@ -76,6 +107,8 @@ const PetSelectorModal: React.FC<Props> = ({
           <TouchableOpacity style={styles.confirmButton} onPress={onConfirm}>
             <Text style={styles.confirmButtonText}>산책 시작하기</Text>
           </TouchableOpacity>
+            </>
+          )}
         </View>
       </View>
     </Modal>
@@ -96,6 +129,12 @@ const styles = StyleSheet.create({
     padding: 30,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    zIndex: 1,
   },
   title: {fontSize: 18, fontWeight: 'bold', marginBottom: 16},
   petCard: {
@@ -125,4 +164,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   confirmButtonText: {color: 'white', fontSize: 16},
+  registerButton: {
+    flexDirection: 'row',        // 아이콘과 텍스트 나란히
+    alignItems: 'center',        // 수직 정렬 중앙
+    backgroundColor: '#4D7CFE',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  icon: {
+    marginRight: 6,              // 텍스트와 간격
+  },
+  registerButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
 });
