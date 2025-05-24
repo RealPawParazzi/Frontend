@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -8,27 +8,32 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { launchImageLibrary } from 'react-native-image-picker';
+import {launchImageLibrary} from 'react-native-image-picker';
 import useBattleStore from '../../../context/battleStore';
+import {useAIvideoStore} from '../../../context/AIvideoStore';
 
 const BattleWithTwoAI = () => {
+  const {loading, battleResult, battleDetail, requestTwoInstanceBattleAction} =
+    useBattleStore();
+
   const {
-    loading,
-    battleResult,
-    requestTwoInstanceBattleAction,
-  } = useBattleStore();
+    status,
+    finalUrl,
+    reset: resetVideo,
+    startBattleVideoGeneration,
+  } = useAIvideoStore();
 
   // 🐶 펫1 상태
-  const [pet1, setPet1] = useState({ name: '', type: 'DOG', petDetail: '' });
+  const [pet1, setPet1] = useState({name: '', type: 'DOG', petDetail: ''});
   const [pet1Image, setPet1Image] = useState<any>(null);
 
   // 🐱 펫2 상태
-  const [pet2, setPet2] = useState({ name: '', type: 'CAT', petDetail: '' });
+  const [pet2, setPet2] = useState({name: '', type: 'CAT', petDetail: ''});
   const [pet2Image, setPet2Image] = useState<any>(null);
 
   // 🖼️ 이미지 선택
   const pickImage = async (setImage: Function) => {
-    const res = await launchImageLibrary({ mediaType: 'photo' });
+    const res = await launchImageLibrary({mediaType: 'photo'});
     const asset = res.assets?.[0];
     if (asset?.uri && asset?.fileName && asset?.type) {
       setImage({
@@ -42,28 +47,36 @@ const BattleWithTwoAI = () => {
   // 🥊 배틀 요청
   const handleBattle = async () => {
     if (
-      !pet1.name || !pet1.petDetail || !pet1Image ||
-      !pet2.name || !pet2.petDetail || !pet2Image
+      !pet1.name ||
+      !pet1.petDetail ||
+      !pet1Image ||
+      !pet2.name ||
+      !pet2.petDetail ||
+      !pet2Image
     ) {
-      Alert.alert('⚠️ 입력 누락', '모든 필드를 입력하고 이미지를 선택해주세요.');
+      Alert.alert(
+        '⚠️ 입력 누락',
+        '모든 필드를 입력하고 이미지를 선택해주세요.',
+      );
       return;
     }
 
     try {
-      await requestTwoInstanceBattleAction(
-        pet1,
-        pet1Image,
-        pet2,
-        pet2Image
-      );
-
-
-      console.log('pet1 : ', pet1);
-      console.log('pet2 : ', pet2);
-      console.log('battleResult : ', battleResult);
+      resetVideo(); // 영상 초기화
+      console.log('[⚔️ 두 가상펫 배틀 시작]');
+      await requestTwoInstanceBattleAction(pet1, pet1Image, pet2, pet2Image);
     } catch (e: any) {
       Alert.alert('❌ 실패', e.message || '배틀 요청 실패');
     }
+  };
+
+  // 🎬 배틀 영상 생성
+  const handleGenerateVideo = () => {
+    if (!battleResult?.runway_prompt || !battleDetail?.battleId) {
+      return;
+    }
+    console.log('🎬 [영상 생성 요청]', battleDetail.battleId);
+    startBattleVideoGeneration(battleDetail.battleId);
   };
 
   return (
@@ -76,21 +89,25 @@ const BattleWithTwoAI = () => {
         style={styles.input}
         placeholder="이름"
         value={pet1.name}
-        onChangeText={name => setPet1({ ...pet1, name })}
+        onChangeText={name => setPet1({...pet1, name})}
       />
       <TextInput
         style={styles.input}
         placeholder="설명"
         value={pet1.petDetail}
-        onChangeText={petDetail => setPet1({ ...pet1, petDetail })}
+        onChangeText={petDetail => setPet1({...pet1, petDetail})}
       />
       <TextInput
         style={styles.input}
         placeholder="타입 (DOG/CAT)"
         value={pet1.type}
-        onChangeText={type => setPet1({ ...pet1, type: type.toUpperCase() === 'CAT' ? 'CAT' : 'DOG' })}
+        onChangeText={type =>
+          setPet1({...pet1, type: type.toUpperCase() === 'CAT' ? 'CAT' : 'DOG'})
+        }
       />
-      <TouchableOpacity style={styles.imageButton} onPress={() => pickImage(setPet1Image)}>
+      <TouchableOpacity
+        style={styles.imageButton}
+        onPress={() => pickImage(setPet1Image)}>
         <Text>{pet1Image ? '📸 이미지 선택 완료' : '🖼️ 이미지 선택하기'}</Text>
       </TouchableOpacity>
 
@@ -100,21 +117,25 @@ const BattleWithTwoAI = () => {
         style={styles.input}
         placeholder="이름"
         value={pet2.name}
-        onChangeText={name => setPet2({ ...pet2, name })}
+        onChangeText={name => setPet2({...pet2, name})}
       />
       <TextInput
         style={styles.input}
         placeholder="설명"
         value={pet2.petDetail}
-        onChangeText={petDetail => setPet2({ ...pet2, petDetail })}
+        onChangeText={petDetail => setPet2({...pet2, petDetail})}
       />
       <TextInput
         style={styles.input}
         placeholder="타입 (DOG/CAT)"
         value={pet2.type}
-        onChangeText={type => setPet2({ ...pet2, type: type.toUpperCase() === 'CAT' ? 'CAT' : 'DOG' })}
+        onChangeText={type =>
+          setPet2({...pet2, type: type.toUpperCase() === 'CAT' ? 'CAT' : 'DOG'})
+        }
       />
-      <TouchableOpacity style={styles.imageButton} onPress={() => pickImage(setPet2Image)}>
+      <TouchableOpacity
+        style={styles.imageButton}
+        onPress={() => pickImage(setPet2Image)}>
         <Text>{pet2Image ? '📸 이미지 선택 완료' : '🖼️ 이미지 선택하기'}</Text>
       </TouchableOpacity>
 
@@ -123,7 +144,13 @@ const BattleWithTwoAI = () => {
         <Text style={styles.battleButtonText}>배틀 시작</Text>
       </TouchableOpacity>
 
-      {loading && <ActivityIndicator size="large" color="#4D7CFE" style={{ marginTop: 10 }} />}
+      {loading && (
+        <ActivityIndicator
+          size="large"
+          color="#4D7CFE"
+          style={{marginTop: 10}}
+        />
+      )}
 
       {/* 🎉 결과 */}
       {battleResult && (
@@ -131,16 +158,27 @@ const BattleWithTwoAI = () => {
           <Text style={styles.resultTitle}>🎉 배틀 결과</Text>
           <Text style={styles.resultText}>{battleResult.result}</Text>
           <Text style={styles.resultText}>🏆 승자: {battleResult.winner}</Text>
+
+          <TouchableOpacity style={styles.generateButton} onPress={handleGenerateVideo}>
+            <Text style={styles.generateButtonText}>🎬 배틀 영상 생성</Text>
+          </TouchableOpacity>
         </View>
+      )}
+
+      {status === 'IN_PROGRESS' && (
+        <Text style={{ marginTop: 10, color: '#666' }}>📽️ 영상 생성 중...</Text>
+      )}
+      {finalUrl && (
+        <Text style={{ color: '#4D7CFE', marginTop: 10 }}>📺 영상 링크: {finalUrl}</Text>
       )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { padding: 20 },
-  title: { fontSize: 18, fontWeight: 'bold', marginBottom: 16, color: '#4D7CFE' },
-  subTitle: { fontSize: 16, fontWeight: '600', marginTop: 10, marginBottom: 6 },
+  container: {padding: 20},
+  title: {fontSize: 18, fontWeight: 'bold', marginBottom: 16, color: '#4D7CFE'},
+  subTitle: {fontSize: 16, fontWeight: '600', marginTop: 10, marginBottom: 6},
   input: {
     backgroundColor: '#F1F3F5',
     padding: 10,
@@ -180,6 +218,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
     marginBottom: 4,
+  },
+  generateButton: {
+    marginTop: 10,
+    backgroundColor: '#2ECC71',
+    padding: 10,
+    borderRadius: 8,
+  },
+  generateButtonText: {
+    color: '#FFF',
+    textAlign: 'center',
+    fontWeight: '600',
   },
 });
 
