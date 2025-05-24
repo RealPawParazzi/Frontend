@@ -260,7 +260,7 @@ const StorybookDetailScreen = ({
   if (loading) {
     return (
       <View style={styles.loader}>
-        <ActivityIndicator size="large" color="#FF6F00" />
+        <ActivityIndicator size="large" color="#4D7CFE" />
       </View>
     );
   }
