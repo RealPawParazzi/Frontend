@@ -6,12 +6,25 @@ import {
   TouchableOpacity,
   StyleSheet,
   Platform,
+  TextInput,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import petStore from '../context/petStore'; // userStore → petStore로 변경
-import {useNavigation} from '@react-navigation/native'; // ✅ 네비게이션 훅 추가
+import {useNavigation} from '@react-navigation/native';
 
-const Header = () => {
+interface HeaderProps {
+  searchMode: boolean;
+  setSearchMode: (v: boolean) => void;
+  searchQuery: string;
+  setSearchQuery: (v: string) => void;
+}
+
+const Header: React.FC<HeaderProps> = ({
+  searchMode,
+  setSearchMode,
+  searchQuery,
+  setSearchQuery,
+}) => {
   const navigation = useNavigation();
   const {pets} = petStore();
 
@@ -40,48 +53,82 @@ const Header = () => {
   return (
     <View style={styles.container}>
       {/* 🐾 좌측 반려동물 프로필 or 등록 안내 */}
-      <TouchableOpacity
-        style={styles.petContainer}
-        onPress={() => setDropdownVisible(!dropdownVisible)}>
-        {/* 🐾 아이콘 또는 이미지 */}
-        {(!pets?.length || isDummyPet) ? (
-          <View style={styles.emptyPetCircle}>
-            <Icon name="pets" size={20} color="#aaa" />
-          </View>
-        ) : (
-          <Image
-            source={getImageSource(selectedPet?.petImg)}
-            style={styles.petImage}
+
+      {searchMode ? (
+        // 🔍 검색 입력창
+        <View style={styles.searchBar}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="게시물 제목 검색"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            autoFocus
           />
-        )}
-        {/* 🐱 펫 이름 or 안내문구 */}
-        <Text style={styles.petName}>
-          {!pets?.length || isDummyPet ? '반려동물을 등록해 주세요!' : selectedPet?.name}
-        </Text>
-        <Icon
-          name={dropdownVisible ? 'arrow-drop-up' : 'arrow-drop-down'}
-          size={22}
-          color="#333"
-        />
-      </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              setSearchMode(false);
+              setSearchQuery('');
+            }}>
+            <Icon name="close" size={24} color="#666" />
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <>
+          {/* 🐾 반려동물 선택 영역 */}
+          <TouchableOpacity
+            style={styles.petContainer}
+            onPress={() => setDropdownVisible(!dropdownVisible)}>
+            {!pets?.length || isDummyPet ? (
+              <View style={styles.emptyPetCircle}>
+                <Icon name="pets" size={20} color="#aaa" />
+              </View>
+            ) : (
+              <Image
+                source={getImageSource(selectedPet?.petImg)}
+                style={styles.petImage}
+              />
+            )}
+            <Text style={styles.petName}>
+              {!pets?.length || isDummyPet
+                ? '반려동물을 등록해 주세요!'
+                : selectedPet?.name}
+            </Text>
+            <Icon
+              name={dropdownVisible ? 'arrow-drop-up' : 'arrow-drop-down'}
+              size={22}
+              color="#333"
+            />
+          </TouchableOpacity>
 
-      {/* 🔔 우측 알림 아이콘 */}
-      <TouchableOpacity style={styles.notificationIcon}>
-        <Icon
-          name={Platform.OS === 'ios' ? 'notifications' : 'notifications-none'}
-          size={24}
-          color="#999"
-        />
-      </TouchableOpacity>
+          {/* 🔔 알림 + 🔍 검색 아이콘 */}
+          <View style={{flexDirection: 'row'}}>
+            <TouchableOpacity style={styles.iconButton}>
+              <Icon
+                name={
+                  Platform.OS === 'ios' ? 'notifications' : 'notifications-none'
+                }
+                size={24}
+                color="#999"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => setSearchMode(true)}>
+              <Icon name="search" size={24} color="#666" />
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
 
-      {/* 🔽 드롭다운 메뉴 */}
+      {/* 🔽 펫 선택 드롭다운 */}
       {dropdownVisible && (
         <View style={styles.dropdown}>
-          {(!pets?.length || isDummyPet) ? (
+          {!pets?.length || isDummyPet ? (
             <TouchableOpacity
               style={styles.dropdownItem}
               onPress={() => {
                 setDropdownVisible(false);
+                //@ts-ignore
                 navigation.navigate('PetRegistrationScreen');
               }}>
               <Text style={styles.dropdownText}>등록하러 가기</Text>
@@ -153,6 +200,24 @@ const styles = StyleSheet.create({
     color: '#333',
     marginRight: 4,
   },
+  iconButton: {
+    padding: 5,
+    marginLeft: 6,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    backgroundColor: '#F0F0F0',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: 6,
+    fontSize: 15,
+    color: '#333',
+  },
   dropdown: {
     position: 'absolute',
     top: 60,
@@ -176,9 +241,6 @@ const styles = StyleSheet.create({
   dropdownText: {
     fontSize: 14,
     marginLeft: 8,
-  },
-  notificationIcon: {
-    padding: 5,
   },
 });
 

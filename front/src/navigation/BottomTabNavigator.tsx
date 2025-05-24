@@ -19,6 +19,7 @@ import HomeScreen from '../screens/HomeScreen';
 import Header from '../components/Header';
 import GlobalSnackbar from './GlobalSnackbar';
 import {useSnackbarStore} from '../context/snackbarStore';
+import SearchScreen from '../screens/SearchScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -26,6 +27,10 @@ const BottomTabNavigator = ({navigation}: any) => {
   const [menuVisible, setMenuVisible] = useState(false);
   const [animation] = useState(new Animated.Value(0));
   const {visible, message, hideSnackbar} = useSnackbarStore();
+
+  const [searchMode, setSearchMode] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
 
   // ✅ FAB 메뉴 애니메이션 실행 함수
   const toggleMenu = () => {
@@ -47,7 +52,22 @@ const BottomTabNavigator = ({navigation}: any) => {
 
   return (
     <SafeAreaView style={styles.safeContainer}>
-      <Header />
+      <Header
+        searchMode={searchMode}
+        setSearchMode={setSearchMode}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+      />
+
+      {searchMode && (
+        <SearchScreen
+          searchQuery={searchQuery}
+          onClose={() => {
+            setSearchMode(false);
+            setSearchQuery('');
+          }}
+        />
+      )}
 
       {/*/!* ✅ 전역 Snackbar *!/*/}
       {/*<GlobalSnackbar*/}
