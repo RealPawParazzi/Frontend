@@ -544,24 +544,16 @@ const MapScreen = () => {
                     <Text style={styles.starText}>⭐</Text>
                   </View>
                 ) : (
-                  // 기본 회색 마커
-                  <Image
-                    source={require('../assets/images/marker/middleIcon.png')}
-                    style={styles.markerIcon}
-                  />
+                  // ✅ 아래처럼 변경
+                  <View style={styles.pawMarker}>
+                    <Text style={styles.pawText}>🐾</Text>
+                  </View>
                 )}
               </Marker>
             );
           })}
         </MapView>
       </View>
-
-      {/* 📍 현재 위치 버튼 (우하단 고정) */}
-      <TouchableOpacity
-        style={styles.locationButton}
-        onPress={getCurrentLocation}>
-        <Icon name="my-location" size={24} color="white" />
-      </TouchableOpacity>
 
       {/* ✅ 하단 버튼 바 */}
       <View style={styles.bottomBar}>
@@ -657,14 +649,6 @@ const MapScreen = () => {
         isFavorite={selectedPlace ? isPlaceInFavorites(selectedPlace) : false}
         onToggleFavorite={toggleFavorite}
       />
-
-      {/* ⭐ 즐겨찾기 버튼 - 돋보기 위에 위치 */}
-      <TouchableOpacity
-        style={[styles.locationButton, {bottom: 330}]}
-        onPress={() => setIsFavoritesModalVisible(true)}>
-        <Icon name="star" size={22} color="white" />
-      </TouchableOpacity>
-
       <FavoritesModal
         isVisible={isFavoritesModalVisible}
         onClose={() => setIsFavoritesModalVisible(false)}
@@ -675,19 +659,34 @@ const MapScreen = () => {
       }}
         />
 
-      {/* 🔍 검색 트리거 버튼 (위치 조정) */}
-      <TouchableOpacity
-        style={[styles.locationButton, {bottom: 260}]}
-        onPress={() => setShouldSearchPlaces(true)}>
-        <Icon name="search" size={22} color="white" />
-      </TouchableOpacity>
+      <View style={styles.rightButtonGroup}>
+        <TouchableOpacity onPress={() => setIsFavoritesModalVisible(true)}>
+          <View style={styles.iconButton}>
+            <Icon name="star" size={22} color="white" />
+          </View>
+        </TouchableOpacity>
 
-      {/* ✅ 추가된 버튼: 산책 루트 보기 모달 열기 */}
-      <TouchableOpacity
-        style={[styles.locationButton, {bottom: 190}]} // 위치 조정
-        onPress={() => setBottomSheetVisible(true)}>
-        <Icon name="pets" size={22} color="white" />
-      </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => setShouldSearchPlaces(true)}>
+          <View style={styles.iconButton}>
+            <Icon name="search" size={22} color="white" />
+          </View>
+        </TouchableOpacity>
+
+
+        <TouchableOpacity onPress={() => setBottomSheetVisible(true)}>
+          <View style={styles.iconButton}>
+            <Icon name="pets" size={22} color="white" />
+          </View>
+        </TouchableOpacity>
+
+        {/* 📍 현재 위치 버튼 */}
+        <TouchableOpacity onPress={getCurrentLocation}>
+          <View style={styles.iconButton}>
+            <Icon name="my-location" size={22} color="white" />
+          </View>
+        </TouchableOpacity>
+      </View>
 
     </View>
   );
@@ -696,29 +695,8 @@ const MapScreen = () => {
 /** ✅ 스타일 정의 */
 const styles = StyleSheet.create({
   container: {flex: 1, backgroundColor: '#ffffff'},
-  /** 🗺️ 지도 스타일 */
   mapContainer: {flex: 1.5, overflow: 'hidden'},
-  map: {width: '100%', height: '100%'},
 
-  statsOverlay: {
-    position: 'absolute',
-    bottom: 140,
-    alignSelf: 'center',
-    alignItems: 'center',
-    zIndex: 10,
-  },
-  statsText: {fontSize: 16, fontWeight: 'bold'},
-
-  /** 📍 현재 위치 버튼 */
-  locationButton: {
-    position: 'absolute',
-    bottom: 120,
-    right: 20,
-    backgroundColor: '#4D7CFE',
-    padding: 12,
-    borderRadius: 50,
-    elevation: 3,
-  },
   bottomBar: {
     position: 'absolute',
     bottom: 30,
@@ -751,11 +729,26 @@ const styles = StyleSheet.create({
     borderRadius: 50,
   },
 
+  rightButtonGroup: {
+    position: 'absolute',
+    right: 20,
+    bottom: 100,
+    alignItems: 'center',
+    gap: 5,
+  },
+  iconButton: {
+    backgroundColor: '#4D7CFE',
+    padding: 12,
+    borderRadius: 50,
+    marginBottom: 10,
+    elevation: 3,
+  },
+
   favoriteMarker: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#FFD700', // 노란색
+    backgroundColor: '#FFD700',
     justifyContent: 'center',
     alignItems: 'center',
     borderColor: '#fff',
@@ -768,6 +761,24 @@ const styles = StyleSheet.create({
 
   starText: {
     fontSize: 20,
+  },
+
+  pawMarker: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#8888ff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderColor: '#fff',
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 2,
+    elevation: 4,
+  },
+  pawText: {
+    fontSize: 18,
   },
 });
 
