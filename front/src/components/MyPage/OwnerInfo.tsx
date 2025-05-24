@@ -9,7 +9,7 @@ import {
   Alert,
   Modal,
 } from 'react-native';
-import { createThumbnail } from 'react-native-create-thumbnail';
+import {createThumbnail} from 'react-native-create-thumbnail';
 import userStore from '../../context/userStore';
 import userFollowStore from '../../context/userFollowStore';
 import {useStoryReelsStore} from '../../context/storyReelsStore';
@@ -20,7 +20,9 @@ import authStore from '../../context/authStore';
 import {getImageSource} from '../../utils/imageUtils';
 import boardStore from '../../context/boardStore';
 import Video from 'react-native-video';
-import StoryReelsModal from '../../components/HomePage/StoryReels/StoryReelsModal'; // 위치에 따라 경로 조정
+import StoryReelsModal from '../../components/HomePage/StoryReels/StoryReelsModal';
+import MyVideos from './MyVideos';
+import MyPhotos from './MyPhotos'; // 위치에 따라 경로 조정
 
 // ✅ 기본 프로필 이미지
 const DEFAULT_PROFILE_IMAGE = require('../../assets/images/user-2.png');
@@ -51,16 +53,21 @@ const OwnerInfo = () => {
   const {myStories, loadMyStories} = useStoryReelsStore();
 
   // ✅ 썸네일 상태
-  const [memoryThumbnails, setMemoryThumbnails] = useState<{ [key: number]: string }>({});
+  const [memoryThumbnails, setMemoryThumbnails] = useState<{
+    [key: number]: string;
+  }>({});
 
-// ✅ 썸네일 생성 함수
+  // ✅ 썸네일 생성 함수
   const generateThumbnailForMedia = async (story: any): Promise<string> => {
     const isVideo =
       story.mediaUrl.endsWith('.mp4') || story.mediaUrl.endsWith('.mov');
 
     if (isVideo) {
       try {
-        const thumb = await createThumbnail({ url: story.mediaUrl, timeStamp: 1000 });
+        const thumb = await createThumbnail({
+          url: story.mediaUrl,
+          timeStamp: 1000,
+        });
         return thumb.path;
       } catch (error) {
         console.warn('썸네일 생성 실패:', error);
@@ -71,10 +78,10 @@ const OwnerInfo = () => {
     }
   };
 
-// ✅ 썸네일 로딩 useEffect
+  // ✅ 썸네일 로딩 useEffect
   useEffect(() => {
     const loadThumbnails = async () => {
-      const thumbs: { [key: number]: string } = {};
+      const thumbs: {[key: number]: string} = {};
       for (const story of myStories) {
         const thumbUri = await generateThumbnailForMedia(story);
         thumbs[story.storyId] = thumbUri;
@@ -179,7 +186,7 @@ const OwnerInfo = () => {
   const openSingleStory = (story: any) => {
     setSingleStoryGroup({
       memberId: Number(userData.id), // 현재 사용자 ID
-      nickname: userData.nickName,  // 사용자 닉네임
+      nickname: userData.nickName, // 사용자 닉네임
       profileImageUrl: userData.profileImage.uri, // 사용자 프로필 이미지
       stories: [story], // 🔥 단일 스토리만 배열로 전달
     });
@@ -191,6 +198,9 @@ const OwnerInfo = () => {
   //     console.log('📸 profileImage value:', userData.profileImage.uri);
   //     console.log('📸 typeof profileImage:', typeof userData.profileImage);
   // }, [userData]);
+
+  // 상단에 추가
+  const realPetCount = userData.petList?.filter(p => Number(p.id) !== 0).length || 0;
 
   return (
     <View style={styles.container}>
@@ -209,10 +219,14 @@ const OwnerInfo = () => {
             }}
           />
           <View style={styles.userInfo}>
-            <Text style={styles.username}>
-              {userData.nickName || userData.name}
-            </Text>
-            <Text style={styles.petCount}>{userData.petCount}마리</Text>
+            {/* 🔹 닉네임 + 이름 (한 줄에 배치) */}
+            <View style={styles.nameRow}>
+              <Text style={styles.userNickname}>{userData.nickName}</Text>
+              <Text style={styles.userRealName}>@{userData.name}</Text>
+            </View>
+
+            {/* 🔹 반려동물 수 */}
+            <Text style={styles.petCount}>{realPetCount}마리</Text>
           </View>
         </View>
 
@@ -259,7 +273,7 @@ const OwnerInfo = () => {
             //@ts-ignore
             navigation.navigate('UserPostsScreen', {
               userId: userData.id,
-              userName: userData.name,
+              userName: userData.nickName,
             })
           }>
           <Text style={styles.statNumber}>{postCount}</Text>
@@ -273,6 +287,7 @@ const OwnerInfo = () => {
               type: 'followers',
               userId: userData.id,
               userName: userData.name,
+              userNickName: userData.nickName,
             })
           }>
           <Text style={styles.statNumber}>{followerCount}</Text>
@@ -286,6 +301,7 @@ const OwnerInfo = () => {
               type: 'following',
               userId: userData.id,
               userName: userData.name,
+              userNickName: userData.nickName,
             })
           }>
           <Text style={styles.statNumber}>{followingCount}</Text>
@@ -302,13 +318,15 @@ const OwnerInfo = () => {
             data={myStories}
             //@ts-ignore
             keyExtractor={item => item.storyId}
-            renderItem={({ item }) => (
+            renderItem={({item}) => (
               <TouchableOpacity
                 style={styles.memoryCircle}
-                onPress={() => openSingleStory(item)}
-              >
+                onPress={() => openSingleStory(item)}>
                 <Image
-                  source={{ uri: memoryThumbnails[item.storyId] || DEFAULT_PROFILE_IMAGE }}
+                  source={{
+                    uri:
+                      memoryThumbnails[item.storyId] || DEFAULT_PROFILE_IMAGE,
+                  }}
                   style={styles.memoryImage}
                 />
               </TouchableOpacity>
@@ -363,72 +381,11 @@ const OwnerInfo = () => {
       </View>
 
       {/* ✅ 선택된 탭에 따라 다른 컴포넌트 출력 */}
-      {selectedTab === 'posts' && <PostList userId={Number(userData.id)} />}
-      {selectedTab === 'photos' && (
-        <FlatList
-          data={myBoards
-            .filter(post => !!post.titleImage)
-            .map(post => post.titleImage)}
-          keyExtractor={(item, index) => index.toString()}
-          numColumns={3} // 🔹 사진을 3열로 출력
-          renderItem={({item}) => (
-            <View style={styles.photoContainer}>
-              <Image
-                source={getImageSource(item, DEFAULT_PROFILE_IMAGE)}
-                style={styles.photo}
-              />
-            </View>
-          )}
-        />
-      )}
-      {selectedTab === 'videos' && (
-        <>
-          {myBoards.filter(post =>
-            post.contents?.some(
-              c =>
-                c.type === 'File' &&
-                typeof c.value === 'string' &&
-                (c.value.endsWith('.mp4') || c.value.endsWith('.mov')),
-            ),
-          ).length > 0 ? (
-            <FlatList
-              data={myBoards.filter(post =>
-                post.contents?.some(
-                  c =>
-                    c.type === 'File' &&
-                    typeof c.value === 'string' &&
-                    (c.value.endsWith('.mp4') || c.value.endsWith('.mov')),
-                ),
-              )}
-              keyExtractor={item => item.id.toString()}
-              renderItem={({item}) => (
-                <View style={styles.videoCard}>
-                  <Text style={styles.videoTitle}>{item.titleContent}</Text>
-                  <Video
-                    source={{
-                      uri:
-                        item.contents?.find(
-                          c => c.type === 'File' && c.value.endsWith('.mp4'),
-                        )?.value || '',
-                    }}
-                    style={styles.videoPlayer}
-                    resizeMode="cover"
-                    repeat
-                    muted
-                    controls={true}
-                  />
-                </View>
-              )}
-            />
-          ) : (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>
-                아직 업로드된 비디오가 없습니다.
-              </Text>
-            </View>
-          )}
-        </>
-      )}
+      <View style={styles.tabContentWrapper}>
+        {selectedTab === 'posts' && <PostList userId={Number(userData.id)} />}
+        {selectedTab === 'photos' && <MyPhotos userId={Number(userData.id)} />}
+        {selectedTab === 'videos' && <MyVideos userId={Number(userData.id)} />}
+      </View>
     </View>
   );
 };
@@ -462,13 +419,27 @@ const styles = StyleSheet.create({
   userInfo: {
     marginLeft: 12,
   },
-  username: {
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  userNickname: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: '#000',
+    marginRight: 6, // 닉네임과 이름 사이 여백
   },
+
+  userRealName: {
+    fontSize: 13,
+    color: '#777',
+  },
+
   petCount: {
-    fontSize: 14,
-    color: 'gray',
+    fontSize: 13,
+    color: '#777',
+    marginTop: 2,
   },
 
   /** ✅ 점 세 개(더보기) 버튼 */
@@ -587,29 +558,9 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 5,
   },
-  videoCard: {
-    marginBottom: 20,
-    borderRadius: 10,
-    overflow: 'hidden',
-    backgroundColor: '#000',
-  },
-  videoTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#fff',
-    padding: 8,
-    backgroundColor: '#222',
-  },
-  videoPlayer: {
-    width: '100%',
-    height: 300,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  emptyText: {
-    color: 'gray',
+  tabContentWrapper: {
+    marginTop: 8,
+    paddingBottom: 300, // 📌 탭 아래 여백
   },
 });
 

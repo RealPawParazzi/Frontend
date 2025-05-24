@@ -159,6 +159,30 @@ const ReplyCard = ({ reply, commentId }: ReplyCardProps) => {
         }
     };
 
+  // ✅ 날짜 포맷팅 함수
+  const formatDate = (dateString: string) => {
+    if (!dateString) {
+      return '';
+    }
+
+    try {
+      const date = new Date(dateString);
+
+      // ✅ 오전/오후 시간 포맷 생성
+      const isAM = date.getHours() < 12;
+      const hour12 = date.getHours() % 12 || 12;
+      const ampm = isAM ? '오전' : '오후';
+      const minute = date.getMinutes().toString().padStart(2, '0');
+
+      return `${date.getFullYear()}년 ${
+        date.getMonth() + 1
+      }월 ${date.getDate()}일 ${ampm} ${hour12}시 ${minute}분`;
+    } catch (error) {
+      console.error('날짜 포맷팅 오류:', error);
+      return dateString;
+    }
+  };
+
     return (
         <View style={styles.container}>
             {/* 부모 댓글과 연결되는 선 */}
@@ -172,7 +196,7 @@ const ReplyCard = ({ reply, commentId }: ReplyCardProps) => {
                 />
                 <View style={styles.textWrapper}>
                     <Text style={styles.nickname}>{reply.replyMember.nickname}</Text>
-                    <Text style={styles.date}>{reply.createdAt}</Text>
+                    <Text style={styles.date}>{formatDate(reply.createdAt)}</Text>
                 </View>
 
                 {/* 옵션 메뉴 (햄버거 아이콘) */}
@@ -275,8 +299,8 @@ const styles = StyleSheet.create({
     },
     content: {
         fontSize: 14,
-        marginHorizontal: 15,
-        marginVertical: 25,
+        marginHorizontal: 10,
+        marginVertical: 15,
     },
     editContainer: {
         flexDirection: 'row',

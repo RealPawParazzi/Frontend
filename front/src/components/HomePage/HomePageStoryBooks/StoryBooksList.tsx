@@ -94,6 +94,7 @@ const StoryBooksList = () => {
       {/* ✅ 게시글 리스트 출력 */}
       {filteredSortedBoards.length > 0 ? (
         <FlatList
+          contentContainerStyle={{paddingHorizontal: 0}}
           data={filteredSortedBoards}
           keyExtractor={item => item.id.toString()}
           renderItem={({item}) => <StoryBookCard story={item} />}
@@ -109,13 +110,14 @@ const StoryBooksList = () => {
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 10,
-    paddingBottom: 10,
+    marginVertical: 0,
+    paddingBottom: 0,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: 15,
+    marginTop: 8,
+    marginLeft: 10,
     marginBottom: 8,
   },
   sectionTitle: {
@@ -145,7 +147,7 @@ const styles = StyleSheet.create({
   activeTabText: {
     color: '#4D7CFE', // 🔵 선택된 탭만 파란색
     fontWeight: 'bold',
-    textDecorationLine: 'underline',
+    // textDecorationLine: 'underline',
   },
   emptyText: {
     textAlign: 'center',

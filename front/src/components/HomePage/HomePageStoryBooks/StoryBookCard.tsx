@@ -1,13 +1,26 @@
 // 📁 StoryBookCard.tsx
 import React, {useEffect, useState} from 'react';
-import {View, Text, Image, StyleSheet, TouchableOpacity} from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  ActionSheetIOS,
+  Platform,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import {useNavigation} from '@react-navigation/native';
 import Video from 'react-native-video';
 import {createThumbnail} from 'react-native-create-thumbnail';
+import userStore from '../../../context/userStore';
+import boardStore from '../../../context/boardStore'; // 추가
+import useSearchStore from '../../../context/searchStore'; // ✅ 추가
 
 interface StoryBookCardProps {
   id: number;
+  title: string;
   titleImage: string;
   titleContent: string;
   writeDatetime: string;
@@ -18,10 +31,13 @@ interface StoryBookCardProps {
   favoriteCount: number;
   commentCount: number;
   viewCount: number;
+  tag?: string; // 태그는 선택적
 }
 
 const StoryBookCard: React.FC<{story: StoryBookCardProps}> = ({story}) => {
   const navigation = useNavigation();
+  const {userData} = userStore();
+  const {deleteExistingBoard, fetchBoardList} = boardStore(); // ✅ 삭제 함수 불러오기
 
   const [thumbnailUri, setThumbnailUri] = useState<string | null>(null);
 
@@ -29,12 +45,115 @@ const StoryBookCard: React.FC<{story: StoryBookCardProps}> = ({story}) => {
     story.titleImage.toLowerCase().endsWith('.mp4') ||
     story.titleImage.toLowerCase().includes('video');
 
+  const handleDelete = async () => {
+    Alert.alert('삭제 확인', '정말 삭제하시겠습니까?', [
+      {text: '취소', style: 'cancel'},
+      {
+        text: '삭제',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deleteExistingBoard(story.id); // ✅ 실제 삭제 실행
+            await fetchBoardList(); // ✅ 삭제 후 리스트 새로고침
+            Alert.alert('삭제 완료', '게시글이 삭제되었습니다.');
+          } catch (error) {
+            console.error('❌ 삭제 실패:', error);
+            Alert.alert('오류', '게시글 삭제 중 문제가 발생했습니다.');
+          }
+        },
+      },
+    ]);
+  };
+
+  // ✅ 햄버거 메뉴 동작
+  const handleMoreOptions = () => {
+    const isAuthor = story.author.nickname === userData.nickName;
+
+    if (Platform.OS === 'ios') {
+      const options = isAuthor
+        ? ['수정하기 ✏️', '삭제하기 ❌', '취소']
+        : ['신고하기 🚨', '취소'];
+      const cancelButtonIndex = isAuthor ? 2 : 1;
+      const destructiveButtonIndex = isAuthor ? 1 : undefined;
+
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options,
+          cancelButtonIndex,
+          destructiveButtonIndex,
+        },
+        buttonIndex => {
+          if (isAuthor) {
+            if (buttonIndex === 0) {
+              // 수정
+              // @ts-ignore
+              navigation.navigate('EditStorybookScreen', {boardId: story.id});
+            } else if (buttonIndex === 1) {
+              handleDelete();
+            }
+          } else {
+            if (buttonIndex === 0) {
+              // 신고하기
+              // @ts-ignore
+              navigation.navigate('CuriousQuestionScreen', {
+                prefill: {
+                  titleOption: '유저 신고',
+                  content: `신고 대상: ${story.author.nickname}\n게시글 ID: ${story.id}\n사유: `,
+                },
+              });
+            }
+          }
+        },
+      );
+    } else {
+      // ✅ Android
+      if (isAuthor) {
+        Alert.alert('게시글 관리', '수정 또는 삭제하시겠습니까?', [
+          {
+            text: '수정하기',
+            onPress: () => {
+              // @ts-ignore
+              navigation.navigate('EditStorybookScreen', {boardId: story.id});
+            },
+          },
+          {
+            text: '삭제하기',
+            style: 'destructive',
+            onPress: () => {
+              handleDelete();
+            },
+          },
+          {text: '취소', style: 'cancel'},
+        ]);
+      } else {
+        Alert.alert('신고하기', '해당 사용자를 신고하시겠습니까?', [
+          {
+            text: '신고',
+            onPress: () => {
+              // @ts-ignore
+              navigation.navigate('CuriousQuestionScreen', {
+                prefill: {
+                  titleOption: '유저 신고',
+                  content: `신고 대상: ${story.author.nickname}\n게시글 ID: ${story.id}\n사유: `,
+                },
+              });
+            },
+          },
+          {text: '취소', style: 'cancel'},
+        ]);
+      }
+    }
+  };
+
   // ✅ 썸네일 생성
   useEffect(() => {
     const generateThumbnail = async () => {
       if (isVideo) {
         try {
-          const { path } = await createThumbnail({ url: story.titleImage, timeStamp: 1000 });
+          const {path} = await createThumbnail({
+            url: story.titleImage,
+            timeStamp: 1000,
+          });
           setThumbnailUri(path);
           console.log('썸네일 생성 성공:', path);
         } catch (err) {
@@ -65,7 +184,9 @@ const StoryBookCard: React.FC<{story: StoryBookCardProps}> = ({story}) => {
             {new Date(story.writeDatetime).toLocaleDateString()}
           </Text>
         </View>
-        <Icon name="more-vert" size={20} color="gray" />
+        <TouchableOpacity onPress={handleMoreOptions}>
+          <Icon name="more-vert" size={20} color="gray" />
+        </TouchableOpacity>
       </View>
 
       {/* ✅ 이미지 or 썸네일 */}
@@ -73,17 +194,22 @@ const StoryBookCard: React.FC<{story: StoryBookCardProps}> = ({story}) => {
         {story.titleImage &&
           (isVideo ? (
             thumbnailUri ? (
-              <Image source={{ uri: thumbnailUri }} style={styles.storyImage} />
+              <Image source={{uri: thumbnailUri}} style={styles.storyImage} />
             ) : (
-              <View style={[styles.storyImage, { backgroundColor: '#000' }]} />
+              <View style={[styles.storyImage, {backgroundColor: '#000'}]} />
             )
           ) : (
-            <Image source={{ uri: story.titleImage }} style={styles.storyImage} />
+            <Image source={{uri: story.titleImage}} style={styles.storyImage} />
           ))}
       </TouchableOpacity>
 
-      {/* 🔹 콘텐츠 텍스트 */}
-      <Text style={styles.content}>{story.titleContent}</Text>
+      {/* 🔹 게시글 내용 */}
+      <View style={styles.textWrapper}>
+        <Text style={styles.title}>{story.title}</Text>
+        <Text style={styles.titleContent}>{story.titleContent}</Text>
+        {story.tag && <Text style={styles.tagText}>#{story.tag}</Text>}
+      </View>
+
 
       {/* 🔹 하단 아이콘 */}
       <View style={styles.footer}>
@@ -107,38 +233,30 @@ const StoryBookCard: React.FC<{story: StoryBookCardProps}> = ({story}) => {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#fff',
-    borderRadius: 50,
-    padding: 25,
-    marginVertical: 10,
-    marginHorizontal: 5,
-
-    // iOS
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-
-    // Android
-    elevation: 10,
+    paddingHorizontal: 15,
+    paddingTop: 18,
+    paddingBottom: 12,
+    borderBottomWidth: 1.5,
+    borderColor: '#eee',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
-    justifyContent: 'space-between',
+    marginBottom: 8,
   },
   avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    marginRight: 10,
   },
   info: {
     flex: 1,
-    marginLeft: 10,
   },
   username: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 'bold',
+    marginBottom: 2,
   },
   meta: {
     fontSize: 12,
@@ -146,20 +264,34 @@ const styles = StyleSheet.create({
   },
   storyImage: {
     width: '100%',
-    height: 200,
+    height: 220,
     borderRadius: 12,
-    marginBottom: 10,
-    backgroundColor: '#000',
+    marginTop: 8,
   },
-  content: {
+  textWrapper: {
+    paddingHorizontal: 12,
+    paddingTop: 10,
+  },
+  title: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#111',
+  },
+  titleContent: {
     fontSize: 14,
-    color: '#444',
-    marginBottom: 10,
+    color: '#333',
+    marginVertical: 10,
+  },
+  tagText: {
+    fontSize: 12,
+    color: '#4D7CFE',
+    marginTop: 6,
+    fontWeight: '600',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingTop: 4,
+    marginTop: 4,
   },
   iconGroup: {
     flexDirection: 'row',
@@ -168,7 +300,7 @@ const styles = StyleSheet.create({
   iconText: {
     fontSize: 13,
     marginLeft: 4,
-    color: '#555',
+    color: '#777',
   },
 });
 

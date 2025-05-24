@@ -6,6 +6,7 @@ import {
   fetchVideoStatus,
   createBattleVideoRequest,
 } from '../services/AIvideoService';
+import {useSnackbarStore} from './snackbarStore';
 
 interface AIvideoState {
   jobId: string | null;
@@ -90,6 +91,10 @@ export const useAIvideoStore = create<AIvideoState>((set, get) => ({
             pollInterval: null,
             status: 'COMPLETED',
           });
+
+          // ✅ 스낵바 알림 추가
+          // useSnackbarStore.getState().showSnackbar('🎉 동영상이 완성되었습니다!');
+
           return;
         }
 

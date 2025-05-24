@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -10,13 +10,23 @@ import {Picker} from '@react-native-picker/picker';
 import petStore from '../../../context/petStore';
 import useBattleStore from '../../../context/battleStore';
 import {useAIvideoStore} from '../../../context/AIvideoStore';
+import userStore from '../../../context/userStore';
 
 const BattleWithOthers: React.FC = () => {
   const {pets} = petStore();
   const [myPetId, setMyPetId] = useState<number | null>(
     pets.length > 0 ? pets[0].petId : null,
   );
-  const [targetPetId] = useState<number>(6); // 임시 상대 루비
+  const {battleOpponents, loadBattleOpponents} = userStore(); // ✅ 상대 유저 목록
+
+  const [selectedOpponentId, setSelectedOpponentId] = useState<string | null>(
+    null,
+  );
+  const [targetPetId, setTargetPetId] = useState<number | null>(null); // ✅ 선택된 상대 펫 ID
+
+  const selectedOpponent = battleOpponents.find(
+    o => o.id === selectedOpponentId,
+  );
 
   const {battleResult, battleDetail, loading, error, requestBattleAction} =
     useBattleStore();
@@ -28,8 +38,14 @@ const BattleWithOthers: React.FC = () => {
     reset: resetVideo,
   } = useAIvideoStore();
 
+  useEffect(() => {
+    loadBattleOpponents(); // ✅ 컴포넌트 마운트 시 상대 유저 로드
+  }, [loadBattleOpponents]);
+
   const handleStartBattle = async () => {
-    if (!myPetId || !targetPetId) return;
+    if (!myPetId || !targetPetId) {
+      return;
+    }
     resetVideo();
     await requestBattleAction(myPetId, targetPetId);
   };
@@ -57,7 +73,46 @@ const BattleWithOthers: React.FC = () => {
         </Picker>
       </View>
 
-      <Text style={styles.label}>상대 펫: 루비 (ID 6)</Text>
+      <Text style={styles.label}>상대 유저 선택</Text>
+      <View style={styles.pickerContainer}>
+        <Picker
+          selectedValue={selectedOpponentId}
+          onValueChange={value => {
+            setSelectedOpponentId(value);
+            setTargetPetId(null); // 유저 바뀌면 펫 초기화
+          }}
+          mode="dropdown">
+          <Picker.Item label="상대 유저 선택" value={null} />
+          {battleOpponents.map(o => (
+            <Picker.Item
+              key={o.id}
+              label={`${o.nickName} (${o.name})`}
+              value={o.id}
+            />
+          ))}
+        </Picker>
+      </View>
+
+      {selectedOpponent && (
+        <>
+          <Text style={styles.label}>상대 펫 선택</Text>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={targetPetId}
+              onValueChange={value => setTargetPetId(value)}
+              mode="dropdown">
+              <Picker.Item label="상대 펫 선택" value={null} />
+              {selectedOpponent.petList.map(pet => (
+                <Picker.Item
+                  key={pet.id}
+                  label={pet.name}
+                  value={Number(pet.id)}
+                />
+              ))}
+            </Picker>
+          </View>
+        </>
+      )}
 
       <TouchableOpacity style={styles.battleButton} onPress={handleStartBattle}>
         <Text style={styles.battleButtonText}>배틀 시작</Text>

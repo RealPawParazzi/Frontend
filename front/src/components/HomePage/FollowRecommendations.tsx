@@ -63,11 +63,11 @@ const FollowRecommendations = () => {
     user => Number(user.id) !== Number(userData.id), // 👉 본인 제외
   );
 
-  useEffect(() => {
-    if (selectedUser) {
-      console.log('🧠 selectedUser가 바뀜:', selectedUser);
-    }
-  }, [selectedUser]);
+  // useEffect(() => {
+  //   if (selectedUser) {
+  //     console.log('🧠 selectedUser가 바뀜:', selectedUser);
+  //   }
+  // }, [selectedUser]);
 
   return (
     <View style={styles.container}>
@@ -84,14 +84,14 @@ const FollowRecommendations = () => {
         data={filteredRecommendations}
         horizontal
         keyExtractor={item => {
-          console.log('🧩 keyExtractor item:', item);
-          console.log('🧠 selectedUser가 바뀜:', selectedUser);
+          // console.log('🧩 keyExtractor item:', item);
+          // console.log('🧠 selectedUser가 바뀜:', selectedUser);
           return item?.id?.toString?.() ?? 'unknown';
         }}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{paddingHorizontal: 10}}
         renderItem={({item}) => {
-          console.log('🧩 renderItem item:', item);
+          // console.log('🧩 renderItem item:', item);
           return (
             <ShadowWrapper style={styles.cardWrapper}>
               <View style={styles.card}>

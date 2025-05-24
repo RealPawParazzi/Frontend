@@ -30,10 +30,11 @@ const DEFAULT_PROFILE_IMAGE = require('../../assets/images/user-2.png');
 const FollowListScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const {type, userId, userName} = route.params as {
+  const {type, userId, userName, userNickName} = route.params as {
     type: 'followers' | 'following';
     userId: number;
     userName: string;
+    userNickName: string;
   };
 
   const {
@@ -164,8 +165,8 @@ const FollowListScreen = () => {
   // ✅ 헤더 텍스트 지정
   const getHeaderTitle = () => {
     return selectedSegment === 0
-      ? `${userName || ''}님의 팔로워`
-      : `${userName || ''}님의 팔로잉`;
+      ? `${userNickName || ''}님의 팔로워`
+      : `${userNickName || ''}님의 팔로잉`;
   };
 
   return (
@@ -214,6 +215,7 @@ const FollowListScreen = () => {
           </Text>
           <TouchableOpacity
             style={styles.recommendButton}
+            //@ts-ignore
             onPress={() => navigation.navigate('Home')} // ✅ 홈으로 이동
           >
             <Text style={styles.recommendText}>팔로우 추천 보러가기</Text>

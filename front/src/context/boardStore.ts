@@ -266,9 +266,23 @@ const boardStore = create<{
   deleteExistingBoard: async boardId => {
     try {
       await deleteBoard(boardId);
-      set(state => ({
-        boardList: state.boardList.filter(board => board.id !== boardId),
-      }));
+
+      set(state => {
+        const newBoardList = state.boardList.filter(board => board.id !== boardId);
+
+        // 모든 유저 게시글 목록에서 해당 게시글 제거
+        const updatedUserBoardsMap: typeof state.userBoardsMap = {};
+        for (const [userId, boards] of Object.entries(state.userBoardsMap)) {
+          updatedUserBoardsMap[Number(userId)] = boards.filter(board => board.id !== boardId);
+        }
+
+        return {
+          boardList: newBoardList,
+          userBoardsMap: updatedUserBoardsMap,
+          selectedBoard:
+            state.selectedBoard?.id === boardId ? null : state.selectedBoard,
+        };
+      });
     } catch (error) {
       console.error('❌ deleteExistingBoard 오류:', error);
     }
