@@ -70,7 +70,7 @@ const SearchScreen: React.FC<Props> = ({ searchQuery, onClose }) => {
 const styles = StyleSheet.create({
   overlay: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 110 : 60, // 헤더 아래부터 시작
+    top: Platform.OS === 'ios' ? 105 : 60, // 헤더 아래부터 시작
     left: 0,
     right: 0,
     bottom: 0,
