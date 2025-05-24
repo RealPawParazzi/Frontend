@@ -228,7 +228,7 @@ export const getPetWalksByDate = async (
 export const getMyAllWalks = async (): Promise<WalkRecordResponse[]> => {
   try {
     const headers = await getAuthHeaders();
-    const res = await fetch(`${API_BASE_URL}`, {
+    const res = await fetch(`${API_BASE_URL}/my`, {
       method: 'GET',
       headers,
     });
