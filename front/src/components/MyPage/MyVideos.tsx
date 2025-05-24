@@ -10,7 +10,6 @@ import {
 import {useNavigation} from '@react-navigation/native';
 import {createThumbnail} from 'react-native-create-thumbnail';
 import boardStore from '../../context/boardStore';
-import EmptyPostPrompt from '../../common/EmptyPostPrompt';
 
 
 const DEFAULT_THUMBNAIL = require('../../assets/images/user-2.png');
