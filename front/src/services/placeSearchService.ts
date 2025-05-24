@@ -18,23 +18,69 @@ const GOOGLE_API_KEY =
 export const searchPetFriendlyPlaces = async (lat: number, lng: number) => {
   try {
     // ✅ 1. 하나의 강력한 키워드 + broad type으로 한번에 검색
-    const keyword = '강아지 고양이 펫 반려동물 dog cat pet animal'; // 한글+영문 혼합
+    const keyword = [
+      '반려동물',
+      '애완동물',
+      '애견',
+      '애묘',
+      'dog',
+      'cat',
+      'pet',
+      'animal',
+      'dogcafe',
+      'catcafe',
+      'veterinary',
+      'grooming',
+      '동물병원',
+      '펫샵',
+      'vets',
+      // 'petshop',
+      // 'petstore',
+      // 'petfriendly',
+      // '애완동물카페',
+      // '애견카페',
+      // '애묘카페',
+      // '애견미용',
+      // '애묘미용',
+      // '반려동물용품점',
+      // '반려동물카페',
+      // '반려동물병원',
+      // '반려동물식당',
+      // '반려동물식품점',
+      // '반려동물식품',
+      // '반려동물용품',
+      // '반려동물미용',
+      // '반려동물호텔',
+
+    ].join(' ');
     const response = await axios.get(GOOGLE_PLACES_API, {
       params: {
         key: GOOGLE_API_KEY,
         location: `${lat},${lng}`,
-        rankby: 'distance', // ✅ 가까운 순으로 정렬
+        radius: 1500,
         keyword,
         type: 'point_of_interest', // ✅ 넓은 범위로 포함
         language: 'ko',
       },
     });
 
-    const results = response.data.results || [];
-    console.log('📡 Google API 응답 상태:', response.data.status);
-    console.log('🐾 검색된 장소 수:', results.length);
+    const rawResults = response.data.results || [];
 
-    return results;
+    // ✅ 중복 제거: 장소명 + 주소 기준
+    const uniqueMap = new Map();
+    for (const place of rawResults) {
+      const key = `${place.name}_${place.vicinity}`;
+      if (!uniqueMap.has(key)) {
+        uniqueMap.set(key, place);
+      }
+    }
+
+    const uniqueResults = Array.from(uniqueMap.values());
+
+    console.log('📡 Google API 응답 상태:', response.data.status);
+    console.log('🐾 총 결과(중복 제거 후):', uniqueResults.length);
+
+    return uniqueResults;
   } catch (error) {
     console.error('❌ 장소 검색 실패:', error);
     return [];
