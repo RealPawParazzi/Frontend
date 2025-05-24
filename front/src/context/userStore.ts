@@ -66,6 +66,15 @@ interface StoryReel {
   video?: VideoSource;
 }
 
+/** ✅ 배틀용 상대 타입 정의 */
+export interface BattleOpponent {
+  id: string;
+  name: string;
+  nickName: string;
+  profileImage: ImageSource;
+  petList: Pet[];
+}
+
 /** ✅ 프로필 이미지 정규화 함수 */
 const normalizeImage = (img: any) => {
   if (!img) {
@@ -140,6 +149,10 @@ const userStore = create<{
   storyBooks: StoryBook[];
   storyReels: StoryReel[];
   activityLog: {[key: string]: Post[]};
+  //  배틀 상대 리스트 상태 및 함수 추가
+  battleOpponents: BattleOpponent[];
+  loadBattleOpponents: () => Promise<void>;
+
   /** ✅ 이 함수 내부에서 API 호출도 함께 수행 */
   updateUserData: (
     updateData: Partial<UserData>,
@@ -152,6 +165,9 @@ const userStore = create<{
   /** ✅ 사용자 데이터 (초기값: 기본 더미 데이터) */
   userData: defaultUserData,
   allUsers: [],
+
+  // 배틀 상대 리스트 상태
+  battleOpponents: [],
 
   /** ✅ 전체 유저 데이터 불러오기 */
   loadAllUsers: async () => {
@@ -203,7 +219,7 @@ const userStore = create<{
     },
   ],
 
-  /** ✅ 서버에서 전체 유저 가져와서 랜덤 추천 3명 리스트 생성 */
+  /** ✅ 서버에서 전체 유저 가져와서 랜덤 추천 8명 리스트 생성 */
   loadFollowRecommendations: async () => {
     try {
       const users = await fetchAllUsers();
@@ -225,6 +241,36 @@ const userStore = create<{
       console.error('❌ 팔로우 추천 데이터 불러오기 실패:', error);
     }
   },
+
+  /** ✅ 배틀 상대용 유저 리스트 로드 */
+  loadBattleOpponents: async () => {
+    try {
+      const users = await fetchAllUsers();
+      const shuffled = users.sort(() => 0.5 - Math.random()).slice(0, 5);
+
+      const battleList: BattleOpponent[] = shuffled.map(user => ({
+        id: user.id,
+        name: user.name,
+        nickName: user.nickName,
+        profileImage: user.profileImage
+          ? {uri: String(user.profileImage)}
+          : require('../assets/images/user-2.png'),
+        petList: (user.petList || []).map((pet: any) => ({
+          id: String(pet.petId),
+          name: pet.name,
+          species: pet.type,
+          image: pet.petImg
+            ? {uri: String(pet.petImg)}
+            : require('../assets/images/pets-1.jpg'),
+        })),
+      }));
+
+      set({battleOpponents: battleList});
+    } catch (error) {
+      console.error('❌ 배틀 상대 유저 불러오기 실패:', error);
+    }
+  },
+
 
   /** ✅ 오늘의 스토리북 리스트 */
   storyBooks: [
