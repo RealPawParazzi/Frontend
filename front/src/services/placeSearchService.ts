@@ -16,65 +16,25 @@ const GOOGLE_API_KEY =
  */
 
 export const searchPetFriendlyPlaces = async (lat: number, lng: number) => {
-  const radius = 1500; // 검색 반경 (단위: m)
-
-  // 추가된 키워드 (한글 + 영어)
-  const keywords = [
-    '강아지',
-    '고양이',
-    '펫',
-    '반려동물',
-    'pet',
-    'dog',
-    'cat',
-    'vet',
-    'animal',
-  ];
-
-  // 사용할 type 리스트
-  const types = [
-    'veterinary_care',
-    'vet', // 동물 병원
-    'pet_store', // 펫 용품점
-    'cafe', // 애견 카페
-    'store', // 일반 상점 (펫 용품점 포함 가능)
-    'park', // 산책 가능한 공원
-    'bakery', // 애견 간식점
-    'point_of_interest', // 관심 장소 (광범위)
-    'establishment', // 거의 모든 상업 장소 포함
-  ];
-
-  const allResults: any[] = [];
-
   try {
-    // 각 타입에 대해 API 호출
-    for (const type of types) {
-      for (const word of keywords) {
-        const response = await axios.get(GOOGLE_PLACES_API, {
-          params: {
-            key: GOOGLE_API_KEY,
-            location: `${lat},${lng}`,
-            radius,
-            keyword: word,
-            type,
-            language: 'ko',
-          },
-        });
+    // ✅ 1. 하나의 강력한 키워드 + broad type으로 한번에 검색
+    const keyword = '강아지 고양이 펫 반려동물 dog cat pet animal'; // 한글+영문 혼합
+    const response = await axios.get(GOOGLE_PLACES_API, {
+      params: {
+        key: GOOGLE_API_KEY,
+        location: `${lat},${lng}`,
+        rankby: 'distance', // ✅ 가까운 순으로 정렬
+        keyword,
+        type: 'point_of_interest', // ✅ 넓은 범위로 포함
+        language: 'ko',
+      },
+    });
 
-        console.log('📡 Google API 응답 상태:', response.data.status);
-        console.log(`📡 ${type} 검색 결과 상태:`, response.data.status);
-        if (response.data.results) {
-          allResults.push(...response.data.results);
-        }
-      }
-    }
+    const results = response.data.results || [];
+    console.log('📡 Google API 응답 상태:', response.data.status);
+    console.log('🐾 검색된 장소 수:', results.length);
 
-    const uniqueResults = Array.from(
-      new Map(allResults.map(place => [place.place_id, place])).values(),
-    );
-
-    console.log('🐾 중복 제거 후 최종 장소 수:', uniqueResults.length);
-    return uniqueResults;
+    return results;
   } catch (error) {
     console.error('❌ 장소 검색 실패:', error);
     return [];
