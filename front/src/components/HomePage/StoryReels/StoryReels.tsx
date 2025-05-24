@@ -133,29 +133,38 @@ const StoryReels = () => {
                 ListHeaderComponent={
                     <View style={styles.myStoryWrapper}>
                         {/* 🔵 내 스토리 버튼 */}
-                        <TouchableOpacity onPress={handleMyStoryPress}>
-                            <Image
-                                source={{ uri: userData?.profileImage.uri || 'https://default-image-url.com/default-profile.png' }}
-                                style={[
-                                    styles.storyImage,
-                                    myStories.length > 0 && styles.grayBorder, // 회색 테두리: 이미 스토리가 있는 경우
-                                ]}
-                            />
-                        </TouchableOpacity>
+                      <TouchableOpacity onPress={handleMyStoryPress}>
+                        <Image
+                          source={{
+                            uri: userData?.profileImage.uri || require('../../../assets/images/user-2.png'),
+                          }}
+                          style={[
+                            styles.storyImage,
+                            myStories.length > 0 ? styles.activeBorder : styles.noBorder,
+                          ]}
+                        />
+                      </TouchableOpacity>
                         {/* ➕ 플러스 아이콘으로 추가 업로드 */}
                         <TouchableOpacity style={styles.plusIconWrapper} onPress={handlePickAndUpload}>
                             <Icon name="add-circle" size={20} color="#3399ff" />
                         </TouchableOpacity>
                     </View>
                 }
-                renderItem={({ item, index }) => (
+                renderItem={({ item, index }) => {
+                  if (!item.stories || item.stories.length === 0) return null; // ❌ 스토리 없으면 렌더링 안함
+
+                  return (
                     <TouchableOpacity
-                        style={styles.storyItem}
-                        onPress={() => handleOtherUserPress(index)}
+                      style={styles.storyItem}
+                      onPress={() => handleOtherUserPress(index)}
                     >
-                        <Image source={{ uri: item.profileImageUrl }} style={styles.storyImage} />
+                      <Image
+                        source={{ uri: item.profileImageUrl }}
+                        style={[styles.storyImage, styles.activeBorder]} // ✅ 항상 파란색 테두리
+                      />
                     </TouchableOpacity>
-                )}
+                  );
+                }}
             />
 
 
@@ -194,13 +203,22 @@ const styles = StyleSheet.create({
     storyItem: {
         marginHorizontal: 6,
     },
-    storyImage: {
-        width: 60,
-        height: 60,
-        borderRadius: 50,
-        borderWidth: 2.5,
-        borderColor: '#00a1e6',
-    },
+  storyImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 50,
+    backgroundColor: '#EAEAEA',
+
+  },
+
+  activeBorder: {
+    borderWidth: 2.5,
+    borderColor: '#00a1e6', // 파란색 띠지
+  },
+
+  noBorder: {
+    borderWidth: 0, // 띠지 없음
+  },
     grayBorder: {
         borderColor: '#bbb',
     },
