@@ -1,4 +1,3 @@
-// 📄 screens/MiniGameScreen.tsx
 import React, { useState } from 'react';
 import {
   View,
@@ -29,26 +28,35 @@ const MiniGameScreen = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[styles.tabButton, tab === 'others' && styles.activeTab]}
-          onPress={() => setTab('others')}
-        >
-          <Text style={styles.tabText}>다른 펫과</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tabButton, tab === 'ai-one' && styles.activeTab]}
-          onPress={() => setTab('ai-one')}
-        >
-          <Text style={styles.tabText}>가상펫과</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tabButton, tab === 'ai-two' && styles.activeTab]}
-          onPress={() => setTab('ai-two')}
-        >
-          <Text style={styles.tabText}>가상펫끼리</Text>
-        </TouchableOpacity>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+      {/* 탭 UI 개선 - 3개로 확장 */}
+      <View style={styles.tabWrapper}>
+        <View style={styles.tabBox}>
+          <TouchableOpacity
+            style={[styles.tabItem, tab === 'others' && styles.activeTabItem]}
+            onPress={() => setTab('others')}
+          >
+            <Text style={[styles.tabItemText, tab === 'others' && styles.activeTabText]}>
+              다른 펫과
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tabItem, tab === 'ai-one' && styles.activeTabItem]}
+            onPress={() => setTab('ai-one')}
+          >
+            <Text style={[styles.tabItemText, tab === 'ai-one' && styles.activeTabText]}>
+              즉석 펫과
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tabItem, tab === 'ai-two' && styles.activeTabItem]}
+            onPress={() => setTab('ai-two')}
+          >
+            <Text style={[styles.tabItemText, tab === 'ai-two' && styles.activeTabText]}>
+              즉석 펫끼리
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
       <ScrollView contentContainerStyle={{ padding: 20 }}>
         {renderTab()}
@@ -58,27 +66,44 @@ const MiniGameScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  tabContainer: {
+  // 탭 박스 바깥 여백
+  tabWrapper: {
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+  },
+  // 탭 박스
+  tabBox: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 12,
     backgroundColor: '#F4F4F4',
+    borderRadius: 16,
+    overflow: 'hidden',
   },
-  tabButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-    backgroundColor: '#E0E0E0',
+  // 탭 항목 기본
+  tabItem: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  activeTab: {
-    backgroundColor: '#4D7CFE',
+  // 활성 탭
+  activeTabItem: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  tabText: {
+  // 텍스트
+  tabItemText: {
     fontSize: 14,
-    color: '#fff',
     fontWeight: 'bold',
+    color: '#999999',
+  },
+  activeTabText: {
+    color: '#4D7CFE',
   },
 });
 
 export default MiniGameScreen;
-
