@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "resolveJsonModule": true,  // JSON 파일 import 가능하도록 설정
+    "esModuleInterop": true,    // CommonJS 모듈 호환성 추가
+    "target": "esnext",
+    "module": "esnext",
+    "types": ["@env"],
+    "include": ["src", "env.d.ts"],
+    "strict": true,
+    "jsx": "react-native",
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "moduleResolution": "node",
+    "baseUrl": "./",
+    "paths": {
+      "@react-navigation/*": ["node_modules/@react-navigation/*"]
+    }
+  },
+  "exclude": ["node_modules", "babel.config.js", "metro.config.js"]
+}
