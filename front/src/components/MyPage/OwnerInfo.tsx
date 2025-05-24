@@ -199,6 +199,9 @@ const OwnerInfo = () => {
   //     console.log('📸 typeof profileImage:', typeof userData.profileImage);
   // }, [userData]);
 
+  // 상단에 추가
+  const realPetCount = userData.petList?.filter(p => Number(p.id) !== 0).length || 0;
+
   return (
     <View style={styles.container}>
       {/* ✅ 상단 프로필 영역 */}
@@ -223,7 +226,7 @@ const OwnerInfo = () => {
             </View>
 
             {/* 🔹 반려동물 수 */}
-            <Text style={styles.petCount}>{userData.petCount}마리</Text>
+            <Text style={styles.petCount}>{realPetCount}마리</Text>
           </View>
         </View>
 
