@@ -21,11 +21,15 @@ const SearchScreen: React.FC<Props> = ({ searchQuery, onClose }) => {
   const { boardList } = boardStore();
 
   const filteredPosts = useMemo(() => {
-    return boardList.filter(
-      post =>
-        post.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.titleContent?.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
+    return boardList.filter(post => {
+      const lowerQuery = searchQuery.toLowerCase();
+      return (
+        post.title?.toLowerCase().includes(lowerQuery) ||
+        post.titleContent?.toLowerCase().includes(lowerQuery) ||
+        post.tag?.toLowerCase().includes(lowerQuery) ||
+        post.author.nickname?.toLowerCase().includes(lowerQuery)
+      );
+    });
   }, [searchQuery, boardList]);
 
   return (
@@ -50,6 +54,9 @@ const SearchScreen: React.FC<Props> = ({ searchQuery, onClose }) => {
             >
               <Text style={styles.resultTitle}>{post.title}</Text>
               <Text style={styles.resultSub}>{post.titleContent}</Text>
+              <Text style={styles.resultMeta}>
+                • 작성자: {post.author.nickname}  {post.tag ? `#${post.tag}` : ''}
+              </Text>
             </TouchableOpacity>
           ))
         ) : (
@@ -63,7 +70,7 @@ const SearchScreen: React.FC<Props> = ({ searchQuery, onClose }) => {
 const styles = StyleSheet.create({
   overlay: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 120 : 60, // 헤더 아래부터 시작
+    top: Platform.OS === 'ios' ? 110 : 60, // 헤더 아래부터 시작
     left: 0,
     right: 0,
     bottom: 0,
@@ -98,6 +105,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
     fontSize: 15,
+  },
+  resultMeta: {
+    fontSize: 12,
+    color: '#888',
+    marginTop: 6,
   },
   resultSub: {
     fontSize: 13,
