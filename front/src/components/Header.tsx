@@ -123,36 +123,40 @@ const Header: React.FC<HeaderProps> = ({
       {/* 🔽 펫 선택 드롭다운 */}
       {dropdownVisible && (
         <View style={styles.dropdown}>
-          {!pets?.length || isDummyPet ? (
-            <TouchableOpacity
-              style={styles.dropdownItem}
-              onPress={() => {
-                setDropdownVisible(false);
-                //@ts-ignore
-                navigation.navigate('PetRegistrationScreen');
-              }}>
-              <Text style={styles.dropdownText}>등록하러 가기</Text>
-            </TouchableOpacity>
-          ) : (
-            pets.map(
-              pet =>
-                pet.petId !== selectedPet?.petId && (
-                  <TouchableOpacity
-                    key={pet.petId}
-                    style={styles.dropdownItem}
-                    onPress={() => {
-                      setSelectedPet(pet);
-                      setDropdownVisible(false);
-                    }}>
-                    <Image
-                      source={getImageSource(pet.petImg)}
-                      style={styles.petImage}
-                    />
-                    <Text style={styles.dropdownText}>{pet.name}</Text>
-                  </TouchableOpacity>
-                ),
-            )
+          {pets
+            .filter(pet => pet.petId !== selectedPet?.petId)
+            .map(pet => (
+              <TouchableOpacity
+                key={pet.petId}
+                style={styles.dropdownItem}
+                onPress={() => {
+                  setSelectedPet(pet);
+                  setDropdownVisible(false);
+                }}>
+                <Image
+                  source={getImageSource(pet.petImg)}
+                  style={styles.petImage}
+                />
+                <Text style={styles.dropdownText}>{pet.name}</Text>
+              </TouchableOpacity>
+            ))}
+
+          {pets.length > 0 && (
+            <View style={styles.divider} />
           )}
+
+          <TouchableOpacity
+            style={styles.dropdownItem}
+            onPress={() => {
+              setDropdownVisible(false);
+              //@ts-ignore
+              navigation.navigate('PetRegistrationScreen');
+            }}>
+            <Icon name="add" size={18} color="#4D7CFE" />
+            <Text style={[styles.dropdownText, {color: '#4D7CFE'}]}>
+              등록하러 가기
+            </Text>
+          </TouchableOpacity>
         </View>
       )}
     </View>
@@ -241,6 +245,11 @@ const styles = StyleSheet.create({
   dropdownText: {
     fontSize: 14,
     marginLeft: 8,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#eee',
+    marginVertical: 6,
   },
 });
 
