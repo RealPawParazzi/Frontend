@@ -30,7 +30,10 @@ import PetRouteBottomModal from '../components/Map/PetRouteBottomModal';
 import PlaceDetailModal from '../components/Map/PlaceDetailModal';
 
 import {searchPetFriendlyPlaces} from '../services/placeSearchService';
-import {createPlace} from '../services/placeService';
+import placeStore, {Place} from '../context/placeStore';
+import FavoritesModal from '../components/Map/FavoritesModal'; // 🔹 즐겨찾기 장소 스토어 추가
+
+
 
 // NodeJS 타입 오류 방지를 위한 글로벌 선언
 declare global {
@@ -87,6 +90,40 @@ const MapScreen = () => {
 
   const [isPlaceModalVisible, setIsPlaceModalVisible] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<any>(null);
+
+  const { places, fetchPlaces, addPlace } = placeStore(); // 추가된 부분
+
+  const [isFavoritesModalVisible, setIsFavoritesModalVisible] = useState(false);
+
+  const [selectedFavoritePlace, setSelectedFavoritePlace] = useState<Place | null>(null); // 즐겨찾기 모달에서 선택한 장소
+
+  /** ✅ 즐겨찾기 모달에서 장소 클릭 시 지도 이동 및 모달 열기 */
+  const handleSelectFavoritePlace = (place: Place) => {
+    const transformedPlace = {
+      name: place.name,
+      vicinity: place.address,
+      geometry: {
+        location: {
+          lat: place.latitude,
+          lng: place.longitude,
+        },
+      },
+    };
+
+    setSelectedPlace(transformedPlace);
+    setIsPlaceModalVisible(true);
+
+    // 지도 이동
+    mapRef.current?.animateToRegion(
+      {
+        latitude: place.latitude,
+        longitude: place.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      },
+      1000,
+    );
+  };
 
   // ✅ 위치 권한 요청 및 확인 함수
   const checkLocationPermission = async (): Promise<boolean> => {
@@ -155,6 +192,10 @@ const MapScreen = () => {
   useEffect(() => {
     getCurrentLocation();
   }, []);
+
+  useEffect(() => {
+    fetchPlaces(); // 즐겨찾기 장소 가져오기
+  }, [fetchPlaces]);
 
   // ✅ 위치 변경 & 검색 트리거 시 근처 장소 검색
   useEffect(() => {
@@ -225,9 +266,10 @@ const MapScreen = () => {
         return;
       }
 
-      /** 위치 권한 허용된 경우 위치 추적 시작 */
-      setStartTime(new Date().toISOString().replace('Z', '').split('.')[0]);
-      console.log(`[산책 시작시간] : ${startTime}`);
+      // ✅ startTime이 아직 설정되지 않았다면, 한 번만 설정
+      setStartTime(prev =>
+        prev ? prev : new Date().toISOString().replace('Z', '').split('.')[0],
+      );
 
       watchId = Geolocation.watchPosition(
         position => {
@@ -295,7 +337,7 @@ const MapScreen = () => {
         Geolocation.clearWatch(watchId);
       }
     };
-  }, [isWalking, startTime, walkRoute]);
+  }, [isWalking, walkRoute]);
 
   // ✅ 거리 계산 및 평균 속도 계산
   useEffect(() => {
@@ -380,10 +422,43 @@ const MapScreen = () => {
   };
 
   const startWalking = () => {
-    setPetRoutes([]); // 산책 시작 시 기존 경로 제거
-    // setStartTime(new Date().toISOString().split('.')[0]);
-    // setIsWalking(true);
+    setPetRoutes([]);
     setWalkRoute([]);
+    setStartTime(null);
+  };
+
+  const isPlaceInFavorites = (place: any): boolean => {
+    return places.some(
+      fav =>
+        fav.name === place.name &&
+        fav.address === place.vicinity
+    );
+  };
+
+  const toggleFavorite = async () => {
+    if (!selectedPlace) return;
+
+    const isFav = isPlaceInFavorites(selectedPlace);
+
+    if (isFav) {
+      // 삭제
+      const placeToRemove = places.find(
+        p =>
+          p.name === selectedPlace.name &&
+          p.address === selectedPlace.vicinity
+      );
+      if (placeToRemove) {
+        await placeStore.getState().removePlace(placeToRemove.id);
+      }
+    } else {
+      // 추가
+      await addPlace({
+        name: selectedPlace.name,
+        address: selectedPlace.vicinity,
+        latitude: selectedPlace.geometry.location.lat,
+        longitude: selectedPlace.geometry.location.lng,
+      });
+    }
   };
 
   return (
@@ -420,7 +495,7 @@ const MapScreen = () => {
           <WalkPathPolyline route={walkRoute} />
 
           {/* ✅ 과거 산책 경로 */}
-          {petRoutes.length > 1 && (
+          {!isWalking && petRoutes.length > 1 && (
             <>
               <Polyline
                 coordinates={petRoutes}
@@ -446,24 +521,38 @@ const MapScreen = () => {
             </>
           )}
 
-          {/* ✅ 근처 장소 마커 */}
-          {nearbyPlaces.map((place, index) => (
-            <Marker
-              key={`place-${index}`}
-              coordinate={{
-                latitude: place.geometry.location.lat,
-                longitude: place.geometry.location.lng,
-              }}
-              onPress={() => {
-                setSelectedPlace(place); // 클릭 시 모달 표시용 상태 저장
-                setIsPlaceModalVisible(true);
-              }}>
-              <Image
-                source={require('../assets/images/marker/middleIcon.png')}
-                style={styles.markerIcon}
-              />
-            </Marker>
-          ))}
+          {/* ✅ 근처 장소 마커, 즐겨찾는 장소는 노란 카머 표시 */}
+          {nearbyPlaces.map((place, index) => {
+            const isFavorite = places.some(fav =>
+              fav.name === place.name && fav.address === place.vicinity
+            ); // ✅ 이름 + 주소로 즐겨찾기 여부 확인
+
+            return (
+              <Marker
+                key={`place-${index}`}
+                coordinate={{
+                  latitude: place.geometry.location.lat,
+                  longitude: place.geometry.location.lng,
+                }}
+                onPress={() => {
+                  setSelectedPlace(place);
+                  setIsPlaceModalVisible(true);
+                }}>
+                {isFavorite ? (
+                  // 즐겨찾기 마커 (노란색 + 별 아이콘)
+                  <View style={styles.favoriteMarker}>
+                    <Text style={styles.starText}>⭐</Text>
+                  </View>
+                ) : (
+                  // 기본 회색 마커
+                  <Image
+                    source={require('../assets/images/marker/middleIcon.png')}
+                    style={styles.markerIcon}
+                  />
+                )}
+              </Marker>
+            );
+          })}
         </MapView>
       </View>
 
@@ -565,23 +654,26 @@ const MapScreen = () => {
         isVisible={isPlaceModalVisible}
         place={selectedPlace}
         onClose={() => setIsPlaceModalVisible(false)}
-        onAddFavorite={async () => {
-          if (!selectedPlace) {
-            return;
-          }
-          try {
-            await createPlace({
-              name: selectedPlace.name,
-              address: selectedPlace.vicinity,
-              latitude: selectedPlace.geometry.location.lat,
-              longitude: selectedPlace.geometry.location.lng,
-            });
-            Alert.alert('✅ 즐겨찾기에 추가되었습니다!');
-          } catch (e) {
-            Alert.alert('❌ 실패', '즐겨찾기 추가에 실패했습니다.');
-          }
-        }}
+        isFavorite={selectedPlace ? isPlaceInFavorites(selectedPlace) : false}
+        onToggleFavorite={toggleFavorite}
       />
+
+      {/* ⭐ 즐겨찾기 버튼 - 돋보기 위에 위치 */}
+      <TouchableOpacity
+        style={[styles.locationButton, {bottom: 330}]}
+        onPress={() => setIsFavoritesModalVisible(true)}>
+        <Icon name="star" size={22} color="white" />
+      </TouchableOpacity>
+
+      <FavoritesModal
+        isVisible={isFavoritesModalVisible}
+        onClose={() => setIsFavoritesModalVisible(false)}
+        places={places}
+        onSelectPlace={(place) => {
+        handleSelectFavoritePlace(place);
+        setIsFavoritesModalVisible(false);
+      }}
+        />
 
       {/* 🔍 검색 트리거 버튼 (위치 조정) */}
       <TouchableOpacity
@@ -597,14 +689,6 @@ const MapScreen = () => {
         <Icon name="pets" size={22} color="white" />
       </TouchableOpacity>
 
-      {/* ✅ 선택된 펫의 산책 루트를 지도에 표시 */}
-      {petRoutes.length > 1 && (
-        <Polyline
-          coordinates={petRoutes}
-          strokeColor="#FFDD99"
-          strokeWidth={4}
-        />
-      )}
     </View>
   );
 };
@@ -665,6 +749,25 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
     backgroundColor: '#ffffff',
     borderRadius: 50,
+  },
+
+  favoriteMarker: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFD700', // 노란색
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderColor: '#fff',
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+
+  starText: {
+    fontSize: 20,
   },
 });
 
