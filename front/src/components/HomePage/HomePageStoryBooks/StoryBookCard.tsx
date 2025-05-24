@@ -16,9 +16,11 @@ import Video from 'react-native-video';
 import {createThumbnail} from 'react-native-create-thumbnail';
 import userStore from '../../../context/userStore';
 import boardStore from '../../../context/boardStore'; // 추가
+import useSearchStore from '../../../context/searchStore'; // ✅ 추가
 
 interface StoryBookCardProps {
   id: number;
+  title: string;
   titleImage: string;
   titleContent: string;
   writeDatetime: string;
@@ -29,6 +31,7 @@ interface StoryBookCardProps {
   favoriteCount: number;
   commentCount: number;
   viewCount: number;
+  tag?: string; // 태그는 선택적
 }
 
 const StoryBookCard: React.FC<{story: StoryBookCardProps}> = ({story}) => {
@@ -200,8 +203,13 @@ const StoryBookCard: React.FC<{story: StoryBookCardProps}> = ({story}) => {
           ))}
       </TouchableOpacity>
 
-      {/* 🔹 콘텐츠 텍스트 */}
-      <Text style={styles.content}>{story.titleContent}</Text>
+      {/* 🔹 게시글 내용 */}
+      <View style={styles.textWrapper}>
+        <Text style={styles.title}>{story.title}</Text>
+        <Text style={styles.titleContent}>{story.titleContent}</Text>
+        {story.tag && <Text style={styles.tagText}>#{story.tag}</Text>}
+      </View>
+
 
       {/* 🔹 하단 아이콘 */}
       <View style={styles.footer}>
@@ -260,11 +268,25 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginTop: 8,
   },
-  content: {
+  textWrapper: {
+    paddingHorizontal: 12,
+    paddingTop: 10,
+  },
+  title: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#111',
+  },
+  titleContent: {
     fontSize: 14,
     color: '#333',
-    marginTop: 10,
-    marginBottom: 8,
+    marginVertical: 10,
+  },
+  tagText: {
+    fontSize: 12,
+    color: '#4D7CFE',
+    marginTop: 6,
+    fontWeight: '600',
   },
   footer: {
     flexDirection: 'row',
