@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import {useNavigation} from '@react-navigation/native'; // 🔹 네비게이션 훅
 import {Calendar} from 'react-native-calendars';
 import userStore from '../context/userStore';
 import walkStore from '../context/walkStore';
@@ -18,6 +19,8 @@ import boardStore from '../context/boardStore';
 import Footer from '../components/Footer';
 
 const CalendarScreen = () => {
+  const navigation = useNavigation(); // 🔹 화면 이동용 네비게이션 객체
+
   const {userData} = userStore();
   const {walks, fetchAllMyWalks} = walkStore(); // ✅ 전체 산책기록 불러오기
   const {userBoardsMap, fetchUserBoards} = boardStore();
@@ -147,19 +150,23 @@ const CalendarScreen = () => {
             <>
               <Text style={styles.sectionTitle}>📍 산책 기록</Text>
               {filteredWalks.map(walk => (
-                <View key={walk.id} style={styles.cardWalk}>
+                <TouchableOpacity
+                  key={walk.id}
+                  style={styles.cardWalk}
+                  onPress={() =>
+                    //@ts-ignore
+                    navigation.navigate('Map', {walkId: walk.id}) // ✅ 맵 화면으로 이동
+                  }>
                   <Text style={styles.cardTitle}>[산책] {walk.distance}km</Text>
                   <Text style={styles.cardSub}>
-                    {new Date(walk.startTime).toLocaleTimeString()} • 평균{' '}
-                    {walk.averageSpeed}km/h
+                    {new Date(walk.startTime).toLocaleTimeString()} • 평균 {walk.averageSpeed}km/h
                   </Text>
                   {walk.pet && (
                     <Text style={styles.cardSub}>
-                      🐾 {walk.pet.name} (
-                      {walk.pet.type === 'DOG' ? '강아지' : '고양이'})
+                      🐾 {walk.pet.name} ({walk.pet.type === 'DOG' ? '강아지' : '고양이'})
                     </Text>
                   )}
-                </View>
+                </TouchableOpacity>
               ))}
             </>
           )}
@@ -169,13 +176,19 @@ const CalendarScreen = () => {
             <>
               <Text style={styles.sectionTitle}>📝 게시물</Text>
               {filteredPosts.map(post => (
-                <View key={post.id} style={styles.cardPost}>
+                <TouchableOpacity
+                  key={post.id}
+                  style={styles.cardPost}
+                  onPress={() =>
+                    //@ts-ignore
+                    navigation.navigate('StorybookDetailScreen', {boardId: post.id}) // ✅ 상세 게시글로 이동
+                  }>
                   <Text style={styles.cardTitle}>[게시물] {post.title}</Text>
                   <Text style={styles.cardContent}>{post.titleContent}</Text>
                   <Text style={styles.cardSub}>
                     작성자: {post.author?.nickname}
                   </Text>
-                </View>
+                </TouchableOpacity>
               ))}
             </>
           )}
