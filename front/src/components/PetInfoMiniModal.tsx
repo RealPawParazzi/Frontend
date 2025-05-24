@@ -30,13 +30,9 @@ const PetInfoMiniModal: React.FC<PetInfoMiniModalProps> = ({
   const navigation = useNavigation();
   const {removePet} = petStore(); // 🟢 삭제 스토어 함수 사용
 
-  if (!pet) {
-    return null;
-  }
 
-  /**
-   * 🗑️ 반려동물 삭제 처리
-   */
+  if (!pet) return null;
+
   const handleDelete = async () => {
     Alert.alert('삭제 확인', '이 반려동물을 삭제하시겠습니까?', [
       {text: '취소', style: 'cancel'},
@@ -45,13 +41,10 @@ const PetInfoMiniModal: React.FC<PetInfoMiniModalProps> = ({
         style: 'destructive',
         onPress: async () => {
           try {
-            await removePet(pet.petId); // ✅ Zustand에서 삭제
-            onClose(); // ✅ 모달 닫기
+            await removePet(pet.petId);
+            onClose();
           } catch (error) {
-            Alert.alert(
-              '삭제 실패',
-              '반려동물을 삭제하는 중 오류가 발생했습니다.',
-            );
+            Alert.alert('삭제 실패', '삭제 중 오류가 발생했습니다.');
             console.error('🐶❌ 삭제 오류:', error);
           }
         },
@@ -59,13 +52,14 @@ const PetInfoMiniModal: React.FC<PetInfoMiniModalProps> = ({
     ]);
   };
 
+
   /**
    * ✏ 수정 페이지 이동
    */
   const handleEdit = () => {
     // @ts-ignore
-    navigation.navigate('PetEditScreen', {pet}); // ✅ 수정 화면으로 이동
-    onClose(); // ✅ 모달 닫기
+    navigation.navigate('PetEditScreen', {pet});
+    onClose();
   };
 
   /**
@@ -163,55 +157,52 @@ const PetInfoMiniModal: React.FC<PetInfoMiniModalProps> = ({
                   }`}
             </Text>
           </View>
+
+          <View style={styles.petBio}>
+            <Text style={styles.bioTitle}>집사는 {pet.name}를 이렇게 생각해요!</Text>
+            <Text style={styles.bioText}>{pet.petDetail || '아직 작성된 집사의 소개가 없어요!'}</Text>
+          </View>
         </View>
       </View>
     </Modal>
   );
 };
-
 /** ✅ 스타일 정의 */
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
-    paddingBottom: 20,
   },
-
   modalContainer: {
     backgroundColor: 'white',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
     alignItems: 'center',
-    height: '78%',
+    height: '88%',
   },
-
   closeButton: {
     alignSelf: 'flex-end',
     padding: 5,
   },
-
   petImage: {
     width: '100%',
     height: 200,
     borderRadius: 12,
     marginVertical: 15,
   },
-
   headerButtons: {
     flexDirection: 'row',
     justifyContent: 'center',
     marginBottom: 10,
   },
-
   iconButton: {
     marginHorizontal: 15,
     padding: 8,
     backgroundColor: 'rgba(255,255,255,0.8)',
     borderRadius: 20,
   },
-
   petInfoCard: {
     backgroundColor: '#E0F2F1',
     borderRadius: 20,
@@ -219,68 +210,57 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
   },
-
   petName: {
     fontSize: 22,
     fontWeight: 'bold',
     color: '#333',
   },
-
   petType: {
     fontSize: 16,
     color: '#777',
     marginTop: 5,
   },
-
   petAgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 10,
   },
-
   petAge: {
     fontSize: 16,
     color: '#777',
     marginLeft: 5,
   },
-
   petDetails: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     width: '100%',
     marginTop: 20,
   },
-
   detailBox: {
     width: '48%',
     paddingVertical: 10,
     borderRadius: 10,
     alignItems: 'center',
   },
-
   detailLabel: {
     fontSize: 12,
     color: '#555',
   },
-
   detailValue: {
     fontSize: 14,
     fontWeight: 'bold',
     marginTop: 5,
   },
-
   petBio: {
     width: '100%',
     marginTop: 20,
   },
-
   bioTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 10,
   },
-
   bioText: {
     fontSize: 14,
     color: '#666',
