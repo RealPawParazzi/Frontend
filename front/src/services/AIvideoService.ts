@@ -94,7 +94,7 @@ export async function fetchVideoStatus(jobId: string): Promise<StatusResponse> {
  * POST /api/videos/{battleId}
  */
 export async function createBattleVideoRequest(
-  battleId: number,
+  battleId: number | undefined,
 ): Promise<CreateResponse> {
   const token = await AsyncStorage.getItem('accessToken');
   if (!token) {

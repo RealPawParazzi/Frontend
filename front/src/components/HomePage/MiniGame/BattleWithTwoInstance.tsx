@@ -11,11 +11,11 @@ import {
 import {launchImageLibrary} from 'react-native-image-picker';
 import useBattleStore from '../../../context/battleStore';
 import {useAIvideoStore} from '../../../context/AIvideoStore';
+import Video from 'react-native-video';
 
-const BattleWithTwoAI = () => {
-  const {loading, battleResult, battleDetail, requestTwoInstanceBattleAction} =
+const BattleWithTwoInstance = () => {
+  const {loading, battleResult, requestTwoInstanceBattleAction} =
     useBattleStore();
-
   const {
     status,
     finalUrl,
@@ -23,15 +23,25 @@ const BattleWithTwoAI = () => {
     startBattleVideoGeneration,
   } = useAIvideoStore();
 
-  // 🐶 펫1 상태
-  const [pet1, setPet1] = useState({name: '', type: 'DOG', petDetail: ''});
+  // ✅ 펫1 상태
+  const [pet1, setPet1] = useState({
+    name: '',
+    type: 'DOG',
+    petDetail: '',
+    birthDate: '',
+  });
   const [pet1Image, setPet1Image] = useState<any>(null);
 
-  // 🐱 펫2 상태
-  const [pet2, setPet2] = useState({name: '', type: 'CAT', petDetail: ''});
+  // ✅ 펫2 상태
+  const [pet2, setPet2] = useState({
+    name: '',
+    type: 'CAT',
+    petDetail: '',
+    birthDate: '',
+  });
   const [pet2Image, setPet2Image] = useState<any>(null);
 
-  // 🖼️ 이미지 선택
+  // ✅ 이미지 선택
   const pickImage = async (setImage: Function) => {
     const res = await launchImageLibrary({mediaType: 'photo'});
     const asset = res.assets?.[0];
@@ -44,14 +54,16 @@ const BattleWithTwoAI = () => {
     }
   };
 
-  // 🥊 배틀 요청
+  // ✅ 배틀 요청
   const handleBattle = async () => {
     if (
       !pet1.name ||
       !pet1.petDetail ||
+      !pet1.birthDate ||
       !pet1Image ||
       !pet2.name ||
       !pet2.petDetail ||
+      !pet2.birthDate ||
       !pet2Image
     ) {
       Alert.alert(
@@ -62,97 +74,53 @@ const BattleWithTwoAI = () => {
     }
 
     try {
-      resetVideo(); // 영상 초기화
-      console.log('[⚔️ 두 가상펫 배틀 시작]');
+      resetVideo(); // 🎬 이전 영상 초기화
       await requestTwoInstanceBattleAction(pet1, pet1Image, pet2, pet2Image);
     } catch (e: any) {
       Alert.alert('❌ 실패', e.message || '배틀 요청 실패');
     }
   };
 
-  // 🎬 배틀 영상 생성
+  // ✅ 영상 생성 요청
   const handleGenerateVideo = () => {
-    if (!battleResult?.runway_prompt || !battleDetail?.battleId) {
+    if (!battleResult?.battleId) {
       return;
     }
-    console.log('🎬 [영상 생성 요청]', battleDetail.battleId);
-    startBattleVideoGeneration(battleDetail.battleId);
+    startBattleVideoGeneration(battleResult.battleId);
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>🤖 가상의 두 마리 펫 배틀</Text>
+      <Text style={styles.title}>🤖 즉석 두 마리 펫 배틀</Text>
 
-      {/* 🐶 펫1 입력 */}
-      <Text style={styles.subTitle}>🐶 가상 펫 1</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="이름"
-        value={pet1.name}
-        onChangeText={name => setPet1({...pet1, name})}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="설명"
-        value={pet1.petDetail}
-        onChangeText={petDetail => setPet1({...pet1, petDetail})}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="타입 (DOG/CAT)"
-        value={pet1.type}
-        onChangeText={type =>
-          setPet1({...pet1, type: type.toUpperCase() === 'CAT' ? 'CAT' : 'DOG'})
-        }
-      />
-      <TouchableOpacity
-        style={styles.imageButton}
-        onPress={() => pickImage(setPet1Image)}>
+      {/* 펫 1 입력 */}
+      <Text style={styles.subTitle}>🐶 즉석 펫 1</Text>
+      <TextInput style={styles.input} placeholder="이름" value={pet1.name} onChangeText={v => setPet1({ ...pet1, name: v })} />
+      <TextInput style={styles.input} placeholder="설명" value={pet1.petDetail} onChangeText={v => setPet1({ ...pet1, petDetail: v })} />
+      <TextInput style={styles.input} placeholder="종류 (DOG/CAT)" value={pet1.type} onChangeText={v => setPet1({ ...pet1, type: v.toUpperCase() === 'CAT' ? 'CAT' : 'DOG' })} />
+      <TextInput style={styles.input} placeholder="생년월일 (YYYY-MM-DD)" value={pet1.birthDate} onChangeText={v => setPet1({ ...pet1, birthDate: v })} />
+      <TouchableOpacity style={styles.imageButton} onPress={() => pickImage(setPet1Image)}>
         <Text>{pet1Image ? '📸 이미지 선택 완료' : '🖼️ 이미지 선택하기'}</Text>
       </TouchableOpacity>
 
-      {/* 🐱 펫2 입력 */}
-      <Text style={styles.subTitle}>🐱 가상 펫 2</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="이름"
-        value={pet2.name}
-        onChangeText={name => setPet2({...pet2, name})}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="설명"
-        value={pet2.petDetail}
-        onChangeText={petDetail => setPet2({...pet2, petDetail})}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="타입 (DOG/CAT)"
-        value={pet2.type}
-        onChangeText={type =>
-          setPet2({...pet2, type: type.toUpperCase() === 'CAT' ? 'CAT' : 'DOG'})
-        }
-      />
-      <TouchableOpacity
-        style={styles.imageButton}
-        onPress={() => pickImage(setPet2Image)}>
+      {/* 펫 2 입력 */}
+      <Text style={styles.subTitle}>🐱 즉석 펫 2</Text>
+      <TextInput style={styles.input} placeholder="이름" value={pet2.name} onChangeText={v => setPet2({ ...pet2, name: v })} />
+      <TextInput style={styles.input} placeholder="설명" value={pet2.petDetail} onChangeText={v => setPet2({ ...pet2, petDetail: v })} />
+      <TextInput style={styles.input} placeholder="종류 (DOG/CAT)" value={pet2.type} onChangeText={v => setPet2({ ...pet2, type: v.toUpperCase() === 'CAT' ? 'CAT' : 'DOG' })} />
+      <TextInput style={styles.input} placeholder="생년월일 (YYYY-MM-DD)" value={pet2.birthDate} onChangeText={v => setPet2({ ...pet2, birthDate: v })} />
+      <TouchableOpacity style={styles.imageButton} onPress={() => pickImage(setPet2Image)}>
         <Text>{pet2Image ? '📸 이미지 선택 완료' : '🖼️ 이미지 선택하기'}</Text>
       </TouchableOpacity>
 
-      {/* 🔘 배틀 버튼 */}
+      {/* 배틀 버튼 */}
       <TouchableOpacity style={styles.battleButton} onPress={handleBattle}>
         <Text style={styles.battleButtonText}>배틀 시작</Text>
       </TouchableOpacity>
 
-      {loading && (
-        <ActivityIndicator
-          size="large"
-          color="#4D7CFE"
-          style={{marginTop: 10}}
-        />
-      )}
+      {loading && <ActivityIndicator size="large" color="#4D7CFE" style={{ marginTop: 10 }} />}
 
-      {/* 🎉 결과 */}
+      {/* 결과 출력 */}
       {battleResult && (
         <View style={styles.resultBox}>
           <Text style={styles.resultTitle}>🎉 배틀 결과</Text>
@@ -165,25 +133,42 @@ const BattleWithTwoAI = () => {
         </View>
       )}
 
+      {/* ✅ 영상 생성 중 로딩 */}
       {status === 'IN_PROGRESS' && (
-        <Text style={{ marginTop: 10, color: '#666' }}>📽️ 영상 생성 중...</Text>
+        <View style={styles.videoLoading}>
+          <ActivityIndicator size="large" color="#4D7CFE" />
+          <Text style={{marginTop: 8, color: '#666'}}>📽️ 영상 생성 중...</Text>
+        </View>
       )}
+
       {finalUrl && (
-        <Text style={{ color: '#4D7CFE', marginTop: 10 }}>📺 영상 링크: {finalUrl}</Text>
+        <View style={{ marginTop: 20 }}>
+          <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>📺 배틀 영상:</Text>
+          <Video
+            source={{ uri: finalUrl }}
+            style={{ width: '100%', height: 200, borderRadius: 10, backgroundColor: '#000' }}
+            controls
+            resizeMode="contain"
+          />
+        </View>
       )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {padding: 20},
-  title: {fontSize: 18, fontWeight: 'bold', marginBottom: 16, color: '#4D7CFE'},
-  subTitle: {fontSize: 16, fontWeight: '600', marginTop: 10, marginBottom: 6},
+  container: { padding: 20 },
+  title: { fontSize: 18, fontWeight: 'bold', marginBottom: 16, color: '#4D7CFE' },
+  subTitle: { fontSize: 16, fontWeight: '600', marginTop: 10, marginBottom: 6 },
   input: {
     backgroundColor: '#F1F3F5',
     padding: 10,
     borderRadius: 8,
     marginBottom: 10,
+  },
+  videoLoading: {
+    marginTop: 16,
+    alignItems: 'center',
   },
   imageButton: {
     backgroundColor: '#DDE6FF',
@@ -232,4 +217,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default BattleWithTwoAI;
+export default BattleWithTwoInstance;

@@ -21,7 +21,7 @@ interface AIvideoState {
     imageFile: {uri: string; name: string; type: string},
   ) => Promise<void>;
   pollStatus: (intervalMs?: number) => void;
-  startBattleVideoGeneration: (battleId: number) => Promise<void>; // ✅ 배틀 영상 추가
+  startBattleVideoGeneration: (battleId: number | undefined) => Promise<void>; // ✅ 배틀 영상 추가
   setFinalUrl: (url: string) => void;
   stopPolling: () => void;
   reset: () => void;
@@ -143,7 +143,7 @@ export const useAIvideoStore = create<AIvideoState>((set, get) => ({
   },
 
   // ✅ 배틀 영상 생성 시작
-  startBattleVideoGeneration: async (battleId: number) => {
+  startBattleVideoGeneration: async (battleId: number | undefined) => {
     get().reset(); // 기존 상태 초기화
     set({status: 'PENDING', resultUrl: null, error: null, finalUrl: null});
 

@@ -11,6 +11,7 @@ import {
 import {launchImageLibrary} from 'react-native-image-picker';
 import useBattleStore from '../../../context/battleStore';
 import {useAIvideoStore} from '../../../context/AIvideoStore';
+import Video from 'react-native-video';
 
 // 예시: 서버에서 가져올 수 있음
 const opponentPets = [
@@ -19,6 +20,7 @@ const opponentPets = [
     name: '루비',
     type: 'DOG',
     image: require('../../../assets/images/1.jpg'),
+    birth: '2023-01-01',
     detail: '루비는 활발하고 용감한 강아지입니다.',
   },
   {
@@ -26,6 +28,7 @@ const opponentPets = [
     name: '몽이',
     type: 'CAT',
     image: require('../../../assets/images/cat-1.jpg'),
+    birth: '2022-05-15',
     detail: '몽이는 호기심 많고 장난꾸러기 고양이입니다.',
   },
   {
@@ -33,23 +36,25 @@ const opponentPets = [
     name: '짱이',
     type: 'CAT',
     image: require('../../../assets/images/cat-4.jpg'),
+    birth: '2021-08-20',
     detail: '짱이는 조용하고 차분한 성격의 고양이입니다.',
   },
 ];
 
-const BattleWithOneAI = () => {
+const BattleWithOneInstance = () => {
   // ✅ 상태 정의
-  const [targetPetId, setTargetPetId] = useState<number | null>(null); // 상대 펫 (하드코딩된 예시)
-  const [myAiName, setMyAiName] = useState('');
-  const [myAiDetail, setMyAiDetail] = useState('');
-  const [myAiType, setMyAiType] = useState<'DOG' | 'CAT'>('DOG'); // 선택지 확장 가능
-  const [aiImage, setAiImage] = useState<{
+  const [targetPetId, setTargetPetId] = useState<number | null>(null);
+  const [myInstanceName, setMyInstanceName] = useState('');
+  const [myInstanceDetail, setMyInstanceDetail] = useState('');
+  const [myInstanceType, setMyInstanceType] = useState<'DOG' | 'CAT'>('DOG');
+  const [myInstancdBirth, setMyInstanceBirth] = useState<string | null>(null);
+  const [InstanceImage, setInstanceImage] = useState<{
     uri: string;
     name: string;
     type: string;
   } | null>(null);
 
-  const {loading, battleResult, battleDetail, requestOneInstanceBattleAction} =
+  const {loading, battleResult, requestOneInstanceBattleAction} =
     useBattleStore();
 
   const {
@@ -59,12 +64,12 @@ const BattleWithOneAI = () => {
     reset: resetVideo,
   } = useAIvideoStore();
 
-  // ✅ 이미지 선택
+  // ✅ 이미지 선택 핸들러
   const handlePickImage = async () => {
     const res = await launchImageLibrary({mediaType: 'photo'});
     const asset = res.assets?.[0];
     if (asset?.uri && asset.fileName && asset.type) {
-      setAiImage({
+      setInstanceImage({
         uri: asset.uri,
         name: asset.fileName,
         type: asset.type,
@@ -72,9 +77,9 @@ const BattleWithOneAI = () => {
     }
   };
 
-  // ✅ 배틀 시작
+  // ✅ 배틀 실행 핸들러
   const handleBattle = async () => {
-    if (!targetPetId || !myAiName || !myAiDetail || !myAiType || !aiImage) {
+    if (!targetPetId || !myInstanceName || !myInstanceDetail || !myInstancdBirth || !InstanceImage) {
       Alert.alert(
         '⚠️ 입력 누락',
         '모든 정보를 입력하고 이미지를 선택해주세요.',
@@ -84,33 +89,28 @@ const BattleWithOneAI = () => {
 
     try {
       resetVideo();
-      console.log('[⚔️ 배틀 요청 시작]');
       await requestOneInstanceBattleAction(
         targetPetId,
         {
-          name: myAiName,
-          type: myAiType,
-          petDetail: myAiDetail,
+          name: myInstanceName,
+          type: myInstanceType,
+          petDetail: myInstanceDetail,
+          birthDate: myInstancdBirth,
         },
-        aiImage,
+        InstanceImage,
       );
     } catch (e: any) {
       Alert.alert('❌ 실패', e.message || '배틀 요청 실패');
     }
   };
 
+  // ✅ 영상 생성 핸들러
   const handleGenerateVideo = () => {
-    if (!battleResult?.runway_prompt || !battleDetail?.battleId) {
-      console.log('❌ runway_prompt 또는 battleId 없음');
+    console.log('🎬 [영상 생성 요청]', battleResult?.battleId);
+    if (!battleResult?.battleId) {
       return;
     }
-
-    console.log('🎬 [영상 생성 요청]', {
-      battleId: battleDetail.battleId,
-      prompt: battleResult.runway_prompt,
-    });
-
-    startBattleVideoGeneration(battleDetail.battleId);
+    startBattleVideoGeneration(battleResult?.battleId);
   };
 
   return (
@@ -122,40 +122,50 @@ const BattleWithOneAI = () => {
       {opponentPets.map(pet => (
         <TouchableOpacity
           key={pet.petId}
-          style={[styles.selectButton, targetPetId === pet.petId && styles.selectedButton]}
-          onPress={() => setTargetPetId(pet.petId)}
-        >
-          <Text>{pet.name} (ID: {pet.petId}, {pet.type}, {pet.detail})</Text>
+          style={[
+            styles.selectButton,
+            targetPetId === pet.petId && styles.selectedButton,
+          ]}
+          onPress={() => setTargetPetId(pet.petId)}>
+          <Text>
+            {pet.name} (ID: {pet.petId}, {pet.type}, {pet.detail})
+          </Text>
         </TouchableOpacity>
       ))}
-
 
       {/* ✍️ 내 펫 정보 입력 */}
       <TextInput
         style={styles.input}
-        placeholder="가상 펫 이름"
-        value={myAiName}
-        onChangeText={setMyAiName}
+        placeholder="펫 이름"
+        value={myInstanceName}
+        onChangeText={setMyInstanceName}
       />
       <TextInput
         style={[styles.input, {height: 80}]}
-        placeholder="가상 펫의 특징 설명"
+        placeholder="펫의 특징 설명"
         multiline
-        value={myAiDetail}
-        onChangeText={setMyAiDetail}
+        value={myInstanceDetail}
+        onChangeText={setMyInstanceDetail}
       />
       <TextInput
         style={styles.input}
         placeholder="종류 (DOG 또는 CAT)"
-        value={myAiType}
+        value={myInstanceType}
         onChangeText={v =>
-          setMyAiType(v.toUpperCase() === 'CAT' ? 'CAT' : 'DOG')
+          setMyInstanceType(v.toUpperCase() === 'CAT' ? 'CAT' : 'DOG')
         }
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="생년월일 (YYYY-MM-DD)"
+        value={myInstancdBirth || ''}
+        onChangeText={setMyInstanceBirth}
+        keyboardType="numeric"
       />
 
       {/* ✅ 이미지 선택 */}
       <TouchableOpacity style={styles.imageButton} onPress={handlePickImage}>
-        <Text>{aiImage ? '📸 이미지 선택 완료' : '🖼️ 펫 이미지 선택'}</Text>
+        <Text>{InstanceImage ? '📸 이미지 선택 완료' : '🖼️ 펫 이미지 선택'}</Text>
       </TouchableOpacity>
 
       {/* ✅ 배틀 버튼 */}
@@ -173,16 +183,35 @@ const BattleWithOneAI = () => {
           <Text>{battleResult.result}</Text>
           <Text>🏆 승자: {battleResult.winner}</Text>
 
-          <TouchableOpacity style={styles.generateButton} onPress={handleGenerateVideo}>
+          <TouchableOpacity
+            style={styles.generateButton}
+            onPress={handleGenerateVideo}>
             <Text style={styles.generateButtonText}>🎬 배틀 영상 생성</Text>
           </TouchableOpacity>
         </View>
       )}
+      {/* ✅ 영상 생성 중 로딩 */}
       {status === 'IN_PROGRESS' && (
-        <Text style={{marginTop: 10, color: '#888'}}>📽️ 영상 생성 중...</Text>
+        <View style={styles.videoLoading}>
+          <ActivityIndicator size="large" color="#4D7CFE" />
+          <Text style={{marginTop: 8, color: '#666'}}>📽️ 영상 생성 중...</Text>
+        </View>
       )}
       {finalUrl && (
-        <Text style={{color: '#4D7CFE'}}>📺 영상 링크: {finalUrl}</Text>
+        <View style={{ marginTop: 20 }}>
+          <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>📺 배틀 영상:</Text>
+          <Video
+            source={{ uri: finalUrl }}
+            style={{
+              width: '100%',
+              height: 200,
+              borderRadius: 10,
+              backgroundColor: '#000',
+            }}
+            controls
+            resizeMode="contain"
+          />
+        </View>
       )}
     </View>
   );
@@ -210,9 +239,6 @@ const styles = StyleSheet.create({
   selectedButton: {
     backgroundColor: '#A7C8FF',
   },
-  petLabel: {
-    fontSize: 14,
-  },
   input: {
     backgroundColor: '#F1F3F5',
     padding: 10,
@@ -225,6 +251,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     marginBottom: 12,
+  },
+  videoLoading: {
+    marginTop: 16,
+    alignItems: 'center',
   },
   battleButton: {
     backgroundColor: '#4D7CFE',
@@ -247,12 +277,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 8,
   },
-  resultText: {
-    fontSize: 14,
-    color: '#333',
-    marginBottom: 4,
-  },
-
   generateButton: {
     marginTop: 10,
     backgroundColor: '#2ECC71',
@@ -266,4 +290,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default BattleWithOneAI;
+export default BattleWithOneInstance;
