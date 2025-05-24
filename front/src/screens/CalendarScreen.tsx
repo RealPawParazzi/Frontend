@@ -90,9 +90,17 @@ const CalendarScreen = () => {
   }, [walks, myPosts, selectedDate]);
 
   // ✅ 선택된 날짜의 산책 + 게시물 필터링
-  const filteredWalks = Object.values(walks).filter(
-    w => formatDate(w.startTime) === selectedDate,
-  );
+  const filteredWalks = useMemo(() => {
+    return Object.values(walks).filter(walk => {
+      const isSameDate = formatDate(walk.startTime) === selectedDate;
+
+      const matchesSearch =
+        searchText.trim() === '' ||
+        walk.pet?.name?.toLowerCase().includes(searchText.toLowerCase());
+
+      return isSameDate && matchesSearch;
+    });
+  }, [walks, selectedDate, searchText]);
 
   const filteredPosts = myPosts.filter(
     post =>
