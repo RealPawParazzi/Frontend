@@ -86,22 +86,6 @@ const StorybookScreen = ({navigation, route}: any) => {
     };
   }, [bottomBarAnim]);
 
-  // // ✅ 키보드 올라올 때 ScrollView 살짝 올리기
-  // useEffect(() => {
-  //   const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
-  //     scrollRef.current?.scrollTo({y: 100, animated: true}); // 🔥 약간 위로 스크롤
-  //   });
-  //
-  //   const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-  //     scrollRef.current?.scrollTo({y: 0, animated: true}); // 🔄 복구
-  //   });
-  //
-  //   return () => {
-  //     keyboardDidShowListener.remove();
-  //     keyboardDidHideListener.remove();
-  //   };
-  // }, []);
-
   // ✅ 현재 날짜 가져오기
   const getCurrentDate = () => {
     const today = new Date();
@@ -215,6 +199,13 @@ const StorybookScreen = ({navigation, route}: any) => {
       blocks.every(b => b.value.trim() === '')
     ) {
       Alert.alert('⚠️ 입력 오류', '제목과 내용은 필수 항목입니다.');
+      return;
+    }
+
+    // ✅ 미디어 포함 여부 확인
+    const imageBlocks = validBlocks.filter(b => b.type === 'File');
+    if (imageBlocks.length === 0) {
+      Alert.alert('⚠️ 미디어 누락', '사진이나 동영상 중 하나 이상 포함되어야 합니다.');
       return;
     }
 

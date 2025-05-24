@@ -238,6 +238,14 @@ const EditStorybookScreen = ({
       return;
     }
 
+    if (imageBlocks.length === 0) {
+      Alert.alert(
+        '⚠️ 미디어 누락',
+        '게시물에는 하나 이상의 사진 또는 동영상이 포함되어야 합니다.',
+      );
+      return;
+    }
+
     setLoading(true); // 🔄 업데이트 시작
 
     try {
