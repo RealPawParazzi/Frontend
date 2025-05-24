@@ -17,6 +17,7 @@ import {getImageSource} from '../../utils/imageUtils';
 import {createThumbnail} from 'react-native-create-thumbnail';
 import boardStore from '../../context/boardStore';
 import userStore from '../../context/userStore';
+import useSearchStore from '../../context/searchStore'; // ✅ 추가
 
 const DEFAULT_PROFILE_IMAGE = require('../../assets/images/user-2.png');
 
@@ -34,6 +35,7 @@ interface Post {
     nickname: string;
     profileImageUrl: string;
   };
+  tag?: string; // 태그는 선택적
 }
 
 /** ✅ 네비게이션 타입 */
@@ -187,8 +189,11 @@ const PostCard: React.FC<{post: Post}> = ({post}) => {
       </TouchableOpacity>
 
       {/* 🔹 타이틀 콘텐츠 */}
-      <Text style={styles.title}>{post.title}</Text>
-      <Text style={styles.contentText}>{post.titleContent}</Text>
+      <View style={styles.textWrapper}>
+        <Text style={styles.title}>{post.title}</Text>
+        <Text style={styles.contentText}>{post.titleContent}</Text>
+        {post.tag && <Text style={styles.tagText}>#{post.tag}</Text>}
+      </View>
 
 
       {/* 🔹 하단 아이콘: 좋아요, 댓글 */}
@@ -253,22 +258,26 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
     borderRadius: 12,
   },
-
+  textWrapper: {
+    paddingHorizontal: 12,
+    paddingTop: 10,
+  },
   title: {
     fontSize: 15,
     fontWeight: '600',
     color: '#111',
-    paddingHorizontal: 12,
-    paddingTop: 10,
   },
-
   contentText: {
     fontSize: 13,
     color: '#333',
-    paddingHorizontal: 12,
-    paddingTop: 4,
-    paddingBottom: 10,
+    paddingTop: 6,
     lineHeight: 18,
+  },
+  tagText: {
+    fontSize: 12,
+    color: '#4D7CFE',
+    marginTop: 6,
+    fontWeight: '600',
   },
 
   footer: {
