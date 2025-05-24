@@ -18,21 +18,18 @@ import MapView, {
 import Geolocation from 'react-native-geolocation-service';
 import {launchCamera} from 'react-native-image-picker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-
 import {requestLocationPermission} from '../utils/permissions/locationPermission';
 import walkStore from '../context/walkStore';
 import userStore from '../context/userStore';
-
 import WalkStatsBar from '../components/Map/WalkStatsBar';
 import WalkPathPolyline from '../components/Map/WalkPathPolyline';
 import PetSelectorModal from '../components/Map/PetSelectorModal';
 import PetRouteBottomModal from '../components/Map/PetRouteBottomModal';
 import PlaceDetailModal from '../components/Map/PlaceDetailModal';
-
 import {searchPetFriendlyPlaces} from '../services/placeSearchService';
 import placeStore, {Place} from '../context/placeStore';
 import FavoritesModal from '../components/Map/FavoritesModal'; // 🔹 즐겨찾기 장소 스토어 추가
-
+import { useRoute } from '@react-navigation/native';
 
 
 // NodeJS 타입 오류 방지를 위한 글로벌 선언
@@ -42,10 +39,19 @@ declare global {
   }
 }
 
+// KST 시간으로 ISO 문자열 생성 함수 추가
+const getKSTISOString = () => {
+  const now = new Date();
+  const kstOffset = now.getTime() + 9 * 60 * 60 * 1000; // UTC+9 보정
+  return new Date(kstOffset).toISOString().replace('Z', '').split('.')[0];
+};
+
 const MapScreen = () => {
   const {userData} = userStore();
-  const {saveWalk, fetchWalk, walks, fetchPetWalksByDate, fetchWalksByPet} =
+  const {saveWalk, fetchWalk, fetchWalksByPet} =
     walkStore(); // fetchPetWalksByDate 추가
+
+  const route = useRoute<any>(); // 타입 생략 또는 필요 시 StackParamList 사용
 
   // 🐶 선택된 반려동물
   const [selectedPet, setSelectedPet] = useState(userData.petList[0]);
@@ -91,11 +97,50 @@ const MapScreen = () => {
   const [isPlaceModalVisible, setIsPlaceModalVisible] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<any>(null);
 
-  const { places, fetchPlaces, addPlace } = placeStore(); // 추가된 부분
+  const {places, fetchPlaces, addPlace} = placeStore(); // 추가된 부분
 
   const [isFavoritesModalVisible, setIsFavoritesModalVisible] = useState(false);
 
-  const [selectedFavoritePlace, setSelectedFavoritePlace] = useState<Place | null>(null); // 즐겨찾기 모달에서 선택한 장소
+
+  /** ✅ 산책 시작 시 시간 설정 */
+  useEffect(() => {
+    // 처음 산책 시작 시 KST 시간으로 설정
+    if (startTime === null) {
+      setStartTime(getKSTISOString());
+    }
+  }, [startTime]);
+
+  useEffect(() => {
+    const walkIdFromParams = route?.params?.walkId;
+    if (walkIdFromParams) {
+      console.log(`📦 route로 받은 walkId: ${walkIdFromParams}`);
+      // 산책 데이터 로딩
+      (async () => {
+        await fetchWalk(walkIdFromParams);
+        const walk = walkStore.getState().walks[walkIdFromParams];
+        if (walk?.route?.length > 0) {
+          setPetRoutes(walk.route);
+
+          // 지도 중심 이동
+          mapRef.current?.animateToRegion(
+            {
+              latitude: walk.route[0].latitude,
+              longitude: walk.route[0].longitude,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            },
+            1000,
+          );
+        } else {
+          setPetRoutes([]);
+          Alert.alert(
+            '🚫 산책 경로 없음',
+            '선택한 산책 기록에 경로 데이터가 없습니다.',
+          );
+        }
+      })();
+    }
+  }, [fetchWalk, route]);
 
   /** ✅ 즐겨찾기 모달에서 장소 클릭 시 지도 이동 및 모달 열기 */
   const handleSelectFavoritePlace = (place: Place) => {
@@ -215,24 +260,16 @@ const MapScreen = () => {
 
     if (isWalking && startTime) {
       timer = setInterval(() => {
-        // 🔽 문자열을 Date 객체로 변환 (KST 기준으로 해석하지 않도록 UTC 보정)
+        // startTime은 이미 KST 기준이므로 추가 보정 제거
         const parsedStartTime = new Date(startTime);
-        const localStartTime = new Date(
-          parsedStartTime.getTime() + 9 * 60 * 60 * 1000,
-        ); // UTC+9 보정
 
         const now = new Date();
-        const diff = now.getTime() - localStartTime.getTime();
+        const diff = now.getTime() - parsedStartTime.getTime(); // ✅ 그대로 비교
 
         const hours = String(Math.floor(diff / 3600000)).padStart(2, '0');
-        const minutes = String(Math.floor((diff % 3600000) / 60000)).padStart(
-          2,
-          '0',
-        );
-        const seconds = String(Math.floor((diff % 60000) / 1000)).padStart(
-          2,
-          '0',
-        );
+        const minutes = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+        const seconds = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+
         setElapsedTime(`${hours}:${minutes}:${seconds}`);
       }, 1000);
     }
@@ -374,7 +411,27 @@ const MapScreen = () => {
     setIsWalking(false);
 
     if (walkRoute.length > 0 && startTime) {
-      const endTime = new Date().toISOString().replace('Z', '').split('.')[0];
+      const isAllSame = walkRoute.every(
+        point =>
+          point.latitude === walkRoute[0].latitude &&
+          point.longitude === walkRoute[0].longitude,
+      );
+
+      if (isAllSame) {
+        Alert.alert(
+          '🚫 산책 기록 없음',
+          '움직임이 감지되지 않아 산책이 저장되지 않았어요.\n산책을 시작한 후 이동해야 기록됩니다!',
+        );
+        // 상태 초기화
+        setWalkRoute([]);
+        setStartTime(null);
+        setElapsedTime('00:00:00');
+        setTotalDistance(0);
+        setAverageSpeed(0);
+        return;
+      }
+
+      const endTime = getKSTISOString(); // 수정됨: 종료 시간도 KST로 저장
       console.log(`[산책 종료시간] : ${endTime}`);
       console.log(
         `📍 [산책 경로] 총 ${walkRoute.length}개의 위치 데이터 기록됨`,
@@ -429,9 +486,7 @@ const MapScreen = () => {
 
   const isPlaceInFavorites = (place: any): boolean => {
     return places.some(
-      fav =>
-        fav.name === place.name &&
-        fav.address === place.vicinity
+      fav => fav.name === place.name && fav.address === place.vicinity,
     );
   };
 
@@ -444,8 +499,7 @@ const MapScreen = () => {
       // 삭제
       const placeToRemove = places.find(
         p =>
-          p.name === selectedPlace.name &&
-          p.address === selectedPlace.vicinity
+          p.name === selectedPlace.name && p.address === selectedPlace.vicinity,
       );
       if (placeToRemove) {
         await placeStore.getState().removePlace(placeToRemove.id);
@@ -523,8 +577,8 @@ const MapScreen = () => {
 
           {/* ✅ 근처 장소 마커, 즐겨찾는 장소는 노란 카머 표시 */}
           {nearbyPlaces.map((place, index) => {
-            const isFavorite = places.some(fav =>
-              fav.name === place.name && fav.address === place.vicinity
+            const isFavorite = places.some(
+              fav => fav.name === place.name && fav.address === place.vicinity,
             ); // ✅ 이름 + 주소로 즐겨찾기 여부 확인
 
             return (
@@ -653,11 +707,11 @@ const MapScreen = () => {
         isVisible={isFavoritesModalVisible}
         onClose={() => setIsFavoritesModalVisible(false)}
         places={places}
-        onSelectPlace={(place) => {
-        handleSelectFavoritePlace(place);
-        setIsFavoritesModalVisible(false);
-      }}
-        />
+        onSelectPlace={place => {
+          handleSelectFavoritePlace(place);
+          setIsFavoritesModalVisible(false);
+        }}
+      />
 
       <View style={styles.rightButtonGroup}>
         <TouchableOpacity onPress={() => setIsFavoritesModalVisible(true)}>
@@ -666,13 +720,11 @@ const MapScreen = () => {
           </View>
         </TouchableOpacity>
 
-
         <TouchableOpacity onPress={() => setShouldSearchPlaces(true)}>
           <View style={styles.iconButton}>
             <Icon name="search" size={22} color="white" />
           </View>
         </TouchableOpacity>
-
 
         <TouchableOpacity onPress={() => setBottomSheetVisible(true)}>
           <View style={styles.iconButton}>
@@ -687,7 +739,6 @@ const MapScreen = () => {
           </View>
         </TouchableOpacity>
       </View>
-
     </View>
   );
 };
