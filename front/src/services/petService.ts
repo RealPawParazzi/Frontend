@@ -169,7 +169,15 @@ export const deletePet = async (petId: number) => {
  * @returns 배틀 랭킹순 정렬된 펫 리스트
  */
 export const getRankedPets = async () => {
-  const response = await fetch(`${API_BASE_URL}/rank`);
+  const token = await AsyncStorage.getItem('accessToken');
+  if (!token) {
+    throw new Error('로그인이 필요합니다.');
+  }
+
+  const response = await fetch(`${API_BASE_URL}/rank`, {
+    method: 'GET',
+    headers: {Authorization: `Bearer ${token}`},
+  });
   if (!response.ok) {
     throw new Error('랭킹 조회 실패');
   }
