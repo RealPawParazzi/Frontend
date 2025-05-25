@@ -390,6 +390,31 @@ const MapScreen = () => {
     }
   }, [startTime, walkRoute]);
 
+  const handleCameraLaunch = async () => {
+    try {
+      const result = await launchCamera({
+        mediaType: 'photo',
+        cameraType: 'back',
+        quality: 1,
+        saveToPhotos: true,
+        includeBase64: false,
+      });
+
+      if (result.didCancel) {
+        console.log('📷 사용자 취소');
+      } else if (result.assets && result.assets.length > 0) {
+        const photo = result.assets[0];
+        console.log('📸 사진 촬영됨:', photo.uri);
+        Alert.alert('📷 사진 촬영 완료', '갤러리에 저장되었어요!');
+      } else {
+        console.warn('⚠️ 사진 없음');
+      }
+    } catch (error) {
+      console.error('❌ 카메라 실행 실패:', error);
+      Alert.alert('카메라 오류', '카메라 실행 중 문제가 발생했어요.');
+    }
+  };
+
   // ✅ 산책 거리 계산 함수 (간단한 유클리드 방식)
   const calculateDistance = (route: string | any[]) => {
     let distance = 0;
@@ -613,7 +638,9 @@ const MapScreen = () => {
       {/* ✅ 하단 버튼 바 */}
       <View style={styles.bottomBar}>
         {isWalking && (
-          <TouchableOpacity style={styles.cameraButton}>
+          <TouchableOpacity
+            style={styles.cameraButton}
+            onPress={handleCameraLaunch}> {/* 🔧 여기에 연결 */}
             <Icon name="photo-camera" size={24} color="#333" />
           </TouchableOpacity>
         )}
