@@ -23,6 +23,7 @@ import MiniGameScreen from '../screens/MiniGameScreen'; // ❇️ 새로 만들 
 import CuriousQuestionScreen from '../screens/CuriousQuestionScreen';
 import TeamInfoScreen from '../screens/TeamInfoScreen';
 import {loadUserData} from '../context/userStore';
+import MyInquiriesScreen from '../screens/MyInquiriesScreen';
 import authStore from '../context/authStore'; // ✅ authStore 추가
 import {ActivityIndicator, View} from 'react-native';
 
@@ -49,6 +50,7 @@ export type RootStackParamList = {
   TeamInfoScreen: undefined; // ❇️ 새로 만들 화면
   FollowListScreen: {type: 'followers' | 'following'}; // 🆕 팔로워/팔로잉 목록 네비게이션 추가
   UserPostsScreen: {userId: number; userName: string}; // 🆕 특정 유저 게시글 목록 추가
+  MyInquiriesScreen: undefined; // 🆕 내 문의 목록 화면 추가
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -128,6 +130,7 @@ const AppNavigator = () => {
         component={CuriousQuestionScreen}
       />
       <Stack.Screen name="TeamInfoScreen" component={TeamInfoScreen} />
+      <Stack.Screen name="MyInquiriesScreen" component={MyInquiriesScreen} />
     </Stack.Navigator>
   );
 };
