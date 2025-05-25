@@ -37,12 +37,18 @@ const FollowRecommendations = () => {
 
   const [selectedUser, setSelectedUser] = useState<User | null>(null); // 모달에서 보여줄 유저
   const [isModalVisible, setIsModalVisible] = useState(false); // 모달 표시 여부
+  const [localRecommendations, setLocalRecommendations] = useState(followRecommendations);
 
   // ✅ 컴포넌트 마운트 시 추천 목록 + 내 팔로잉 목록 불러오기
   useEffect(() => {
     loadFollowRecommendations();
     fetchFollowing(Number(userData.id));
   }, [loadFollowRecommendations, fetchFollowing, userData.id]);
+
+  useEffect(() => {
+    setLocalRecommendations(followRecommendations);
+  }, [followRecommendations]);
+
 
   // ✅ 특정 유저가 팔로잉 중인지 판단
   const isUserFollowing = (targetId: number) => {
@@ -63,6 +69,10 @@ const FollowRecommendations = () => {
     user => Number(user.id) !== Number(userData.id), // 👉 본인 제외
   );
 
+  const handleRemoveUser = (userId: string) => {
+    setLocalRecommendations(prev => prev.filter(user => user.id !== userId));
+  };
+
   // useEffect(() => {
   //   if (selectedUser) {
   //     console.log('🧠 selectedUser가 바뀜:', selectedUser);
@@ -81,7 +91,7 @@ const FollowRecommendations = () => {
         <Text style={styles.sectionTitle}> 팔로우 추천 </Text>
       </View>
       <FlatList
-        data={filteredRecommendations}
+        data={localRecommendations}
         horizontal
         keyExtractor={item => {
           // console.log('🧩 keyExtractor item:', item);
@@ -97,7 +107,7 @@ const FollowRecommendations = () => {
               <View style={styles.card}>
                 <TouchableOpacity
                   style={styles.closeIconArea}
-                  onPress={() => {}}>
+                  onPress={() => handleRemoveUser(item.id)}>
                   <Text style={styles.closeText}>✕</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
