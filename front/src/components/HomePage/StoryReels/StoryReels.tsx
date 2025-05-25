@@ -159,7 +159,7 @@ const StoryReels = () => {
                       onPress={() => handleOtherUserPress(index)}
                     >
                       <Image
-                        source={{ uri: item.profileImageUrl }}
+                        source={{ uri: item.profileImageUrl || require('../../../assets/images/user-2.png') }}
                         style={[styles.storyImage, styles.activeBorder]} // ✅ 항상 파란색 테두리
                       />
                     </TouchableOpacity>

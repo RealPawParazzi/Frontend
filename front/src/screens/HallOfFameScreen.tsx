@@ -1,30 +1,152 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  Image,
+  ActivityIndicator,
+  TouchableOpacity,
+} from 'react-native';
+import petStore, {PetRanking} from '../context/petStore';
+import { useNavigation } from '@react-navigation/native';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
+const DEFAULT_PET_IMAGE = require('../assets/images/pets-1.jpg');
 
-/**
- * ✅ 명예의 전당 화면
- * - 사용자들의 성과를 보여주는 페이지
- * - 현재는 단순한 텍스트로 구성되어 있음
- * - 추후에 실제 데이터와 연동하여 구현 예정
- */
-const HallOfFameScreen = () => (
-    <View style={styles.container}>
-        <Text style={styles.text}>명예의 전당 페이지입니다 🏆</Text>
+const HallOfFameScreen = () => {
+  const [loading, setLoading] = useState(true);
+  const navigation = useNavigation();
+  const { rankings, fetchPetRankings } = petStore();
+
+  useEffect(() => {
+    const loadRankings = async () => {
+      try {
+        await fetchPetRankings();
+      } catch (error) {
+        console.error('🏆 랭킹 불러오기 실패:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadRankings();
+  }, [fetchPetRankings]);
+
+  const renderItem = ({ item, index }: { item: PetRanking; index: number }) => (
+    <View style={styles.card}>
+      <Text style={styles.rank}>#{index + 1}</Text>
+      <Image
+        source={{ uri: item.petImg || DEFAULT_PET_IMAGE }}
+        style={styles.image}
+      />
+      <View style={styles.infoBox}>
+        <Text style={styles.name}>{item.name}</Text>
+        <Text style={styles.owner}>👤 {item.member.name}</Text>
+        <Text style={styles.detail}>📧 {item.member.email}</Text>
+        <Text style={styles.detail}>📅 {item.birthDate || '생일 정보 없음'}</Text>
+        <View style={styles.winsRow}>
+          <MaterialIcons name="emoji-events" size={18} color="#FFD700" />
+          <Text style={styles.wins}>{item.winCount} 승</Text>
+        </View>
+      </View>
     </View>
-);
+  );
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <MaterialIcons name="arrow-back" size={28} color="#333" />
+        </TouchableOpacity>
+        <Text style={styles.title}>🏆 명예의 전당</Text>
+      </View>
+
+      {loading ? (
+        <ActivityIndicator size="large" color="#4D7CFE" />
+      ) : (
+        <FlatList
+          data={rankings}
+          renderItem={renderItem}
+          keyExtractor={(item) => `${item.petId}`}
+          contentContainerStyle={styles.list}
+        />
+      )}
+    </SafeAreaView>
+  );
+};
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#fff',
-    },
-    text: {
-        fontSize: 20,
-        color: '#333',
-    },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginLeft: 12,
+    color: '#333',
+  },
+  list: {
+    paddingBottom: 20,
+    paddingHorizontal: 16,
+  },
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    marginBottom: 14,
+    borderRadius: 12,
+    backgroundColor: '#F9F9F9',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  rank: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginRight: 12,
+    color: '#4D7CFE',
+    width: 32,
+  },
+  image: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    marginRight: 16,
+  },
+  infoBox: {
+    flex: 1,
+  },
+  name: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+  },
+  owner: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+  },
+  detail: {
+    fontSize: 13,
+    color: '#999',
+    marginTop: 2,
+  },
+  winsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  wins: {
+    marginLeft: 6,
+    fontSize: 14,
+    color: '#333',
+  },
 });
 
 export default HallOfFameScreen;
