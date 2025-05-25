@@ -9,7 +9,7 @@ import {
   Image,
   KeyboardAvoidingView,
   ScrollView,
-  Platform,
+  Platform, Alert,
 } from 'react-native';
 import petStore from '../../../context/petStore';
 import useBattleStore from '../../../context/battleStore';
@@ -17,6 +17,8 @@ import {useAIvideoStore} from '../../../context/AIvideoStore';
 import userStore from '../../../context/userStore';
 import Video from 'react-native-video';
 import CustomDropdown from '../../../common/CustomDropdown';
+import RNFS from 'react-native-fs';
+import Share from 'react-native-share';
 
 const BattleWithOthers: React.FC = () => {
   const {pets} = petStore();
@@ -48,6 +50,8 @@ const BattleWithOthers: React.FC = () => {
 
   useEffect(() => {
     loadBattleOpponents();
+    // resetVideo();
+
   }, [loadBattleOpponents]);
 
   const handleStartBattle = async () => {
@@ -63,6 +67,29 @@ const BattleWithOthers: React.FC = () => {
       return;
     }
     startBattleVideoGeneration(battleResult.battleId);
+  };
+
+  const handleSave = async () => {
+    try {
+      const fileName = `Pawparazzi_${Date.now()}.mp4`;
+      const destPath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
+      await RNFS.copyFile(finalUrl || '', destPath);
+      Alert.alert('성공', '기기에 저장되었습니다!');
+    } catch (err) {
+      Alert.alert('실패', '파일 저장에 실패했습니다.');
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      const fileName = `Pawparazzi_${Date.now()}.mp4`;
+      const destPath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
+      await RNFS.copyFile(finalUrl || '', destPath);
+      const fileUrl = `file://${destPath}`;
+      await Share.open({url: fileUrl, type: 'video/mp4', failOnCancel: false});
+    } catch (err) {
+      Alert.alert('공유 실패', '파일 공유 중 문제가 발생했습니다.');
+    }
   };
 
   return (
@@ -166,32 +193,18 @@ const BattleWithOthers: React.FC = () => {
       {/* 🔄 로딩 */}
       {loading && <ActivityIndicator size="large" color="#4D7CFE" />}
 
-      {/* 📜 배틀 결과 */}
-      {battleResult && (
-        <View style={styles.resultBox}>
-          <Image
-            source={{
-              uri: 'https://images.unsplash.com/photo-1601758123927-196d15f05e4e?fit=crop&w=500&q=80',
-            }}
-            style={styles.resultImage}
-          />
-          <View style={styles.resultOverlay}>
-            <Text style={styles.resultTitle}>{battleResult.winner} wins!</Text>
-            <Text style={styles.resultText}>{battleResult.result}</Text>
-          </View>
-        </View>
-      )}
-
-      {/* 🎬 배틀 영상 생성 버튼 */}
-      {battleResult && (
-        <TouchableOpacity
-          style={styles.generateButton}
-          onPress={handleGenerateVideo}>
-          <Text style={styles.generateButtonText}>
-            🎬 Generate Battle Video
-          </Text>
-        </TouchableOpacity>
-      )}
+          {battleResult && (
+            <View style={styles.resultBox}>
+              <Text style={styles.resultTitle}>🎉 배틀 결과</Text>
+              <Text>{battleResult.result}</Text>
+              <Text>🏆 승자: {battleResult.winner}</Text>
+              <TouchableOpacity
+                style={styles.generateButton}
+                onPress={handleGenerateVideo}>
+                <Text style={styles.generateButtonText}>🎬 배틀 영상 생성</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
       {/* 📽️ 영상 생성 중 */}
       {status === 'IN_PROGRESS' && (
@@ -210,6 +223,20 @@ const BattleWithOthers: React.FC = () => {
             controls
             resizeMode="contain"
           />
+          <View style={styles.actionRow}>
+            <TouchableOpacity style={styles.iconButton} onPress={() => {
+              //@ts-ignore
+              navigation.navigate('StorybookScreen', {videoUri: finalUrl});
+            }}>
+              <Text style={styles.iconText}>✍️ 게시글 작성</Text>
+            </TouchableOpacity>
+            {/*<TouchableOpacity style={styles.iconButton} onPress={handleSave}>*/}
+            {/*  <Text style={styles.iconText}>💾 저장</Text>*/}
+            {/*</TouchableOpacity>*/}
+            <TouchableOpacity style={styles.iconButton} onPress={handleShare}>
+              <Text style={styles.iconText}>📤 공유, 저장</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
 
@@ -223,6 +250,7 @@ const BattleWithOthers: React.FC = () => {
 const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
+    paddingBottom: 20,
   },
   container: {padding: 20},
   sectionTitle: {fontSize: 16, fontWeight: 'bold', marginVertical: 6},
@@ -328,6 +356,25 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontWeight: '500',
   },
+  actionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 16,
+  },
+  iconButton: {
+    flex: 1,
+    backgroundColor: '#F1F3F5',
+    paddingVertical: 12,
+    marginHorizontal: 4,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  iconText: {
+    fontSize: 14,
+    color: '#2C3E50',
+    fontWeight: '500',
+  },
 });
+
 
 export default BattleWithOthers;
