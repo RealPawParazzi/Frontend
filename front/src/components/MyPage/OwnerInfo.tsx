@@ -251,6 +251,25 @@ const OwnerInfo = () => {
               }}>
               <Text style={styles.modalText}>프로필 수정</Text>
             </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalOption}
+              onPress={() => {
+                setMenuVisible(false);
+                // @ts-ignore
+                navigation.navigate('MyInquiriesScreen');
+              }}>
+              <Text style={styles.modalText}>1:1 문의 목록</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.modalOption}
+              onPress={() => {
+                setMenuVisible(false);
+                // @ts-ignore
+                navigation.navigate('MyGeneratedVideosScreen');
+              }}>
+              <Text style={styles.modalText}>생성된 동영상</Text>
+            </TouchableOpacity>
 
             <TouchableOpacity style={styles.modalOption} onPress={handleLogout}>
               <Text style={[styles.modalText, {color: 'red'}]}>로그아웃</Text>
