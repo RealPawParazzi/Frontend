@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import Modal from 'react-native-modal';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import {useNavigation} from '@react-navigation/native';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 
@@ -43,6 +44,12 @@ const PetRouteBottomModal: React.FC<PetRouteBottomModalProps> = ({
   getWalksByPetId,
   onSelectWalk,
 }) => {
+
+  const navigation = useNavigation();
+
+  const filteredPets = pets.filter(p => p.id !== 0); // ✅ 더미 데이터 제외
+  const isOnlyDummy = pets.length === 1 && pets[0].id === 0;
+
 
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
   const [walkHistories, setWalkHistories] = useState<WalkSummary[]>([]);
@@ -83,57 +90,72 @@ const PetRouteBottomModal: React.FC<PetRouteBottomModalProps> = ({
 
         {/* 🔹 헤더 */}
         {!selectedPet ? (
+          isOnlyDummy ? (
+            <View style={{alignItems: 'center', marginTop: 24}}>
+              <Text style={styles.noticeText}>아직 등록된 반려동물이 없습니다.</Text>
+              <TouchableOpacity
+                style={styles.registerButton}
+                onPress={() => {
+                  onClose();
+                  //@ts-ignore
+                  navigation.navigate('PetRegistrationScreen');
+                }}>
+                <Icon name="add" size={18} color="#fff" style={styles.icon} />
+                <Text style={styles.registerButtonText}>등록하러 가기</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              <Text style={styles.title}>🐾 산책 경로 보기</Text>
+              <Text style={styles.noticeText}>
+                반려동물을 선택하면 산책 기록을 볼 수 있어요.
+              </Text>
+              <FlatList
+                data={filteredPets}
+                keyExtractor={(item) => item.id.toString()}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{paddingHorizontal: 16}}
+                renderItem={({item}) => (
+                  <TouchableOpacity
+                    style={styles.petButton}
+                    onPress={() => handleSelectPet(item)}>
+                    <Image source={item.image} style={styles.petImage} />
+                    <Text style={styles.petName}>{item.name}</Text>
+                  </TouchableOpacity>
+                )}
+              />
+            </>
+          )
+        ) : (
           <>
-            <Text style={styles.title}>🐾 산책 경로 보기</Text>
-            <Text style={styles.noticeText}>
-              반려동물을 선택하면 산책 기록을 볼 수 있어요.
-            </Text>
+            <View style={styles.walkHeader}>
+              <TouchableOpacity onPress={handleBackToPetList}>
+                <Text style={styles.backButton}>←</Text>
+              </TouchableOpacity>
+              <Text style={styles.title}>{selectedPet.name}의 산책 기록</Text>
+            </View>
+            {isLoading ? (
+              <Text style={styles.loadingText}>불러오는 중...</Text>
+            ) : (
+              <FlatList
+                data={walkHistories}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({item}) => (
+                  <TouchableOpacity
+                    style={styles.walkItem}
+                    onPress={() => onSelectWalk(item.id)}>
+                    <Text style={styles.walkText}>
+                      📍 {item.startTime.split('T')[0]} / {item.distance}km
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                ListEmptyComponent={
+                  <Text style={styles.emptyText}>📭 산책 기록이 없습니다.</Text>
+                }
+              />
+            )}
           </>
-        ) : (
-          <View style={styles.walkHeader}>
-            <TouchableOpacity onPress={handleBackToPetList}>
-              <Text style={styles.backButton}>←</Text>
-            </TouchableOpacity>
-            <Text style={styles.title}>{selectedPet.name}의 산책 기록</Text>
-          </View>
-        )}
-
-        {/* 🔹 펫 리스트 또는 산책 기록 리스트 */}
-        {!selectedPet ? (
-          <FlatList
-            data={pets}
-            keyExtractor={(item) => item.id.toString()}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 16 }}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.petButton}
-                onPress={() => handleSelectPet(item)}>
-                <Image source={item.image} style={styles.petImage} />
-                <Text style={styles.petName}>{item.name}</Text>
-              </TouchableOpacity>
-            )}
-          />
-        ) : isLoading ? (
-          <Text style={styles.loadingText}>불러오는 중...</Text>
-        ) : (
-          <FlatList
-            data={walkHistories}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.walkItem}
-                onPress={() => onSelectWalk(item.id)}>
-                <Text style={styles.walkText}>
-                  📍 {item.startTime.split('T')[0]} / {item.distance}km
-                </Text>
-              </TouchableOpacity>
-            )}
-            ListEmptyComponent={
-              <Text style={styles.emptyText}>📭 산책 기록이 없습니다.</Text>
-            }
-          />
         )}
       </View>
     </Modal>
@@ -217,6 +239,22 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#666',
     marginTop: 20,
+  },
+  registerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4D7CFE',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  icon: {
+    marginRight: 6,
+  },
+  registerButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
 });
 

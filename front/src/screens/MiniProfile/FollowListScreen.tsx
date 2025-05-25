@@ -165,8 +165,8 @@ const FollowListScreen = () => {
   // ✅ 헤더 텍스트 지정
   const getHeaderTitle = () => {
     return selectedSegment === 0
-      ? `${userNickName || ''}님의 팔로워`
-      : `${userNickName || ''}님의 팔로잉`;
+      ? `${userNickName || userName || '해당 유저'}님의 팔로워`
+      : `${userNickName || userName || '해당 유저'}님의 팔로잉`;
   };
 
   return (

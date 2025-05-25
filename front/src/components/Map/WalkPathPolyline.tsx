@@ -13,7 +13,7 @@ const WalkPathPolyline: React.FC<Props> = ({
   color = '#FF5733',
   strokeWidth = 5,
 }) => {
-  if (route.length < 2) {
+  if (!route || route.length < 2) {
     return null;
   }
   return (

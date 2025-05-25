@@ -1,11 +1,20 @@
 // ✅ StoryBooksList.tsx
 import React, {useEffect, useState} from 'react';
-import {View, FlatList, StyleSheet, Text, TouchableOpacity} from 'react-native';
+import {
+  View,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 import boardStore from '../../../context/boardStore';
 import userStore from '../../../context/userStore';
 import followStore from '../../../context/userFollowStore';
 import StoryBookCard from './StoryBookCard';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+
+const PAGE_SIZE = 10;
 
 const StoryBooksList = () => {
   const {boardList} = boardStore();
@@ -16,6 +25,9 @@ const StoryBooksList = () => {
   const [sortBy, setSortBy] = useState<
     'favoriteCount' | 'viewCount' | 'writeDatetime'
   >('favoriteCount');
+
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   /**
    * ✅ 로그인한 유저의 팔로잉 목록 fetch (현재는 사용 안 하지만 추후 활용 가능)
@@ -43,6 +55,14 @@ const StoryBooksList = () => {
   const filteredSortedBoards = sortBoards(
     boardList.filter(b => b.id !== 0 && b.visibility === 'PUBLIC'),
   );
+
+  const handleLoadMore = () => {
+    setLoadingMore(true);
+    setTimeout(() => {
+      setVisibleCount(prev => prev + PAGE_SIZE);
+      setLoadingMore(false);
+    }, 500);
+  };
 
   return (
     <View style={styles.container}>
@@ -91,15 +111,32 @@ const StoryBooksList = () => {
         </TouchableOpacity>
       </View>
 
+      {/*<Text style={{textAlign: 'center', color: 'gray'}}>*/}
+      {/*  전체 게시글 수: {filteredSortedBoards.length} / 현재 표시 수: {visibleCount}*/}
+      {/*</Text>*/}
+
       {/* ✅ 게시글 리스트 출력 */}
       {filteredSortedBoards.length > 0 ? (
         <FlatList
           contentContainerStyle={{paddingHorizontal: 0}}
-          data={filteredSortedBoards}
+          data={filteredSortedBoards.slice(0, visibleCount)}
           keyExtractor={item => item.id.toString()}
           renderItem={({item}) => <StoryBookCard story={item} />}
           showsVerticalScrollIndicator={false}
           nestedScrollEnabled
+          ListFooterComponent={() =>
+            visibleCount < filteredSortedBoards.length ? (
+              <TouchableOpacity
+                style={styles.loadMoreBtn}
+                onPress={handleLoadMore}>
+                {loadingMore ? (
+                  <ActivityIndicator size="small" color="#4D7CFE" />
+                ) : (
+                  <Text style={styles.loadMoreText}>게시글 더 보기</Text>
+                )}
+              </TouchableOpacity>
+            ) : null
+          }
         />
       ) : (
         <Text style={styles.emptyText}> 게시글이 없습니다. </Text>
@@ -144,11 +181,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#ccc',
   },
-  activeTabText: {
-    color: '#4D7CFE', // 🔵 선택된 탭만 파란색
-    fontWeight: 'bold',
-    // textDecorationLine: 'underline',
-  },
+  activeTabText: {color: '#4D7CFE', fontWeight: 'bold'},
+  loadMoreBtn: {alignItems: 'center', paddingVertical: 12},
+  loadMoreText: {fontSize: 14, color: '#4D7CFE', fontWeight: '500'},
   emptyText: {
     textAlign: 'center',
     marginTop: 40,

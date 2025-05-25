@@ -19,6 +19,15 @@ interface StatusResponse {
   errorMessage: string | null;
 }
 
+export interface GeneratedVideo {
+  requestId: number;
+  createdAt: string;
+  updatedAt: string;
+  prompt: string;
+  imageUrl: string;
+  resultUrl: string | null;
+}
+
 /**
  * POST /api/videos
  * form-data: { request: JSON, image: File }
@@ -94,7 +103,7 @@ export async function fetchVideoStatus(jobId: string): Promise<StatusResponse> {
  * POST /api/videos/{battleId}
  */
 export async function createBattleVideoRequest(
-  battleId: number,
+  battleId: number | undefined,
 ): Promise<CreateResponse> {
   const token = await AsyncStorage.getItem('accessToken');
   if (!token) {
@@ -116,4 +125,49 @@ export async function createBattleVideoRequest(
   }
 
   return await res.json();
+}
+
+export async function fetchAllGeneratedVideos(): Promise<GeneratedVideo[]> {
+  const token = await AsyncStorage.getItem('accessToken');
+  if (!token) {
+    throw new Error('로그인이 필요합니다.');
+  }
+
+  const res = await fetch(`${API_BASE_URL}/all`, {
+    headers: {Authorization: `Bearer ${token}`},
+  });
+
+  if (!res.ok) {
+    let errMessage = '영상 목록 조회 실패';
+    try {
+      const err = await res.json();
+      errMessage = err.message || errMessage;
+    } catch {}
+    throw new Error(errMessage);
+  }
+
+  const allVideos = await res.json();
+  return allVideos.filter((v: GeneratedVideo) => v.resultUrl !== null);
+}
+
+
+export async function fetchLatestBattleVideoByPet(petId: number): Promise<GeneratedVideo | null> {
+  const token = await AsyncStorage.getItem('accessToken');
+  if (!token) {throw new Error('로그인이 필요합니다.');}
+
+  const res = await fetch(`${API_BASE_URL}/${petId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) {
+    let errMessage = '최근 배틀 영상 조회 실패';
+    try {
+      const err = await res.json();
+      errMessage = err.message || errMessage;
+    } catch {}
+    throw new Error(errMessage);
+  }
+
+  const data = await res.json();
+  return data.resultUrl || null;
 }

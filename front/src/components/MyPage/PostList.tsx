@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useState} from 'react';
-import {View, Text, StyleSheet, FlatList, TouchableOpacity} from 'react-native';
+import {View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../navigation/AppNavigator'; // ✅ 스택 네비게이션 타입 가져오기
@@ -24,6 +24,10 @@ const PostList = ({userId}: PostListProps) => {
 
   const [hasNoPosts, setHasNoPosts] = useState(false);
 
+  const [displayCount, setDisplayCount] = useState(10); // ✅ 초기 10개만 표시
+  const [loadingMore, setLoadingMore] = useState(false); // ✅ 더보기 로딩 상태
+
+
   const myBoards: Board[] = useMemo(
     () => userBoardsMap[userId] || [],
     [userBoardsMap, userId],
@@ -38,6 +42,16 @@ const PostList = ({userId}: PostListProps) => {
   useEffect(() => {
     setHasNoPosts(myBoards.length === 0);
   }, [myBoards]);
+
+  const handleLoadMore = () => {
+    if (displayCount < sortedBoards.length) {
+      setLoadingMore(true);
+      setTimeout(() => {
+        setDisplayCount(prev => prev + 10);
+        setLoadingMore(false);
+      }, 500);
+    }
+  };
 
   // ✅ 최신순으로 정렬된 게시글 리스트
   const sortedBoards = useMemo(() => {
@@ -59,11 +73,24 @@ const PostList = ({userId}: PostListProps) => {
           </TouchableOpacity>
         </View>
       ) : (
-        <FlatList
-          data={sortedBoards}
-          renderItem={({item}) => <PostCard post={item} />}
-          keyExtractor={item => String(item.id)}
-        />
+        <>
+          <FlatList
+            data={sortedBoards.slice(0, displayCount)}
+            renderItem={({item}) => <PostCard post={item} />}
+            keyExtractor={item => String(item.id)}
+          />
+          {displayCount < sortedBoards.length && (
+            <View style={styles.loadMoreContainer}>
+              {loadingMore ? (
+                <ActivityIndicator size="small" color="#4D7CFE" />
+              ) : (
+                <TouchableOpacity onPress={handleLoadMore} style={styles.loadMoreButton}>
+                  <Text style={styles.loadMoreText}>게시글 더 보기</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+        </>
       )}
     </View>
   );
@@ -92,6 +119,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
   },
+  loadMoreContainer: {
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  loadMoreButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: '#EAEFFF',
+    borderRadius: 20,
+  },
+  loadMoreText: {
+    color: '#4D7CFE',
+    fontWeight: '600',
+  },
 });
-
 export default PostList;

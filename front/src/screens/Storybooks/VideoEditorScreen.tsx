@@ -1,9 +1,5 @@
 // screens/VideoEditorScreen.tsx
 import React, {useEffect, useRef, useState} from 'react';
-import Share from 'react-native-share';
-import RNFS from 'react-native-fs';
-import {useNavigation} from '@react-navigation/native';
-
 import {
   ScrollView,
   View,
@@ -15,9 +11,14 @@ import {
   Image,
   ActivityIndicator,
   Platform,
+  KeyboardAvoidingView, PermissionsAndroid,
 } from 'react-native';
 import {launchImageLibrary} from 'react-native-image-picker';
 import Video from 'react-native-video';
+import Share from 'react-native-share';
+import RNFS from 'react-native-fs';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import {useNavigation} from '@react-navigation/native';
 import {useAIvideoStore} from '../../context/AIvideoStore';
 
 const VideoEditorScreen: React.FC = () => {
@@ -29,14 +30,13 @@ const VideoEditorScreen: React.FC = () => {
     type: string;
   } | null>(null);
 
-  // ✅ 상태 관리 (Zustand에서 필요한 상태만 개별로 구독)
+  const scrollRef = useRef<ScrollView>(null);
+  const navigation = useNavigation();
+
   const status = useAIvideoStore(s => s.status);
   const finalUrl = useAIvideoStore(s => s.finalUrl);
   const error = useAIvideoStore(s => s.error);
   const startGeneration = useAIvideoStore(s => s.startGeneration);
-
-  const scrollRef = useRef<ScrollView>(null); // ✅ ref 선언
-  const navigation = useNavigation();
 
   // ✅ 유효성 검사 상태 추가
   const [durationError, setDurationError] = useState('');
@@ -107,6 +107,72 @@ const VideoEditorScreen: React.FC = () => {
     }
   };
 
+  const requestAndroidPermission = async () => {
+    if (Platform.OS !== 'android') {return true;}
+
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+        {
+          title: '저장 공간 권한 요청',
+          message: '동영상을 저장하려면 저장 공간 접근 권한이 필요합니다.',
+          buttonNeutral: '나중에',
+          buttonNegative: '거부',
+          buttonPositive: '허용',
+        },
+      );
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
+    } catch (err) {
+      console.warn(err);
+      return false;
+    }
+  };
+
+  const handleSave = async (url: string) => {
+    const hasPermission = await requestAndroidPermission();
+    if (!hasPermission) {
+      Alert.alert('권한 필요', '저장을 위해 권한을 허용해주세요.');
+      return;
+    }
+
+    try {
+      const fileName = `Pawparazzi_${Date.now()}.mp4`;
+      const destPath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
+
+      await RNFS.downloadFile({fromUrl: url, toFile: destPath}).promise;
+
+      Alert.alert('성공', '기기에 저장되었습니다!');
+    } catch (e) {
+      Alert.alert('저장 실패', '문제가 발생했습니다.');
+    }
+  };
+
+  const handleShare = async (url: string) => {
+    const hasPermission = await requestAndroidPermission();
+    if (!hasPermission) {
+      Alert.alert('권한 필요', '저장을 위해 권한을 허용해주세요.');
+      return;
+    }
+
+    try {
+      const fileName = `Pawparazzi_${Date.now()}.mp4`;
+      const destPath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
+
+      const exists = await RNFS.exists(destPath);
+      if (!exists) {
+        await RNFS.downloadFile({fromUrl: url, toFile: destPath}).promise;
+      }
+
+      await Share.open({
+        url: `file://${destPath}`,
+        type: 'video/mp4',
+        failOnCancel: false,
+      });
+    } catch (error) {
+      Alert.alert('공유 실패', '문제가 발생했습니다.');
+    }
+  };
+
   useEffect(() => {
     if (finalUrl && scrollRef.current) {
       setTimeout(() => {
@@ -116,196 +182,185 @@ const VideoEditorScreen: React.FC = () => {
   }, [finalUrl]);
 
   return (
-    <ScrollView ref={scrollRef} contentContainerStyle={styles.scrollContainer}>
-      <View style={styles.container}>
-        {/* ...기존 코드 유지 */}
-        <Text style={styles.title}> 동영상을 생성해보자 !</Text>
-
-        <TextInput
-          style={styles.input}
-          placeholder="원하는 동영상 줄거리 입력하기"
-          value={prompt}
-          onChangeText={setPrompt}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="몇초짜리 영상을 만들까? (ex: 5)"
-          keyboardType="numeric"
-          value={duration}
-          onChangeText={setDuration}
-        />
-
-        {/* ✅ 유효성 경고 메시지 */}
-        {durationError ? (
-          <Text style={styles.durationErrorText}>{durationError}</Text>
-        ) : null}
-
-        {/* ✅ 이미지 미리보기 박스 (업로드 전/후 상태 구분) */}
-        <TouchableOpacity onPress={pickImage} activeOpacity={0.9}>
-          <View style={styles.previewBox}>
-            {imageFile ? (
-              <>
-                {/* ✅ 업로드된 이미지 표시 */}
-                <Image
-                  source={{uri: imageFile.uri}}
-                  style={styles.previewImage}
-                  resizeMode="cover"
-                />
-                {/* ✅ 삭제 버튼 (우측 상단) */}
-                <TouchableOpacity
-                  style={styles.deleteButton}
-                  onPress={() => setImageFile(null)}>
-                  <Text style={styles.deleteButtonText}>✕</Text>
-                </TouchableOpacity>
-              </>
-            ) : (
-              <View style={styles.placeholderContent}>
-                <Text style={styles.placeholderTitle}>
-                  아직 선택된 이미지가 없습니다.
-                </Text>
-                <Text style={styles.placeholderSub}>
-                  이미지를 업로드하세요.
-                </Text>
-              </View>
-            )}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={{flex: 1}}>
+      <ScrollView
+        ref={scrollRef}
+        contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.container}>
+          {/* 🔙 뒤로가기 버튼 */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <Icon name="arrow-back-ios" size={24} color="#333" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>동영상 생성</Text>
+            <View style={{width: 24}} />
           </View>
-        </TouchableOpacity>
 
-        {/* ✅ 생성 버튼 */}
-        <TouchableOpacity
-          style={[
-            styles.generateButton,
-            (status === 'PENDING' || status === 'IN_PROGRESS') &&
-              styles.disabledButton,
-          ]}
-          onPress={handleGenerate}
-          disabled={status === 'PENDING' || status === 'IN_PROGRESS'}>
-          <Text style={styles.buttonText}>
-            {status === 'PENDING' || status === 'IN_PROGRESS'
-              ? '열심히 동영상을 생성 중...'
-              : '동영상 생성하기'}
-          </Text>
-        </TouchableOpacity>
+          <Text style={styles.title}>동영상을 생성해보자 !</Text>
 
-        {/* ✅ 로딩 중 표시 */}
-        {(status === 'PENDING' || status === 'IN_PROGRESS') && (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#4D7CFE" />
-            <Text style={styles.loadingText}>
-              동영상을 생성하고 있습니다...
-            </Text>
-          </View>
-        )}
+          <TextInput
+            style={styles.input}
+            placeholder="원하는 동영상 줄거리 입력하기"
+            value={prompt}
+            onChangeText={setPrompt}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="몇초짜리 영상을 만들까? (ex: 5)"
+            keyboardType="numeric"
+            value={duration}
+            onChangeText={setDuration}
+          />
 
-        {/* ✅ 에러 메시지 */}
-        {error && <Text style={styles.errorText}>❌ 오류: {error}</Text>}
+          {/* ✅ 유효성 경고 메시지 */}
+          {durationError ? (
+            <Text style={styles.durationErrorText}>{durationError}</Text>
+          ) : null}
 
-        {/* ✅ 결과 영상 미리보기 */}
-        {finalUrl && (
-          <>
-            <Text style={styles.resultLabel}>✅ 생성 완료!</Text>
-            <Video
-              source={{uri: finalUrl}}
-              style={styles.video}
-              controls
-              resizeMode="contain"
-              paused={true}
-            />
-            {/* 기능 버튼 영역 */}
-            <View style={styles.actionRow}>
-              {/* 게시글 작성으로 이동 */}
-              <TouchableOpacity
-                style={styles.iconButton}
-                onPress={() => {
-                  // @ts-ignore
-                  navigation.navigate('StorybookScreen', {videoUri: finalUrl}); // 이동시 URI 넘김
-                }}>
-                <Text style={styles.iconText}>✍️ 게시글 작성</Text>
-              </TouchableOpacity>
-
-              {/* 기기에 저장 */}
-              <TouchableOpacity
-                style={styles.iconButton}
-                onPress={async () => {
-                  try {
-                    const fileName = `Pawparazzi_${Date.now()}.mp4`;
-
-                    // ✅ 더 안전한 저장 경로 (iOS & Android 모두 동작)
-                    const destPath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
-
-                    console.log('✅ 영상 저장 경로:', destPath);
-
-                    await RNFS.copyFile(finalUrl, destPath);
-
-                    Alert.alert(
-                      '성공',
-                      '기기에 저장되었습니다!\n(앱 전용 폴더에 저장됨)',
-                    );
-                  } catch (err) {
-                    console.log('❌ 저장 에러:', err);
-                    Alert.alert('실패', '파일 저장에 실패했습니다.');
-                  }
-                }}>
-                <Text style={styles.iconText}>💾 저장</Text>
-              </TouchableOpacity>
-
-              {/* 공유하기 */}
-              <TouchableOpacity
-                style={styles.iconButton}
-                onPress={async () => {
-                  try {
-                    const fileName = `Pawparazzi_${Date.now()}.mp4`;
-                    const destPath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
-
-                    console.log('✅ 공유용 영상 저장 경로:', destPath);
-
-                    // 공유 전에 파일이 없으면 먼저 저장
-                    const exists = await RNFS.exists(destPath);
-                    if (!exists) {
-                      await RNFS.copyFile(finalUrl, destPath);
-                      console.log('✅ 공유를 위해 영상 복사 완료');
-                    }
-
-                    // ✅ iOS, Android 모두 'file://' prefix 필요
-                    const fileUrl = `file://${destPath}`;
-
-                    await Share.open({
-                      url: fileUrl,
-                      type: 'video/mp4',
-                      failOnCancel: false,
-                    });
-                  } catch (error) {
-                    console.warn('❌ 공유 실패:', error);
-                    Alert.alert('공유 실패', '파일 공유 중 문제가 발생했습니다.');
-                  }
-                }}
-              >
-                <Text style={styles.iconText}>📤 공유</Text>
-              </TouchableOpacity>
+          {/* ✅ 이미지 미리보기 박스 (업로드 전/후 상태 구분) */}
+          <TouchableOpacity onPress={pickImage} activeOpacity={0.9}>
+            <View style={styles.previewBox}>
+              {imageFile ? (
+                <>
+                  {/* ✅ 업로드된 이미지 표시 */}
+                  <Image
+                    source={{uri: imageFile.uri}}
+                    style={styles.previewImage}
+                    resizeMode="cover"
+                  />
+                  {/* ✅ 삭제 버튼 (우측 상단) */}
+                  <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => setImageFile(null)}>
+                    <Text style={styles.deleteButtonText}>✕</Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <View style={styles.placeholderContent}>
+                  <Text style={styles.placeholderTitle}>
+                    아직 선택된 이미지가 없습니다.
+                  </Text>
+                  <Text style={styles.placeholderSub}>
+                    이미지를 업로드하세요.
+                  </Text>
+                </View>
+              )}
             </View>
-          </>
-        )}
-      </View>
-    </ScrollView>
+          </TouchableOpacity>
+
+          {/* ✅ 생성 버튼 */}
+          <TouchableOpacity
+            style={[
+              styles.generateButton,
+              (status === 'PENDING' || status === 'IN_PROGRESS') &&
+                styles.disabledButton,
+            ]}
+            onPress={handleGenerate}
+            disabled={status === 'PENDING' || status === 'IN_PROGRESS'}>
+            <Text style={styles.buttonText}>
+              {status === 'PENDING' || status === 'IN_PROGRESS'
+                ? '열심히 동영상을 생성 중...'
+                : '동영상 생성하기'}
+            </Text>
+          </TouchableOpacity>
+
+          {/* ✅ 로딩 중 표시 */}
+          {(status === 'PENDING' || status === 'IN_PROGRESS') && (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#4D7CFE" />
+              <Text style={styles.loadingText}>
+                동영상을 생성하고 있습니다...
+              </Text>
+            </View>
+          )}
+
+          {/* ✅ 에러 메시지 */}
+          {error && <Text style={styles.errorText}>❌ 오류: {error}</Text>}
+
+          {/* ✅ 결과 영상 미리보기 */}
+          {finalUrl && (
+            <>
+              <Text style={styles.resultLabel}>✅ 생성 완료!</Text>
+              <Video
+                source={{uri: finalUrl}}
+                style={styles.video}
+                controls
+                resizeMode="contain"
+                paused={true}
+              />
+              {/* 기능 버튼 영역 */}
+              <View style={styles.actionRow}>
+                {/* 게시글 작성으로 이동 */}
+                <TouchableOpacity
+                  style={styles.iconButton}
+                  onPress={() => {
+                    // @ts-ignore
+                    navigation.navigate('StorybookScreen', {
+                      videoUri: finalUrl,
+                    }); // 이동시 URI 넘김
+                  }}>
+                  <Text style={styles.iconText}>✍️ 게시글 작성</Text>
+                </TouchableOpacity>
+
+                {/*<TouchableOpacity*/}
+                {/*  style={styles.iconButton}*/}
+                {/*  onPress={() => handleSave(finalUrl || '')}>*/}
+                {/*  <Text style={styles.iconText}>💾 저장</Text>*/}
+                {/*</TouchableOpacity>*/}
+
+                <TouchableOpacity
+                  style={styles.iconButton}
+                  onPress={() => handleShare(finalUrl || '')}>
+                  <Text style={styles.iconText}>📤 공유, 저장</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
+          {/* 🔗 내가 생성한 동영상들 보러가기 */}
+          <View style={{ marginTop: 30, alignItems: 'center' }}>
+            <TouchableOpacity
+              onPress={() => {
+                // @ts-ignore
+                navigation.navigate('MyGeneratedVideosScreen');
+              }}
+            >
+              <Text style={styles.linkText}>내가 생성한 동영상들 보러가기 →</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
-    justifyContent: 'flex-start',
   },
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#FFFFFF',
-    paddingTop: Platform.OS === 'ios' ? 150 : 120,
+    backgroundColor: '#FFF',
     paddingBottom: Platform.OS === 'ios' ? 34 : 20,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: Platform.OS === 'ios' ? 60 : 40,
+    marginBottom: 16,
+    justifyContent: 'space-between',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 24,
+    marginVertical: 24,
     color: '#2C3E50',
     textAlign: 'center',
   },
@@ -446,6 +501,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#2C3E50',
     fontWeight: '500',
+  },
+  linkText: {
+    fontSize: 13,
+    color: '#4D7CFE',
+    textDecorationLine: 'underline',
   },
 });
 

@@ -74,7 +74,7 @@ const UserPostsScreen = () => {
           style={styles.backButton}>
           <Icon name="arrow-back-ios" size={20} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.username}>{userName}님의 게시글</Text>
+        <Text style={styles.username}>{userName || '해당 유저'}님의 게시글</Text>
         <View style={styles.placeholder} />
       </View>
 

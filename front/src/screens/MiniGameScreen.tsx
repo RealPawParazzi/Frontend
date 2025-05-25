@@ -7,21 +7,27 @@ import {
   SafeAreaView,
   ScrollView,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native'; // ✅ navigation 사용
+import Icon from 'react-native-vector-icons/MaterialIcons'; // ✅ Material 아이콘 import
 import BattleWithOthers from '../components/HomePage/MiniGame/BattleWithOthers';
-import BattleWithOneAI from '../components/HomePage/MiniGame/BattleWithOneAI';
-import BattleWithTwoAI from '../components/HomePage/MiniGame/BattleWithTwoAI';
+import BattleWithOneInstance from '../components/HomePage/MiniGame/BattleWithOneInstance';
+import BattleWithTwoInstance from '../components/HomePage/MiniGame/BattleWithTwoInstance';
 
 const MiniGameScreen = () => {
-  const [tab, setTab] = useState<'others' | 'ai-one' | 'ai-two'>('others');
+  const [tab, setTab] = useState<'others' | 'instance-one' | 'instance-two'>('others');
+  const navigation = useNavigation(); // ✅ navigation 객체
+
 
   const renderTab = () => {
+
+
     switch (tab) {
       case 'others':
         return <BattleWithOthers />;
-      case 'ai-one':
-        return <BattleWithOneAI />;
-      case 'ai-two':
-        return <BattleWithTwoAI />;
+      case 'instance-one':
+        return <BattleWithOneInstance />;
+      case 'instance-two':
+        return <BattleWithTwoInstance />;
       default:
         return null;
     }
@@ -29,6 +35,13 @@ const MiniGameScreen = () => {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+      {/* ✅ 뒤로가기 아이콘 (MaterialIcons) */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Icon name="arrow-back" size={28} color="#4D7CFE" />
+        </TouchableOpacity>
+      </View>
+
       {/* 탭 UI 개선 - 3개로 확장 */}
       <View style={styles.tabWrapper}>
         <View style={styles.tabBox}>
@@ -41,18 +54,18 @@ const MiniGameScreen = () => {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.tabItem, tab === 'ai-one' && styles.activeTabItem]}
-            onPress={() => setTab('ai-one')}
+            style={[styles.tabItem, tab === 'instance-one' && styles.activeTabItem]}
+            onPress={() => setTab('instance-one')}
           >
-            <Text style={[styles.tabItemText, tab === 'ai-one' && styles.activeTabText]}>
+            <Text style={[styles.tabItemText, tab === 'instance-one' && styles.activeTabText]}>
               즉석 펫과
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.tabItem, tab === 'ai-two' && styles.activeTabItem]}
-            onPress={() => setTab('ai-two')}
+            style={[styles.tabItem, tab === 'instance-two' && styles.activeTabItem]}
+            onPress={() => setTab('instance-two')}
           >
-            <Text style={[styles.tabItemText, tab === 'ai-two' && styles.activeTabText]}>
+            <Text style={[styles.tabItemText, tab === 'instance-two' && styles.activeTabText]}>
               즉석 펫끼리
             </Text>
           </TouchableOpacity>
@@ -66,6 +79,16 @@ const MiniGameScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 4,
+  },
+  backText: {
+    fontSize: 14,
+    color: '#4D7CFE',
+    fontWeight: 'bold',
+  },
   // 탭 박스 바깥 여백
   tabWrapper: {
     backgroundColor: '#FFFFFF',

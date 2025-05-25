@@ -12,17 +12,24 @@ import {
   Alert,
   ActionSheetIOS,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import Video from 'react-native-video';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
-import { launchImageLibrary } from 'react-native-image-picker';
-import { useStoryReelsStore } from '../../../context/storyReelsStore';
+import {launchImageLibrary} from 'react-native-image-picker';
+import {useStoryReelsStore} from '../../../context/storyReelsStore';
 import userStore from '../../../context/userStore';
 import StoryViewersModal from './StoryViewersModal';
 
-dayjs.extend(relativeTime);
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.extend(relativeTime); // ✅ 이 순서도 중요
+
+dayjs.tz.setDefault('Asia/Seoul');
 
 // ✅ 스토리 타입
 interface Story {
@@ -83,7 +90,6 @@ const StoryReelsModal = ({
   // ✅ 현재 스토리가 내 스토리인지 여부
   const isMyStory = currentUser.memberId === Number(userData.id);
 
-
   // ✅ 진행바 시작 애니메이션 (10초 후 자동 다음 스토리)
   const startProgress = useCallback(() => {
     progress.setValue(0);
@@ -127,9 +133,19 @@ const StoryReelsModal = ({
    * ✅ 이미지 or 영상 길이에 따라 mediaDuration 설정
    */
   useEffect(() => {
-    if (!currentStory) { return; }
-    setMediaDuration(10); // 이미지 or 기본 초기화
-  }, [currentStory, currentStory.mediaUrl]);
+    if (!currentStory || !currentStory.mediaUrl) {
+      return;
+    }
+
+    setMediaDuration(10); // 기본값 설정
+  }, [currentStory]);
+
+  useEffect(() => {
+    if (!currentStory || !currentStory.storyId) {
+      return;
+    }
+    loadStoryViewers(currentStory.storyId);
+  }, [currentStory]);
 
   // ✅ 유저/스토리 변경될 때마다 애니메이션 재시작
   useEffect(() => {
@@ -147,7 +163,7 @@ const StoryReelsModal = ({
   /**
    * ✅ 영상 길이 추출 (onLoad 콜백)
    */
-  const handleVideoLoad = (meta: { duration: number }) => {
+  const handleVideoLoad = (meta: {duration: number}) => {
     if (meta.duration) {
       setMediaDuration(meta.duration);
     }
@@ -244,7 +260,6 @@ const StoryReelsModal = ({
   useEffect(() => {
     if (viewersModalVisible && currentStory?.storyId) {
       loadStoryViewers(currentStory.storyId);
-
     }
   }, [viewersModalVisible, currentStory?.storyId, loadStoryViewers]);
 
@@ -297,7 +312,8 @@ const StoryReelsModal = ({
             style={styles.avatar}
           />
           <Text style={styles.nickname}>
-            {currentUser.nickname} · {dayjs(currentStory.createdAt).fromNow()}
+            {currentUser.nickname} ·{' '}
+            {dayjs.utc(currentStory.createdAt).tz('Asia/Seoul').fromNow()}
           </Text>
           <View style={{flexDirection: 'row', gap: 16}}>
             {isMyStory && (

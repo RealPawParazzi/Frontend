@@ -182,11 +182,11 @@ const MiniProfileModal = ({visible, onClose, user}: MiniProfileModalProps) => {
           <View style={{alignItems: 'center', marginVertical: 10}}>
             {/* 닉네임: 크게, 굵게 */}
             <Text style={{fontSize: 18, fontWeight: 'bold'}}>
-              {user.nickName}
+              {user.nickName || user.name}
             </Text>
 
             {/* 이름: 작게, 옅은 회색 */}
-            <Text style={{fontSize: 12, color: '#888'}}>@{user.name}</Text>
+            <Text style={{fontSize: 12, color: '#888'}}>@{user.name || user.nickName}</Text>
           </View>
 
           {/* 게시물 수, 팔로워, 팔로잉 */}

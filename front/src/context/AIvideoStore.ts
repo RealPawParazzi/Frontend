@@ -4,7 +4,7 @@ import {create} from 'zustand';
 import {
   createVideoRequest,
   fetchVideoStatus,
-  createBattleVideoRequest,
+  createBattleVideoRequest, GeneratedVideo, fetchAllGeneratedVideos, fetchLatestBattleVideoByPet,
 } from '../services/AIvideoService';
 import {useSnackbarStore} from './snackbarStore';
 
@@ -21,10 +21,13 @@ interface AIvideoState {
     imageFile: {uri: string; name: string; type: string},
   ) => Promise<void>;
   pollStatus: (intervalMs?: number) => void;
-  startBattleVideoGeneration: (battleId: number) => Promise<void>; // ✅ 배틀 영상 추가
+  startBattleVideoGeneration: (battleId: number | undefined) => Promise<void>; // ✅ 배틀 영상 추가
   setFinalUrl: (url: string) => void;
   stopPolling: () => void;
   reset: () => void;
+
+  fetchAllVideos: () => Promise<GeneratedVideo[]>;
+  fetchLatestBattleVideoByPet: (petId: number) => Promise<GeneratedVideo | null>;
 }
 
 export const useAIvideoStore = create<AIvideoState>((set, get) => ({
@@ -143,7 +146,7 @@ export const useAIvideoStore = create<AIvideoState>((set, get) => ({
   },
 
   // ✅ 배틀 영상 생성 시작
-  startBattleVideoGeneration: async (battleId: number) => {
+  startBattleVideoGeneration: async (battleId: number | undefined) => {
     get().reset(); // 기존 상태 초기화
     set({status: 'PENDING', resultUrl: null, error: null, finalUrl: null});
 
@@ -153,6 +156,26 @@ export const useAIvideoStore = create<AIvideoState>((set, get) => ({
       get().pollStatus(); // 폴링 시작
     } catch (e: any) {
       set({status: 'FAILED', error: e.message});
+    }
+  },
+
+  fetchAllVideos: async () => {
+    try {
+      const videos = await fetchAllGeneratedVideos();
+      return videos;
+    } catch (e: any) {
+      console.error('❌ 영상 목록 불러오기 실패:', e);
+      return [];
+    }
+  },
+
+  fetchLatestBattleVideoByPet: async (petId: number) => {
+    try {
+      const video = await fetchLatestBattleVideoByPet(petId);
+      return video;
+    } catch (e: any) {
+      console.error('❌ 배틀 영상 불러오기 실패:', e);
+      return null;
     }
   },
 }));

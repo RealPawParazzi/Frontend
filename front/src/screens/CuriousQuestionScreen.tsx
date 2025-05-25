@@ -1,5 +1,4 @@
 // 📁 screens/CuriousQuestionScreen.tsx
-
 import React, {useEffect, useState} from 'react';
 import {
   View,
@@ -18,6 +17,7 @@ import useQuestionStore from '../context/questionStore';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {Picker} from '@react-native-picker/picker';
 import Footer from '../components/Footer';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 // 타입 설정
 type RouteParams = {
@@ -40,21 +40,33 @@ const CuriousQuestionScreen = () => {
   useEffect(() => {
     if (route.params?.prefill) {
       const {titleOption, customTitle, content} = route.params.prefill;
-      if (titleOption) setTitleOption(titleOption);
-      if (customTitle) setCustomTitle(customTitle);
-      if (content) setContent(content);
+      if (titleOption) {
+        setTitleOption(titleOption);
+      }
+      if (customTitle) {
+        setCustomTitle(customTitle);
+      }
+      if (content) {
+        setContent(content);
+      }
     }
   }, [route.params]);
 
   useEffect(() => {
     if (route.params?.prefill) {
-      const { titleOption, customTitle, content } = route.params.prefill;
+      const {titleOption, customTitle, content} = route.params.prefill;
 
       // ✅ 0.1초 후 적용 (Picker 내부 렌더 타이밍 고려)
       setTimeout(() => {
-        if (titleOption) setTitleOption(titleOption);
-        if (customTitle) setCustomTitle(customTitle);
-        if (content) setContent(content);
+        if (titleOption) {
+          setTitleOption(titleOption);
+        }
+        if (customTitle) {
+          setCustomTitle(customTitle);
+        }
+        if (content) {
+          setContent(content);
+        }
       }, 100);
     }
   }, [route.params]);
@@ -93,7 +105,12 @@ const CuriousQuestionScreen = () => {
           contentContainerStyle={styles.container}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}>
-          {/* ✅ 상단 안내 문구 */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <MaterialIcons name="arrow-back" size={26} color="#333" />
+            </TouchableOpacity>
+          </View>
+
           <Text style={styles.title}>운영진에게 직접 질문해주세요 !</Text>
 
           {/* ✅ 제목 선택 드롭다운 */}
@@ -161,7 +178,24 @@ const CuriousQuestionScreen = () => {
             )}
           </TouchableOpacity>
 
-          {/* ✅ Footer는 좌우 패딩 제거한 별도 Wrapper로 감쌈 */}
+          {/* 🔽 문의 내역 이동 링크 */}
+          <TouchableOpacity
+            style={{marginTop: 12, alignSelf: 'center'}}
+            //@ts-ignore
+            onPress={() => navigation.navigate('MyInquiriesScreen')}>
+            {' '}
+            {/* ✅ 해당 스크린 존재해야 함 */}
+            <Text
+              style={{
+                fontSize: 13,
+                marginTop: 20,
+                color: '#4D7CFE',
+                textDecorationLine: 'underline',
+              }}>
+              내 문의 목록 보러가기
+            </Text>
+          </TouchableOpacity>
+
           <View style={styles.footerWrapper}>
             <Footer />
           </View>
@@ -180,6 +214,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  header: {
+    marginTop: 10,
+    marginBottom: 10,
+    paddingHorizontal: 4,
+  },
   container: {
     minHeight: '100%',
     padding: 20,
@@ -190,7 +229,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#4d7cfe',
     marginBottom: 15,
-    marginTop: 70,
+    marginTop: 20,
     textAlign: 'center',
   },
   label: {

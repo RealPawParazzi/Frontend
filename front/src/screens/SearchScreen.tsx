@@ -5,11 +5,18 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  ScrollView, Platform,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import boardStore from '../context/boardStore';
 import userStore from '../context/userStore';
+
+interface Props {
+  searchQuery: string;
+  onClose: () => void;
+}
 
 interface Props {
   searchQuery: string;
@@ -33,14 +40,21 @@ const SearchScreen: React.FC<Props> = ({ searchQuery, onClose }) => {
   }, [searchQuery, boardList]);
 
   return (
-    <View style={styles.overlay}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={styles.overlay}
+    >
       <View style={styles.headerRow}>
         <Text style={styles.resultLabel}>🔍 검색 결과</Text>
         {/*<TouchableOpacity onPress={onClose}>*/}
         {/*  <Text style={styles.closeText}>✕</Text>*/}
         {/*</TouchableOpacity>*/}
       </View>
-      <ScrollView style={styles.resultBox}>
+      <ScrollView
+        style={styles.resultBox}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         {filteredPosts.length > 0 ? (
           filteredPosts.map(post => (
             <TouchableOpacity
@@ -63,7 +77,7 @@ const SearchScreen: React.FC<Props> = ({ searchQuery, onClose }) => {
           <Text style={styles.noResult}>검색된 게시물이 없습니다</Text>
         )}
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 

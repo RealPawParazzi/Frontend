@@ -52,6 +52,12 @@ const CalendarScreen = () => {
     setRefreshing(false);
   }, [fetchUserBoards, fetchAllMyWalks, userData.id]);
 
+  useEffect(() => {
+    // ✅ 화면이 처음 로드될 때 산책 기록과 게시글을 불러옴
+    fetchAllMyWalks();
+    fetchUserBoards(Number(userData.id));
+  }, [fetchAllMyWalks, fetchUserBoards, userData.id]);
+
   // 🟦 산책기록 + 게시물 날짜 마킹
   useEffect(() => {
     const tempMarked: Record<string, any> = {};
