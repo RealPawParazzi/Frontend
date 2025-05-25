@@ -546,8 +546,9 @@ const MapScreen = () => {
           )}
 
           {/* ✅ 현재 산책 경로 마커 */}
-          <WalkPathPolyline route={walkRoute} />
-
+          {isWalking && walkRoute.length > 1 && (
+            <WalkPathPolyline route={walkRoute} />
+          )}
           {/* ✅ 과거 산책 경로 */}
           {!isWalking && petRoutes.length > 1 && (
             <>
