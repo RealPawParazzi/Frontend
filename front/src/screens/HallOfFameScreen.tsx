@@ -107,11 +107,11 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   rank: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     marginRight: 12,
     color: '#4D7CFE',
-    width: 32,
+    width: 35,
   },
   image: {
     width: 64,
