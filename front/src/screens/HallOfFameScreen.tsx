@@ -66,7 +66,7 @@ const HallOfFameScreen = () => {
         <ActivityIndicator size="large" color="#4D7CFE" />
       ) : (
         <FlatList
-          data={rankings}
+          data={rankings.slice(0, 10)}
           renderItem={renderItem}
           keyExtractor={(item) => `${item.petId}`}
           contentContainerStyle={styles.list}
