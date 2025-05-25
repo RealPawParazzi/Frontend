@@ -18,10 +18,21 @@ export interface Pet {
   petDetail?: string;
 }
 
+/** ✅ 확장된 펫 랭킹 타입 */
+export interface PetRanking extends Pet {
+  winCount: number;
+  member: {
+    name: string;
+    email: string;
+  };
+}
+
 /** ✅ Zustand 상태 타입 */
 interface PetStore {
   pets: Pet[];
   fetchPets: () => Promise<void>;
+  rankings: PetRanking[]; // ✅ 랭킹 상태 추가
+
   addPet: (petData: Omit<Pet, 'petId'>, image?: any) => Promise<void>;
   editPet: (
     petId: number,
@@ -30,7 +41,7 @@ interface PetStore {
   ) => Promise<void>;
   removePet: (petId: number) => Promise<void>;
   fetchPetDetail: (petId: number) => Promise<Pet>;
-  fetchPetRankings: () => Promise<Pet[]>;
+  fetchPetRankings: () => Promise<void>; // ✅ 반환 타입 수정
 }
 
 /** ✅ 기본 더미 데이터 */
@@ -49,6 +60,8 @@ const defaultPets: Pet[] = [
 /** ✅ Zustand 전역 상태 */
 const petStore = create<PetStore>(set => ({
   pets: defaultPets,
+  rankings: [], // ✅ 초기값 추가
+
 
   /**
    * ✅ 반려동물 목록 불러오기
@@ -140,14 +153,14 @@ const petStore = create<PetStore>(set => ({
     }
   },
 
-  /** ✅ 배틀 랭킹순 정렬 조회 */
+  /** ✅ 반려동물 랭킹 데이터 저장 */
   fetchPetRankings: async () => {
     try {
-      const rankedPets = await getRankedPets();
-      return rankedPets;
+      const rankedPets = await getRankedPets(); // 서버 응답이 PetRanking[]
+      set({ rankings: rankedPets });
     } catch (error) {
       console.error('🐶❌ 반려동물 랭킹 조회 실패:', error);
-      return [];
+      set({ rankings: [] });
     }
   },
 }));
