@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,8 @@ import {useAIvideoStore} from '../../../context/AIvideoStore';
 import Video from 'react-native-video';
 import CustomDropdown from '../../../common/CustomDropdown';
 import DateTimePicker from 'react-native-modal-datetime-picker';
+import RNFS from 'react-native-fs';
+import Share from 'react-native-share';
 
 const BattleWithTwoInstance = () => {
   const {loading, battleResult, requestTwoInstanceBattleAction} =
@@ -28,6 +30,10 @@ const BattleWithTwoInstance = () => {
     reset: resetVideo,
     startBattleVideoGeneration,
   } = useAIvideoStore();
+
+  // useEffect(() => {
+  //   // resetVideo();
+  // }, [resetVideo]);
 
   // ✅ 펫1 상태
   const [pet1, setPet1] = useState({
@@ -86,7 +92,33 @@ const BattleWithTwoInstance = () => {
     if (!battleResult?.battleId) {
       return;
     }
+    console.log('🎬 [영상 생성 요청]', battleResult?.battleId);
+    console.log('🎬 [영상 생성 상태]', status);
     startBattleVideoGeneration(battleResult.battleId);
+
+  };
+
+  const handleSave = async () => {
+    try {
+      const fileName = `Pawparazzi_${Date.now()}.mp4`;
+      const destPath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
+      await RNFS.copyFile(finalUrl || '', destPath);
+      Alert.alert('성공', '기기에 저장되었습니다!');
+    } catch (err) {
+      Alert.alert('실패', '파일 저장에 실패했습니다.');
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      const fileName = `Pawparazzi_${Date.now()}.mp4`;
+      const destPath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
+      await RNFS.copyFile(finalUrl || '', destPath);
+      const fileUrl = `file://${destPath}`;
+      await Share.open({url: fileUrl, type: 'video/mp4', failOnCancel: false});
+    } catch (err) {
+      Alert.alert('공유 실패', '파일 공유 중 문제가 발생했습니다.');
+    }
   };
 
   return (
@@ -256,6 +288,20 @@ const BattleWithTwoInstance = () => {
             controls
             resizeMode="contain"
           />
+          <View style={styles.actionRow}>
+            <TouchableOpacity style={styles.iconButton} onPress={() => {
+              //@ts-ignore
+              navigation.navigate('StorybookScreen', {videoUri: finalUrl});
+            }}>
+              <Text style={styles.iconText}>✍️ 게시글 작성</Text>
+            </TouchableOpacity>
+            {/*<TouchableOpacity style={styles.iconButton} onPress={handleSave}>*/}
+            {/*  <Text style={styles.iconText}>💾 저장</Text>*/}
+            {/*</TouchableOpacity>*/}
+            <TouchableOpacity style={styles.iconButton} onPress={handleShare}>
+              <Text style={styles.iconText}>📤 공유, 저장</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
       </ScrollView>
@@ -327,6 +373,25 @@ const styles = StyleSheet.create({
   },
   generateButtonText: {color: '#FFF', textAlign: 'center', fontWeight: '600'},
   videoLoading: {marginTop: 16, alignItems: 'center'},
+  actionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 16,
+  },
+  iconButton: {
+    flex: 1,
+    backgroundColor: '#F1F3F5',
+    paddingVertical: 12,
+    marginHorizontal: 4,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  iconText: {
+    fontSize: 14,
+    color: '#2C3E50',
+    fontWeight: '500',
+  },
 });
+
 
 export default BattleWithTwoInstance;

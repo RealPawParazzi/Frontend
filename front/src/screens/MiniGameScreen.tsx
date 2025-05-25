@@ -34,7 +34,7 @@ const MiniGameScreen = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF', height: '100%'}}>
       {/* ✅ 뒤로가기 아이콘 (MaterialIcons) */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
