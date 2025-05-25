@@ -37,7 +37,7 @@ const BottomTabNavigator = ({navigation}: any) => {
     setMenuVisible(!menuVisible);
     Animated.timing(animation, {
       toValue: menuVisible ? 0 : 1,
-      duration: 250,
+      duration: 300,
       easing: Easing.out(Easing.ease),
       useNativeDriver: false,
     }).start();
@@ -47,7 +47,7 @@ const BottomTabNavigator = ({navigation}: any) => {
   const fabOptions = [
     {label: '게시물 등록', icon: 'edit', screen: 'StorybookScreen'},
     {label: '동영상 생성', icon: 'videocam', screen: 'VideoEditorScreen'},
-    {label: '이미지 생성', icon: 'image', screen: 'ImageEditorScreen'},
+    // {label: '이미지 생성', icon: 'image', screen: 'ImageEditorScreen'},
   ];
 
   return (
@@ -149,8 +149,8 @@ const BottomTabNavigator = ({navigation}: any) => {
         />
 
         {fabOptions.map((option, index) => {
-          const angle = (Math.PI / 3.5) * index + Math.PI / 4.7; // ✅ 위쪽 부채꼴 방향으로 변경
-          const radius = 90;
+          const angle = (Math.PI / 3) * index + Math.PI / 3; // ✅ 위쪽 부채꼴 방향으로 변경
+          const radius = 80;
           const x = animation.interpolate({
             inputRange: [0, 1],
             outputRange: [0, radius * Math.cos(angle)],
@@ -238,11 +238,11 @@ const styles = StyleSheet.create({
   },
   fabBackdrop: {
     position: 'absolute',
-    width: 250,
-    height: 250,
-    borderRadius: 200,
+    width: 200,
+    height: 200,
+    borderRadius: 300,
     backgroundColor: 'rgba(0, 0, 0, 0.2)', // ✅ 반투명 회색
-    bottom: -80,
+    bottom: -35,
     alignSelf: 'center',
   },
   fabOption: {
