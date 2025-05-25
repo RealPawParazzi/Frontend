@@ -184,15 +184,15 @@ const MyGeneratedVideosScreen = () => {
                   resizeMode="contain"
                 />
                 <View style={styles.actionRow}>
-                  <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={() => handleSave(selectedVideo.resultUrl || '')}>
-                    <Text style={styles.actionText}>💾 저장</Text>
-                  </TouchableOpacity>
+                  {/*<TouchableOpacity*/}
+                  {/*  style={styles.actionButton}*/}
+                  {/*  onPress={() => handleSave(selectedVideo.resultUrl || '')}>*/}
+                  {/*  <Text style={styles.actionText}>💾 저장</Text>*/}
+                  {/*</TouchableOpacity>*/}
                   <TouchableOpacity
                     style={styles.actionButton}
                     onPress={() => handleShare(selectedVideo.resultUrl || '')}>
-                    <Text style={styles.actionText}>📤 공유</Text>
+                    <Text style={styles.actionText}>📤 공유, 저장</Text>
                   </TouchableOpacity>
                 </View>
                 <TouchableOpacity
