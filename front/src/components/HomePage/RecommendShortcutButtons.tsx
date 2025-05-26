@@ -13,7 +13,7 @@ const shortcuts = [
   },
   {
     key: 'aiPhoto',
-    label: 'AI 동영상 생성',
+    label: 'AI 동영상',
     iconName: 'brush',
     color: '#FF9800',
   },
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   label: {
-    fontSize: 10.2,
+    fontSize: 10.5,
     color: '#333',
     textAlign: 'center',
   },
