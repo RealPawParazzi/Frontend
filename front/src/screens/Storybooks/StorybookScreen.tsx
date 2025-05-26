@@ -22,6 +22,10 @@ import {launchImageLibrary} from 'react-native-image-picker';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import boardStore from '../../context/boardStore';
 import TagInputModal from '../../components/TagInputModal';
+import {createThumbnail} from 'react-native-create-thumbnail';
+import {detectDogBreed, predictDogBreed} from '../../services/dogBreedService';
+import {createAIDiary} from '../../services/diaryService'; // ✅ AI 일기 생성 서비스 추가
+
 
 // 🧩 콘텐츠 블록 타입 정의
 interface BlockItem {
@@ -43,6 +47,7 @@ const StorybookScreen = ({navigation, route}: any) => {
   const [tagModalVisible, setTagModalVisible] = useState(false); // 모달 열기/닫기 상태
   const [tags, setTags] = useState<string[]>([]); // 태그 리스트
   const [isPublic, setIsPublic] = useState(true); // ✅ 게시물 공개 여부 (기본값: 공개)
+  const [generatingDiary, setGeneratingDiary] = useState(false); // ✅ AI 일기 생성 상태
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
   const inputRefs = useRef<Array<TextInput | null>>([]);
@@ -178,6 +183,59 @@ const StorybookScreen = ({navigation, route}: any) => {
     ]);
   };
 
+  const handleBreedPrediction = async (imageUri: string) => {
+    if (!imageUri) {
+      return;
+    }
+
+    try {
+      const finalImageUri = await generateThumbnailIfNeeded(imageUri);
+      console.log('🔍 이미지 URI:', finalImageUri);
+      const result = await predictDogBreed(finalImageUri);
+      console.log('✅ 예측된 품종:', result);
+
+      // 이미 존재하지 않는 경우에만 태그로 추가
+      if (!tags.includes(result.breed)) {
+        setTags(prev => [...prev, result.breed]);
+      }
+
+      Alert.alert('🐶 품종 예측 완료', `예측된 품종: ${result.breed}`);
+    } catch (err) {
+      Alert.alert('❌ 예측 실패', '이미지 분석 중 오류가 발생했습니다.');
+    }
+  };
+
+  const generateThumbnailIfNeeded = async (uri: string) => {
+    if (uri.toLowerCase().endsWith('.mp4')) {
+      const {path} = await createThumbnail({url: uri, timeStamp: 1000});
+      return path;
+    }
+    return uri;
+  };
+
+  const handleAIContentGeneration = async () => {
+    const firstText = blocks.find(b => b.type === 'Text' && b.value.trim());
+    if (!title.trim() || !firstText) {
+      return Alert.alert('⚠️ 조건 누락', '제목과 내용 중 하나 이상이 필요합니다.');
+    }
+
+    try {
+      setGeneratingDiary(true);
+      const res = await createAIDiary(title, firstText.value);
+      if (res?.data?.content) {
+        setTitle(res.data.title);
+        setBlocks([{type: 'Text', value: res.data.content}]);
+      }
+    } catch (err: any) {
+      Alert.alert('❌ 생성 실패', err.message || 'AI 일기 생성 중 오류');
+    } finally {
+      setGeneratingDiary(false);
+    }
+  };
+
+  const hasTextOrTitle = title.trim() !== '' || blocks.some(b => b.type === 'Text' && b.value.trim() !== '');
+
+
   // ✅ 게시글 저장하기
   const handleSavePost = async () => {
     const validBlocks = blocks.filter(b => b.value.trim() !== '');
@@ -205,7 +263,10 @@ const StorybookScreen = ({navigation, route}: any) => {
     // ✅ 미디어 포함 여부 확인
     const imageBlocks = validBlocks.filter(b => b.type === 'File');
     if (imageBlocks.length === 0) {
-      Alert.alert('⚠️ 미디어 누락', '사진이나 동영상 중 하나 이상 포함되어야 합니다.');
+      Alert.alert(
+        '⚠️ 미디어 누락',
+        '사진이나 동영상 중 하나 이상 포함되어야 합니다.',
+      );
       return;
     }
 
@@ -231,14 +292,14 @@ const StorybookScreen = ({navigation, route}: any) => {
       // ✅ 대표 이미지도 타입 맞춰 처리
       const coverImage = titleImage
         ? {
-            uri: String(titleImage),
-            name: titleImage.split('/').pop() || `cover_${Date.now()}`,
-            type:
-              titleImage.toLowerCase().endsWith('.mp4') ||
-              titleImage.toLowerCase().includes('video')
-                ? 'video/mp4'
-                : 'image/jpeg',
-          }
+          uri: String(titleImage),
+          name: titleImage.split('/').pop() || `cover_${Date.now()}`,
+          type:
+            titleImage.toLowerCase().endsWith('.mp4') ||
+            titleImage.toLowerCase().includes('video')
+              ? 'video/mp4'
+              : 'image/jpeg',
+        }
         : undefined;
 
       const boardPayload = {
@@ -255,7 +316,7 @@ const StorybookScreen = ({navigation, route}: any) => {
         mediaFiles as any[],
         coverImage as any,
         firstText,
-        tags.join(', ') // ✅ 콤마로 연결된 문자열로 변환하여 tag 파라미터에 전달
+        tags.join(', '), // ✅ 콤마로 연결된 문자열로 변환하여 tag 파라미터에 전달
       );
 
       console.log('🟡 게시글 등록 요청 데이터:');
@@ -380,6 +441,13 @@ const StorybookScreen = ({navigation, route}: any) => {
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
+                    style={[styles.representativeTag, {top: 45}]} // 위치 조정
+                    onPress={() => handleBreedPrediction(block.value)}>
+                    <Text style={{color: 'white', fontWeight: 'bold'}}>
+                      + 자동 태그
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
                     style={styles.deleteButton}
                     onPress={() => removeBlock(index)}>
                     <MaterialIcons
@@ -436,11 +504,17 @@ const StorybookScreen = ({navigation, route}: any) => {
         {/* ✨ AI 기능 자리 */}
         <TouchableOpacity
           style={styles.bottomIcon}
-          onPress={() =>
-            Alert.alert('준비 중!', 'AI 일기 생성 기능은 곧 추가됩니다.')
-          }>
-          <MaterialIcons name="smart-toy" size={30} color="#aaa" />
-          {/*<Text style={[styles.iconLabel, {color: '#aaa'}]}>AI</Text>*/}
+          disabled={!hasTextOrTitle || generatingDiary}
+          onPress={handleAIContentGeneration}>
+          {generatingDiary ? (
+            <ActivityIndicator size="small" color="#4D7CFE" />
+          ) : (
+            <MaterialIcons
+              name="smart-toy"
+              size={30}
+              color={hasTextOrTitle ? '#4D7CFE' : '#aaa'}
+            />
+          )}
         </TouchableOpacity>
       </Animated.View>
     </SafeAreaView>
