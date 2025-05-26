@@ -6,7 +6,7 @@ import {
   FlatList,
   Image,
   ActivityIndicator,
-  TouchableOpacity,
+  TouchableOpacity, Platform,
 } from 'react-native';
 import petStore, {PetRanking} from '../context/petStore';
 import { useNavigation } from '@react-navigation/native';
@@ -99,12 +99,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     marginBottom: 14,
-    borderRadius: 12,
     backgroundColor: '#F9F9F9',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOpacity: 0.05,
+        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 2 },
+        borderRadius: 12,
+      },
+      android: {
+        elevation: 5,
+        borderWidth: 0.6,
+        borderRadius: 10,
+        borderColor: '#DDD',
+      },
+    }),
   },
   rank: {
     fontSize: 16,

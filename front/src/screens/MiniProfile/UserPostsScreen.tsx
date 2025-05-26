@@ -6,7 +6,7 @@ import {
   Image,
   StyleSheet,
   SafeAreaView,
-  TouchableOpacity,
+  TouchableOpacity, Platform,
 } from 'react-native';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import boardStore, {Board} from '../../context/boardStore';
@@ -161,11 +161,20 @@ const styles = StyleSheet.create({
     marginVertical: 6,
     padding: 14,
     borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+      },
+      android: {
+        elevation: 5,
+        borderWidth: 0.6,
+        borderColor: '#E5E5E5', // 살짝 회색 라인
+      },
+    }),
   },
 
   postContent: {
@@ -203,3 +212,4 @@ const styles = StyleSheet.create({
 });
 
 export default UserPostsScreen;
+

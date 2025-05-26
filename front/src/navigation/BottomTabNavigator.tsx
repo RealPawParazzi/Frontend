@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
   },
   fabContainer: {
     position: 'absolute',
-    bottom: 35,
+    bottom: Platform.OS === 'android' ? 25 : 35,
     alignSelf: 'center',
     alignItems: 'center',
     justifyContent: 'center',
@@ -225,16 +225,21 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#fff', // ✅ 흰색 배경
+    backgroundColor: '#fff',
     borderWidth: 2.2,
-    borderColor: '#4D7CFE', // ✅ 테두리 색상 적용
+    borderColor: '#4D7CFE',
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    shadowOffset: {width: 0, height: 3},
+
+    // ✨ Android white box 이슈 방지
+    overflow: Platform.OS === 'android' ? 'hidden' : 'visible',
+
+    // ✨ 플랫폼별 그림자 처리 분리
+    elevation: Platform.OS === 'android' ? 20 : 0,
+    shadowColor: Platform.OS === 'ios' ? '#000' : undefined,
+    shadowOpacity: Platform.OS === 'ios' ? 0.1 : undefined,
+    shadowRadius: Platform.OS === 'ios' ? 6 : undefined,
+    shadowOffset: Platform.OS === 'ios' ? {width: 0, height: 3} : undefined,
   },
   fabBackdrop: {
     position: 'absolute',

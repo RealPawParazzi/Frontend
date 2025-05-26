@@ -176,8 +176,7 @@ const PostCard: React.FC<{post: Post}> = ({post}) => {
         }>
         {isVideo ? (
           thumbnailUri ? (
-            <Image source={{uri: thumbnailUri}} style={styles.postImage} />
-          ) : (
+            <Image source={getImageSource(thumbnailUri, DEFAULT_PROFILE_IMAGE)} style={styles.postImage} />          ) : (
             <View style={[styles.postImage, {backgroundColor: '#000'}]} />
           )
         ) : (

@@ -342,10 +342,7 @@ const OwnerInfo = () => {
                 style={styles.memoryCircle}
                 onPress={() => openSingleStory(item)}>
                 <Image
-                  source={{
-                    uri:
-                      memoryThumbnails[item.storyId] || DEFAULT_PROFILE_IMAGE,
-                  }}
+                  source={getImageSource(memoryThumbnails[item.storyId], DEFAULT_PROFILE_IMAGE)}
                   style={styles.memoryImage}
                 />
               </TouchableOpacity>

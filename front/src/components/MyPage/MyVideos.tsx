@@ -94,6 +94,10 @@ const MyVideos: React.FC<Props> = ({userId}) => {
     generateThumbnails();
   }, [videoBoards]);
 
+  const getImageSource = (thumbnail: string | undefined, defaultImage: any) => {
+    return thumbnail ? { uri: thumbnail } : defaultImage;
+  };
+
 
   return (
     <FlatList
@@ -108,7 +112,7 @@ const MyVideos: React.FC<Props> = ({userId}) => {
             navigation.navigate('StorybookDetailScreen', { boardId: item.boardId });
           }}>
           <Image
-            source={item.thumbnail ? { uri: item.thumbnail } : DEFAULT_THUMBNAIL}
+            source={getImageSource(item.thumbnail, DEFAULT_THUMBNAIL)}
             style={styles.thumbnail}
           />
           <View style={styles.caption}>

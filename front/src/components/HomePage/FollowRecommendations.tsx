@@ -5,7 +5,7 @@ import {
   FlatList,
   Text,
   StyleSheet,
-  TouchableOpacity,
+  TouchableOpacity, Platform,
 } from 'react-native';
 import userStore from '../../context/userStore';
 import userFollowStore from '../../context/userFollowStore';
@@ -187,6 +187,17 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     borderRadius: 15,
     backgroundColor: '#fff',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.15,
+        shadowRadius: 5,
+      },
+      android: {
+        elevation: 5,
+      },
+    }),
   },
   card: {
     alignItems: 'center',

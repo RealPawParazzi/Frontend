@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   Modal,
   Pressable,
-  ScrollView,
+  ScrollView, Platform,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -151,10 +151,19 @@ const styles = StyleSheet.create({
     marginVertical: 6,
     padding: 14,
     borderRadius: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        shadowOffset: { width: 0, height: 1 },
+      },
+      android: {
+        elevation: 3,
+        borderWidth: 0.7,
+        borderColor: '#DDD',
+      },
+    }),
   },
   cardTextBox: {flex: 1},
   cardTitle: {fontSize: 15, fontWeight: '600', color: '#222', marginBottom: 4},

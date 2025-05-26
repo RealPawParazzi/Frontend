@@ -23,6 +23,8 @@ import boardStore from '../../context/boardStore';
 import {RouteProp} from '@react-navigation/native';
 import {RootStackParamList} from '../../navigation/AppNavigator';
 import TagInputModal from '../../components/TagInputModal';
+import {createThumbnail} from 'react-native-create-thumbnail';
+import {detectDogBreed, predictDogBreed} from '../../services/dogBreedService';
 
 /**
  * 📄 스토리북 게시글 수정 화면
@@ -44,9 +46,9 @@ type EditStorybookScreenRouteProp = RouteProp<
 >;
 
 const EditStorybookScreen = ({
-  route,
-  navigation,
-}: {
+                               route,
+                               navigation,
+                             }: {
   route: EditStorybookScreenRouteProp;
   navigation: any;
 }) => {
@@ -206,6 +208,35 @@ const EditStorybookScreen = ({
     ]);
   };
 
+  const handleBreedPrediction = async (imageUri: string) => {
+    if (!imageUri) {
+      return;
+    }
+
+    try {
+      const finalImageUri = await generateThumbnailIfNeeded(imageUri);
+      const result = await predictDogBreed(finalImageUri);
+      console.log('✅ 예측된 품종:', result);
+
+      // 이미 존재하지 않는 경우에만 태그로 추가
+      if (!tags.includes(result.breed) && result && result.confidence >= 0.5) {
+        setTags(prev => [...prev, result.breed]);
+      }
+
+      Alert.alert('🐶 품종 예측 완료', `예측된 품종: ${result.breed}`);
+    } catch (err) {
+      Alert.alert('❌ 예측 실패', '이미지 분석 중 오류가 발생했습니다.');
+    }
+  };
+
+  const generateThumbnailIfNeeded = async (uri: string) => {
+    if (uri.toLowerCase().endsWith('.mp4')) {
+      const {path} = await createThumbnail({url: uri, timeStamp: 1000});
+      return path;
+    }
+    return uri;
+  };
+
   // ✅ 게시글 수정 요청 처리
   const handleUpdatePost = async () => {
     const validBlocks = blocks.filter(b => b.value.trim() !== ''); // 공백 제거
@@ -222,10 +253,10 @@ const EditStorybookScreen = ({
     // 🔸 대표 이미지 coverImage (없으면 undefined)
     const coverImage = titleImage
       ? {
-          uri: titleImage,
-          name: titleImage.split('/').pop() || `cover_${Date.now()}`,
-          type: titleImage.endsWith('.mp4') ? 'video/mp4' : 'image/jpeg',
-        }
+        uri: titleImage,
+        name: titleImage.split('/').pop() || `cover_${Date.now()}`,
+        type: titleImage.endsWith('.mp4') ? 'video/mp4' : 'image/jpeg',
+      }
       : undefined;
 
     // 🔸 유효성 검사
@@ -390,6 +421,13 @@ const EditStorybookScreen = ({
                       {titleImage === block.value
                         ? '대표 미디어 ✓'
                         : '대표 지정'}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.representativeTag, {top: 45}]} // 위치 조정
+                    onPress={() => handleBreedPrediction(block.value)}>
+                    <Text style={{color: 'white', fontWeight: 'bold'}}>
+                      + 자동 태그
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
