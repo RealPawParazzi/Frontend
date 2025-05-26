@@ -34,6 +34,11 @@ target 'front' do
   # ✅ react-native-permissions 추가 (중복 방지)
   pod 'RNPermissions', :path => '../node_modules/react-native-permissions'
 
+  pod 'Permission-Camera', :path => '../node_modules/react-native-permissions/ios/Camera.podspec'
+  pod 'Permission-PhotoLibrary', :path => '../node_modules/react-native-permissions/ios/PhotoLibrary.podspec'
+  pod 'Permission-LocationWhenInUse', :path => '../node_modules/react-native-permissions/ios/LocationWhenInUse.podspec'
+  pod 'Permission-LocationAlways', :path => '../node_modules/react-native-permissions/ios/LocationAlways.podspec'
+
   post_install do |installer|
     # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
     react_native_post_install(
