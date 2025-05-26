@@ -55,6 +55,8 @@ const StorybookScreen = ({navigation, route}: any) => {
 
   const bottomBarAnim = useRef(new Animated.Value(0)).current;
 
+  const [isPredicting, setIsPredicting] = useState(false);
+
   // 🔥 전달받은 영상이 있을 경우 블록 초기화
   useEffect(() => {
     if (videoUri) {
@@ -189,6 +191,7 @@ const StorybookScreen = ({navigation, route}: any) => {
     }
 
     try {
+      setIsPredicting(true); // 🔄 시작
       const finalImageUri = await generateThumbnailIfNeeded(imageUri);
       console.log('🔍 이미지 URI:', finalImageUri);
       const result = await predictDogBreed(finalImageUri);
@@ -202,6 +205,8 @@ const StorybookScreen = ({navigation, route}: any) => {
       Alert.alert('🐶 품종 예측 완료', `예측된 품종: ${result.breed}`);
     } catch (err) {
       Alert.alert('❌ 예측 실패', '이미지 분석 중 오류가 발생했습니다.');
+    } finally {
+      setIsPredicting(false); // 🔁 종료
     }
   };
 
@@ -441,11 +446,15 @@ const StorybookScreen = ({navigation, route}: any) => {
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.representativeTag, {top: 45}]} // 위치 조정
-                    onPress={() => handleBreedPrediction(block.value)}>
-                    <Text style={{color: 'white', fontWeight: 'bold'}}>
-                      + 자동 태그
-                    </Text>
+                    style={[styles.representativeTag, {top: 45}]}
+                    onPress={() => handleBreedPrediction(block.value)}
+                    disabled={isPredicting} // 로딩 중 중복 클릭 방지
+                  >
+                    {isPredicting ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <Text style={{color: 'white', fontWeight: 'bold'}}>+ 자동 태그</Text>
+                    )}
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.deleteButton}
