@@ -1,7 +1,7 @@
 // 📁 screens/TeamInfoScreen.tsx
 
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import {View, Text, StyleSheet, ScrollView, Platform} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const teamMembers = [
@@ -33,7 +33,7 @@ const teamMembers = [
       'AI 서버 연동',
       '백오피스 ui/ux 프로토타입 디자인',
       '딥러닝 모델 개발',
-      '',
+      '자동 태깅 개발',
     ],
   },
   {
@@ -92,11 +92,19 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 3,
+        borderWidth: 0.8,
+        borderColor: '#DDD',
+      },
+    }),
   },
   name: {
     fontSize: 17,
@@ -117,3 +125,4 @@ const styles = StyleSheet.create({
 });
 
 export default TeamInfoScreen;
+
