@@ -22,6 +22,7 @@ export interface Pet {
 export interface PetRanking extends Pet {
   winCount: number;
   member: {
+    memberId: number;
     name: string;
     email: string;
   };
