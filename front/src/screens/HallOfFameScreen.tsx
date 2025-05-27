@@ -6,18 +6,23 @@ import {
   FlatList,
   Image,
   ActivityIndicator,
-  TouchableOpacity, Platform,
+  TouchableOpacity, Platform, Alert,
 } from 'react-native';
 import petStore, {PetRanking} from '../context/petStore';
 import { useNavigation } from '@react-navigation/native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../navigation/AppNavigator'; // 경로 맞춰줘야 함
+
+type NavigationProp = StackNavigationProp<RootStackParamList, 'MiniGameScreen'>;
+
 
 const DEFAULT_PET_IMAGE = require('../assets/images/pets-1.jpg');
 
 const HallOfFameScreen = () => {
   const [loading, setLoading] = useState(true);
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp>();
   const { rankings, fetchPetRankings } = petStore();
 
   useEffect(() => {
@@ -34,23 +39,45 @@ const HallOfFameScreen = () => {
   }, [fetchPetRankings]);
 
   const renderItem = ({ item, index }: { item: PetRanking; index: number }) => (
-    <View style={styles.card}>
-      <Text style={styles.rank}>#{index + 1}</Text>
-      <Image
-        source={{ uri: item.petImg || DEFAULT_PET_IMAGE }}
-        style={styles.image}
-      />
-      <View style={styles.infoBox}>
-        <Text style={styles.name}>{item.name}</Text>
-        <Text style={styles.owner}>👤 {item.member.name}</Text>
-        <Text style={styles.detail}>📧 {item.member.email}</Text>
-        <Text style={styles.detail}>📅 {item.birthDate || '생일 정보 없음'}</Text>
-        <View style={styles.winsRow}>
-          <MaterialIcons name="emoji-events" size={18} color="#FFD700" />
-          <Text style={styles.wins}>{item.winCount} 승</Text>
+    <TouchableOpacity
+      onPress={() =>
+        Alert.alert(
+          '배틀 신청',
+          `${item.name}에게 배틀을 신청해 볼까요?`,
+          [
+            { text: '아니요', style: 'cancel' },
+            {
+              text: '예',
+              onPress: () => {
+                //@ts-ignore
+                navigation.navigate('MiniGameScreen', {
+                  preSelectedOpponent: {
+                    opponentUserId: item.member.memberId,
+                    petId: item.petId,
+                  },
+                });
+              },
+            },
+          ],
+        )
+      }
+    >
+      {/* 🐾 카드 전체를 Touchable로 감싸야 함 */}
+      <View style={styles.card}>
+        <Text style={styles.rank}>#{index + 1}</Text>
+        <Image source={{ uri: item.petImg || DEFAULT_PET_IMAGE }} style={styles.image} />
+        <View style={styles.infoBox}>
+          <Text style={styles.name}>{item.name}</Text>
+          <Text style={styles.owner}>👤 {item.member.name}</Text>
+          <Text style={styles.detail}>📧 {item.member.email}</Text>
+          <Text style={styles.detail}>📅 {item.birthDate || '생일 정보 없음'}</Text>
+          <View style={styles.winsRow}>
+            <MaterialIcons name="emoji-events" size={18} color="#FFD700" />
+            <Text style={styles.wins}>{item.winCount} 승</Text>
+          </View>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
