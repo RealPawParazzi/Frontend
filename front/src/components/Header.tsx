@@ -11,6 +11,7 @@ import {
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import petStore from '../context/petStore'; // userStore → petStore로 변경
 import {useNavigation} from '@react-navigation/native';
+import SnackbarDropdown from '../common/SnackbarDropdown';
 
 interface HeaderProps {
   searchMode: boolean;
@@ -102,15 +103,9 @@ const Header: React.FC<HeaderProps> = ({
 
           {/* 🔔 알림 + 🔍 검색 아이콘 */}
           <View style={{flexDirection: 'row'}}>
-            <TouchableOpacity style={styles.iconButton}>
-              <Icon
-                name={
-                  Platform.OS === 'ios' ? 'notifications' : 'notifications-none'
-                }
-                size={24}
-                color="#999"
-              />
-            </TouchableOpacity>
+            <View style={styles.iconButton}>
+              <SnackbarDropdown />
+            </View>
             <TouchableOpacity
               style={styles.iconButton}
               onPress={() => setSearchMode(true)}>
