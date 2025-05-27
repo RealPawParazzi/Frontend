@@ -25,6 +25,7 @@ import {RootStackParamList} from '../../navigation/AppNavigator';
 import TagInputModal from '../../components/TagInputModal';
 import {createThumbnail} from 'react-native-create-thumbnail';
 import {detectDogBreed, predictDogBreed} from '../../services/dogBreedService';
+import {useDiaryStore} from '../../context/diaryStore'; // ✅ 추가: 다이어리 스토어
 
 /**
  * 📄 스토리북 게시글 수정 화면
@@ -46,9 +47,9 @@ type EditStorybookScreenRouteProp = RouteProp<
 >;
 
 const EditStorybookScreen = ({
-                               route,
-                               navigation,
-                             }: {
+  route,
+  navigation,
+}: {
   route: EditStorybookScreenRouteProp;
   navigation: any;
 }) => {
@@ -71,6 +72,11 @@ const EditStorybookScreen = ({
   const bottomBarAnim = useRef(new Animated.Value(0)).current;
 
   const [isPredicting, setIsPredicting] = useState(false);
+
+  const {createDiary} = useDiaryStore(); // ✅ 다이어리 생성 메서드 가져오기
+  const [generatingDiary, setGeneratingDiary] = useState(false); // ✅ 추가: AI 일기 생성 상태
+
+
 
   useEffect(() => {
     const show = Keyboard.addListener('keyboardWillShow', e => {
@@ -230,9 +236,9 @@ const EditStorybookScreen = ({
     } catch (err) {
       Alert.alert('❌ 예측 실패', '이미지 분석 중 오류가 발생했습니다.');
     } finally {
-    setIsPredicting(false); // 🔁 종료
-  }
-};
+      setIsPredicting(false); // 🔁 종료
+    }
+  };
 
   const generateThumbnailIfNeeded = async (uri: string) => {
     if (uri.toLowerCase().endsWith('.mp4')) {
@@ -258,10 +264,10 @@ const EditStorybookScreen = ({
     // 🔸 대표 이미지 coverImage (없으면 undefined)
     const coverImage = titleImage
       ? {
-        uri: titleImage,
-        name: titleImage.split('/').pop() || `cover_${Date.now()}`,
-        type: titleImage.endsWith('.mp4') ? 'video/mp4' : 'image/jpeg',
-      }
+          uri: titleImage,
+          name: titleImage.split('/').pop() || `cover_${Date.now()}`,
+          type: titleImage.endsWith('.mp4') ? 'video/mp4' : 'image/jpeg',
+        }
       : undefined;
 
     // 🔸 유효성 검사
@@ -318,6 +324,27 @@ const EditStorybookScreen = ({
       Alert.alert('❌ 수정 실패', '게시글 수정 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAIContentGeneration = async () => {
+    const firstText = blocks.find(b => b.type === 'Text' && b.value.trim());
+    if (!title.trim() || !firstText) {
+      return Alert.alert('⚠️ 조건 누락', '제목과 내용 중 하나 이상이 필요합니다.');
+    }
+
+    try {
+      setGeneratingDiary(true); // ✅ 시작
+      const createdDiary = await createDiary(title, firstText.value);
+      if (createdDiary) {
+        setTitle(createdDiary.title || '');
+        setBlocks([{type: 'Text', value: createdDiary.content || ''}]);
+      }
+      Alert.alert('✅ 생성 완료', 'AI 일기가 성공적으로 생성되었습니다.');
+    } catch (err: any) {
+      Alert.alert('❌ 생성 실패', err.message || 'AI 일기 생성 중 오류');
+    } finally {
+      setGeneratingDiary(false); // ✅ 종료
     }
   };
 
@@ -436,7 +463,9 @@ const EditStorybookScreen = ({
                     {isPredicting ? (
                       <ActivityIndicator size="small" color="#fff" />
                     ) : (
-                      <Text style={{color: 'white', fontWeight: 'bold'}}>+ 자동 태그</Text>
+                      <Text style={{color: 'white', fontWeight: 'bold'}}>
+                        + 자동 태그
+                      </Text>
                     )}
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -501,10 +530,13 @@ const EditStorybookScreen = ({
 
         <TouchableOpacity
           style={styles.bottomIcon}
-          onPress={() =>
-            Alert.alert('준비 중!', 'AI 기능은 곧 추가될 예정입니다.')
-          }>
-          <MaterialIcons name="smart-toy" size={28} color="#aaa" />
+          disabled={generatingDiary}
+          onPress={handleAIContentGeneration}>
+          {generatingDiary ? (
+            <ActivityIndicator size="small" color="#4D7CFE" />
+          ) : (
+            <MaterialIcons name="smart-toy" size={28} color="#4D7CFE" />
+          )}
         </TouchableOpacity>
       </Animated.View>
     </SafeAreaView>

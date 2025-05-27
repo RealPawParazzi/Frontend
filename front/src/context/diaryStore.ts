@@ -22,7 +22,7 @@ interface DiaryState {
 
   loadMyDiaries: () => Promise<void>;
   loadDiaryDetail: (diaryId: number) => Promise<void>;
-  createDiary: (title: string, content: string) => Promise<void>;
+  createDiary: (title: string, content: string) => Promise<Diary | undefined>;
   removeDiary: (diaryId: number) => Promise<void>;
 }
 
@@ -63,6 +63,7 @@ export const useDiaryStore = create<DiaryState>((set) => ({
         diaries: [res.data, ...state.diaries],
         loading: false,
       }));
+      return res.data;
     } catch (e: any) {
       set({error: e.message || '일기 생성 실패', loading: false});
     }

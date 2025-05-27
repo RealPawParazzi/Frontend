@@ -24,8 +24,7 @@ import boardStore from '../../context/boardStore';
 import TagInputModal from '../../components/TagInputModal';
 import {createThumbnail} from 'react-native-create-thumbnail';
 import {detectDogBreed, predictDogBreed} from '../../services/dogBreedService';
-import {createAIDiary} from '../../services/diaryService'; // ✅ AI 일기 생성 서비스 추가
-
+import {useDiaryStore} from '../../context/diaryStore'; // ✅ Zustand store 사용으로 변경
 
 // 🧩 콘텐츠 블록 타입 정의
 interface BlockItem {
@@ -52,6 +51,7 @@ const StorybookScreen = ({navigation, route}: any) => {
   const scrollRef = useRef<ScrollView>(null);
   const inputRefs = useRef<Array<TextInput | null>>([]);
   const createNewBoard = boardStore(state => state.createNewBoard); // Zustand에서 게시글 생성 함수 가져오기
+  const {createDiary, diaries} = useDiaryStore(); // ✅ 상태에서 일기 생성 메서드 가져오기
 
   const bottomBarAnim = useRef(new Animated.Value(0)).current;
 
@@ -221,16 +221,22 @@ const StorybookScreen = ({navigation, route}: any) => {
   const handleAIContentGeneration = async () => {
     const firstText = blocks.find(b => b.type === 'Text' && b.value.trim());
     if (!title.trim() || !firstText) {
-      return Alert.alert('⚠️ 조건 누락', '제목과 내용 중 하나 이상이 필요합니다.');
+      return Alert.alert(
+        '⚠️ 조건 누락',
+        '제목과 내용 중 하나 이상이 필요합니다.',
+      );
     }
-
+    console.log('AI 일기 생성 요청 내용:', title, firstText.value);
     try {
       setGeneratingDiary(true);
-      const res = await createAIDiary(title, firstText.value);
-      if (res?.data?.content) {
-        setTitle(res.data.title);
-        setBlocks([{type: 'Text', value: res.data.content}]);
+      const createdDiary = await createDiary(title, firstText.value); // ✅ 생성된 일기 받기
+      if (createdDiary) {
+        setTitle(createdDiary.title || '');
+        setBlocks([{type: 'Text', value: createdDiary.content || ''}]);
       }
+
+      console.log('AI 일기 생성 결과:', createdDiary);
+      Alert.alert('✅ 생성 완료', 'AI 일기가 성공적으로 생성되었습니다.');
     } catch (err: any) {
       Alert.alert('❌ 생성 실패', err.message || 'AI 일기 생성 중 오류');
     } finally {
@@ -238,8 +244,9 @@ const StorybookScreen = ({navigation, route}: any) => {
     }
   };
 
-  const hasTextOrTitle = title.trim() !== '' || blocks.some(b => b.type === 'Text' && b.value.trim() !== '');
-
+  const hasTextOrTitle =
+    title.trim() !== '' ||
+    blocks.some(b => b.type === 'Text' && b.value.trim() !== '');
 
   // ✅ 게시글 저장하기
   const handleSavePost = async () => {
@@ -297,14 +304,14 @@ const StorybookScreen = ({navigation, route}: any) => {
       // ✅ 대표 이미지도 타입 맞춰 처리
       const coverImage = titleImage
         ? {
-          uri: String(titleImage),
-          name: titleImage.split('/').pop() || `cover_${Date.now()}`,
-          type:
-            titleImage.toLowerCase().endsWith('.mp4') ||
-            titleImage.toLowerCase().includes('video')
-              ? 'video/mp4'
-              : 'image/jpeg',
-        }
+            uri: String(titleImage),
+            name: titleImage.split('/').pop() || `cover_${Date.now()}`,
+            type:
+              titleImage.toLowerCase().endsWith('.mp4') ||
+              titleImage.toLowerCase().includes('video')
+                ? 'video/mp4'
+                : 'image/jpeg',
+          }
         : undefined;
 
       const boardPayload = {
@@ -453,7 +460,9 @@ const StorybookScreen = ({navigation, route}: any) => {
                     {isPredicting ? (
                       <ActivityIndicator size="small" color="#fff" />
                     ) : (
-                      <Text style={{color: 'white', fontWeight: 'bold'}}>+ 자동 태그</Text>
+                      <Text style={{color: 'white', fontWeight: 'bold'}}>
+                        + 자동 태그
+                      </Text>
                     )}
                   </TouchableOpacity>
                   <TouchableOpacity
