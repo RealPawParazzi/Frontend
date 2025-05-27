@@ -11,6 +11,7 @@ import {
   ScrollView,
   Platform,
   Alert,
+  PermissionsAndroid,
 } from 'react-native';
 import petStore from '../../../context/petStore';
 import useBattleStore from '../../../context/battleStore';
@@ -20,10 +21,13 @@ import Video from 'react-native-video';
 import CustomDropdown from '../../../common/CustomDropdown';
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
+import {useNavigation} from '@react-navigation/native';
 
 const BattleWithOthers: React.FC<{
   preSelectedOpponent?: {opponentUserId: string; petId: number};
 }> = ({preSelectedOpponent}) => {
+  const navigation = useNavigation();
+
   const {pets} = petStore();
   const [myPetId, setMyPetId] = useState<number | null>(pets[0]?.petId || null);
   const {battleOpponents, loadBattleOpponents} = userStore();
@@ -68,7 +72,7 @@ const BattleWithOthers: React.FC<{
       return;
     }
     resetVideo();
-    console.log('🚀 배틀 시작 요청',  myPetId, targetPetId );
+    console.log('🚀 배틀 시작 요청', myPetId, targetPetId);
     await requestBattleAction(myPetId, targetPetId);
   };
 
@@ -79,13 +83,53 @@ const BattleWithOthers: React.FC<{
     startBattleVideoGeneration(battleResult.battleId);
   };
 
+  const requestAndroidPermission = async () => {
+    if (Platform.OS !== 'android') {
+      return true;
+    }
+
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+        {
+          title: '저장 공간 권한 요청',
+          message: '동영상을 저장하려면 저장 공간 접근 권한이 필요합니다.',
+          buttonNeutral: '나중에',
+          buttonNegative: '거부',
+          buttonPositive: '허용',
+        },
+      );
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
+    } catch (err) {
+      console.warn(err);
+      return false;
+    }
+  };
+
   const handleShare = async () => {
+    const hasPermission = await requestAndroidPermission();
+    if (!hasPermission) {
+      Alert.alert('권한 필요', '저장을 위해 권한을 허용해주세요.');
+      return;
+    }
+
     try {
       const fileName = `Pawparazzi_${Date.now()}.mp4`;
       const destPath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
-      await RNFS.copyFile(finalUrl || '', destPath);
-      const fileUrl = `file://${destPath}`;
-      await Share.open({url: fileUrl, type: 'video/mp4', failOnCancel: false});
+      const exists = await RNFS.exists(destPath);
+
+      if (!exists) {
+        await RNFS.downloadFile({
+          fromUrl: finalUrl || '',
+          toFile: destPath,
+        }).promise;
+      }
+
+      await Share.open({
+        url: `file://${destPath}`,
+        type: 'video/mp4',
+        failOnCancel: false,
+      });
     } catch (err) {
       Alert.alert('공유 실패', '파일 공유 중 문제가 발생했습니다.');
     }
