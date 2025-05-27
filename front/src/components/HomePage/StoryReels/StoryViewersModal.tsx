@@ -83,19 +83,19 @@ const StoryViewersModal = ({ visible, onClose }: Props) => {
                     </TouchableOpacity>
                 </View>
 
-              {/*/!* ✅ 미니 프로필 모달 *!/*/}
-              {/*{selectedUser && (*/}
-              {/*  <MiniProfileModal*/}
-              {/*    visible={isMiniModalVisible}*/}
-              {/*    onClose={() => setMiniModalVisible(false)}*/}
-              {/*    user={{*/}
-              {/*      id: selectedUser.id,*/}
-              {/*      name: selectedUser.name,*/}
-              {/*      nickName: selectedUser.nickName,*/}
-              {/*      profileImage: selectedUser.profileImage,*/}
-              {/*    }}*/}
-              {/*  />*/}
-              {/*)}*/}
+              {/* ✅ 미니 프로필 모달 */}
+              {selectedUser && (
+                <MiniProfileModal
+                  visible={isMiniModalVisible}
+                  onClose={() => setMiniModalVisible(false)}
+                  user={{
+                    id: selectedUser.id,
+                    name: selectedUser.name,
+                    nickName: selectedUser.nickName,
+                    profileImage: selectedUser.profileImage,
+                  }}
+                />
+              )}
 
 
             </View>
