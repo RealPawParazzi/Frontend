@@ -3,26 +3,42 @@ import React from 'react';
 import {StyleSheet, Text, View, TouchableOpacity} from 'react-native';
 import {useSnackbarStore} from '../context/snackbarStore'; // 경로 수정 주의
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import {useNavigation} from '@react-navigation/native';
+
 
 const Snackbar = () => {
-  const {visible, message, extra, hideSnackbar} = useSnackbarStore();
+  const {visible, message, extra, isBattle, hideSnackbar} = useSnackbarStore();
+  const navigation = useNavigation();
 
   if (!visible) {
     return null;
   }
 
+  const handlePress = () => {
+    if (isBattle) {
+      //@ts-ignore
+      navigation.navigate('MiniGameScreen');
+    } else {
+      //@ts-ignore
+      navigation.navigate('VideoEditorScreen');
+    }
+    hideSnackbar();
+  };
+
   return (
-    <View style={styles.snackbar}>
-      <View style={styles.contentRow}>
-        <View style={{flex: 1}}>
-          <Text style={styles.snackbarText}>{message}</Text>
-          {extra && <Text style={styles.extraText}>{extra}</Text>}
+    <TouchableOpacity onPress={handlePress} activeOpacity={0.95}>
+      <View style={styles.snackbar}>
+        <View style={styles.contentRow}>
+          <View style={{flex: 1}}>
+            <Text style={styles.snackbarText}>{message}</Text>
+            {extra && <Text style={styles.extraText}>{extra}</Text>}
+          </View>
+          <TouchableOpacity onPress={hideSnackbar} style={styles.closeButton}>
+            <Icon name="close" size={18} color="#FFF" />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={hideSnackbar} style={styles.closeButton}>
-          <Icon name="close" size={18} color="#FFF" />
-        </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 

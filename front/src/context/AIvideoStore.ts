@@ -50,6 +50,9 @@ export const useAIvideoStore = create<AIvideoState>((set, get) => ({
     try {
       const {jobId} = await createVideoRequest(prompt, duration, imageFile);
       set({jobId, status: 'PENDING'});
+      // ✅ 스낵바 알림 추가
+      useSnackbarStore.getState().showSnackbar('⏳ 동영상을 생성 중입니다...', `프롬프트: ${prompt}`, false);
+
       // 바로 폴링 시작
       get().pollStatus();
     } catch (e: any) {
@@ -155,6 +158,9 @@ export const useAIvideoStore = create<AIvideoState>((set, get) => ({
     try {
       const {jobId} = await createBattleVideoRequest(battleId);
       set({jobId, status: 'PENDING'});
+      // ✅ 배틀 영상용 스낵바 알림
+      useSnackbarStore.getState().showSnackbar('⚔️ 배틀 영상 생성 중...', '잠시만 기다려주세요', true);
+
       get().pollStatus(); // 폴링 시작
     } catch (e: any) {
       set({status: 'FAILED', error: e.message});
