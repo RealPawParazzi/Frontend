@@ -17,8 +17,6 @@ import MapScreen from '../screens/MapScreen';
 import MyPageScreen from '../screens/MyPageScreen';
 import HomeScreen from '../screens/HomeScreen';
 import Header from '../components/Header';
-import GlobalSnackbar from './GlobalSnackbar';
-import {useSnackbarStore} from '../context/snackbarStore';
 import SearchScreen from '../screens/SearchScreen';
 
 const Tab = createBottomTabNavigator();
@@ -26,7 +24,6 @@ const Tab = createBottomTabNavigator();
 const BottomTabNavigator = ({navigation}: any) => {
   const [menuVisible, setMenuVisible] = useState(false);
   const [animation] = useState(new Animated.Value(0));
-  const {visible, message, hideSnackbar} = useSnackbarStore();
 
   const [searchMode, setSearchMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');

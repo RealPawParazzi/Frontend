@@ -4,16 +4,20 @@ import {create} from 'zustand';
 interface SnackbarState {
   visible: boolean;
   message: string;
-  showSnackbar: (msg: string) => void;
+  extra?: string; // 선택적 프로퍼티로 추가
+  showSnackbar: (message: string, duration?: number) => void;
   hideSnackbar: () => void;
 }
 
-export const useSnackbarStore = create<SnackbarState>((set) => ({
+export const useSnackbarStore = create<SnackbarState>(set => ({
   visible: false,
   message: '',
-  showSnackbar: (msg) => {
-    set({message: msg, visible: true});
-  },
-  hideSnackbar: () => set({visible: false}),
-}));
+  extra: undefined, // 초기값 설정
 
+  showSnackbar: (message, duration = 3000) => {
+    set({visible: true, message});
+    setTimeout(() => set({visible: false, message: ''}), duration);
+  },
+
+  hideSnackbar: () => set({visible: false, message: ''}),
+}));

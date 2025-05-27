@@ -6,7 +6,8 @@ import {
   fetchVideoStatus,
   createBattleVideoRequest, GeneratedVideo, fetchAllGeneratedVideos, fetchLatestBattleVideoByPet,
 } from '../services/AIvideoService';
-import {useSnackbarStore} from './snackbarStore';
+import { useSnackbarStore } from './snackbarStore';
+
 
 interface AIvideoState {
   jobId: string | null;
@@ -96,8 +97,7 @@ export const useAIvideoStore = create<AIvideoState>((set, get) => ({
           });
 
           // ✅ 스낵바 알림 추가
-          // useSnackbarStore.getState().showSnackbar('🎉 동영상이 완성되었습니다!');
-
+          useSnackbarStore.getState().showSnackbar('🎉 동영상이 완성되었습니다!');
           return;
         }
 
@@ -108,6 +108,8 @@ export const useAIvideoStore = create<AIvideoState>((set, get) => ({
             error: data.errorMessage || '동영상 생성에 실패했습니다.',
             pollInterval: null,
           });
+          // ❌ 실패 스낵바 알림
+          useSnackbarStore.getState().showSnackbar('❌ 영상 생성 실패: ' + (data.errorMessage || '오류 발생'));
           return;
         }
 
