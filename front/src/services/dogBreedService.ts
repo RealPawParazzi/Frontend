@@ -6,7 +6,7 @@ interface DogBreedPrediction {
 }
 
 // GCP 서버 URL 설정
-const API_BASE_URL = "http://34.64.201.17:8000";
+const API_BASE_URL = 'http://34.64.201.17:8000';
 const DETECT_URL = `${API_BASE_URL}/api/dog-breed/detect`;
 
 export const predictDogBreed = async (imageUri: string): Promise<DogBreedPrediction> => {
