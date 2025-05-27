@@ -265,7 +265,7 @@ const BattleWithTwoInstance = () => {
         </View>
       )}
 
-      {status === 'IN_PROGRESS' && (
+      {status === 'PENDING' && (
         <View style={styles.videoLoading}>
           <ActivityIndicator size="large" color="#4D7CFE" />
           <Text style={{marginTop: 8, color: '#666'}}>📽️ 영상 생성 중...</Text>

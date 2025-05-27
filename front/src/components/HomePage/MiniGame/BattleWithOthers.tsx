@@ -68,6 +68,7 @@ const BattleWithOthers: React.FC<{
       return;
     }
     resetVideo();
+    console.log('🚀 배틀 시작 요청',  myPetId, targetPetId );
     await requestBattleAction(myPetId, targetPetId);
   };
 
@@ -77,17 +78,6 @@ const BattleWithOthers: React.FC<{
     }
     startBattleVideoGeneration(battleResult.battleId);
   };
-
-  // const handleSave = async () => {
-  //   try {
-  //     const fileName = `Pawparazzi_${Date.now()}.mp4`;
-  //     const destPath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
-  //     await RNFS.copyFile(finalUrl || '', destPath);
-  //     Alert.alert('성공', '기기에 저장되었습니다!');
-  //   } catch (err) {
-  //     Alert.alert('실패', '파일 저장에 실패했습니다.');
-  //   }
-  // };
 
   const handleShare = async () => {
     try {
@@ -226,7 +216,7 @@ const BattleWithOthers: React.FC<{
           )}
 
           {/* 📽️ 영상 생성 중 */}
-          {status === 'IN_PROGRESS' && (
+          {status === 'PENDING' && (
             <View style={styles.videoLoading}>
               <ActivityIndicator size="large" color="#4D7CFE" />
               <Text style={{marginTop: 8, color: '#666'}}>
