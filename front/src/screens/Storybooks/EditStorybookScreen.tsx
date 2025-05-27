@@ -232,9 +232,9 @@ const EditStorybookScreen = ({
         setTags(prev => [...prev, result.breed]);
       }
 
-      Alert.alert('🐶 품종 예측 완료', `예측된 품종: ${result.breed}`);
+      Alert.alert('🐶 AI 태그 생성 완료', `생성된 태그: ${result.breed}`);
     } catch (err) {
-      Alert.alert('❌ 예측 실패', '이미지 분석 중 오류가 발생했습니다.');
+      Alert.alert('❌ AI 태그 생성 실패', '이미지 분석 중 오류가 발생했습니다.');
     } finally {
       setIsPredicting(false); // 🔁 종료
     }
@@ -464,7 +464,7 @@ const EditStorybookScreen = ({
                       <ActivityIndicator size="small" color="#fff" />
                     ) : (
                       <Text style={{color: 'white', fontWeight: 'bold'}}>
-                        + 자동 태그
+                        + AI 태그
                       </Text>
                     )}
                   </TouchableOpacity>
