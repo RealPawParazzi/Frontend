@@ -49,10 +49,10 @@ const BattleWithOthers: React.FC = () => {
   } = useAIvideoStore();
 
   useEffect(() => {
-    loadBattleOpponents();
-    // resetVideo();
+    loadBattleOpponents(); // 최초 1회만 호출
+    console.log('✅ 배틀 상대 리스트 불러오기', battleOpponents);
+  }, []); // ✅ 의존성 배열 비워야 한 번만 실행됨
 
-  }, [loadBattleOpponents]);
 
   const handleStartBattle = async () => {
     if (!myPetId || !targetPetId) {
@@ -147,17 +147,25 @@ const BattleWithOthers: React.FC = () => {
         placeholder="상대 유저 선택"
       />
 
-      {selectedOpponent && (
-        <CustomDropdown
-          options={selectedOpponent.petList.map(p => ({
-            label: p.name,
-            value: Number(p.id),
-          }))}
-          selectedValue={targetPetId}
-          onSelect={val => setTargetPetId(Number(val))}
-          placeholder="상대 펫 선택"
-        />
-      )}
+          {selectedOpponent && (
+            selectedOpponent.petList.length > 0 ? (
+              <CustomDropdown
+                options={selectedOpponent.petList.map(p => ({
+                  label: p.name,
+                  value: Number(p.id),
+                }))}
+                selectedValue={targetPetId}
+                onSelect={val => setTargetPetId(Number(val))}
+                placeholder="상대 펫 선택"
+              />
+            ) : (
+              <Text style={{color: '#999', marginTop: 4, marginBottom: 12}}>
+                해당 유저는 등록된 펫이 없습니다.
+              </Text>
+            )
+          )}
+
+
 
       {/* 🐱 상대 펫 카드 */}
       {selectedOpponent &&

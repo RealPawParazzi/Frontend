@@ -55,8 +55,7 @@ const BattleWithOneInstance = () => {
 
   useEffect(() => {
     loadBattleOpponents();
-    // resetVideo();
-  }, [loadBattleOpponents]);
+  }, []);
 
   // ✅ 이미지 선택 핸들러
   const handlePickImage = async () => {
@@ -225,17 +224,23 @@ const BattleWithOneInstance = () => {
       />
 
       {/* 🐶 상대 펫 선택 드롭다운 */}
-      {targetUser && (
-        <CustomDropdown
-          options={targetUser.petList.map(p => ({
-            label: p.name,
-            value: Number(p.id),
-          }))}
-          selectedValue={targetPetId}
-          onSelect={val => setTargetPetId(val as number)}
-          placeholder="상대 펫 선택"
-        />
-      )}
+          {targetUser && (
+            targetUser.petList.length > 0 ? (
+              <CustomDropdown
+                options={targetUser.petList.map(p => ({
+                  label: p.name,
+                  value: Number(p.id),
+                }))}
+                selectedValue={targetPetId}
+                onSelect={val => setTargetPetId(val as number)}
+                placeholder="상대 펫 선택"
+              />
+            ) : (
+              <Text style={{color: '#999', marginTop: 4, marginBottom: 12}}>
+                해당 유저는 등록된 펫이 없습니다.
+              </Text>
+            )
+          )}
 
       {/* 🐱 상대 펫 카드 */}
       {targetUser &&

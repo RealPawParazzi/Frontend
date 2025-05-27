@@ -58,18 +58,18 @@ export const fetchAllUsers = async (): Promise<UserData[]> => {
         const response = await fetch(`${API_BASE_URL}`);
         if (!response.ok) { throw new Error('전체 유저 목록을 불러오지 못했습니다.'); }
 
-        const users: { id: number; name: string; nickName: string; profileImage: string }[] = await response.json();
+        const users: { id: number; name: string; nickName: string; profileImage: string; pets: never[] }[] = await response.json();
 
         console.log('✅ 전체 유저 목록:', users);
 
         // ✅ 구조분해 할당을 사용하여 `profileImage` 유지
-        return users.map(({ id, name, nickName, profileImage }) => ({
+        return users.map(({ id, name, nickName, profileImage, pets }) => ({
             id: String(id), // ✅ number → string 변환
             name,
             nickName,
             profileImage, // ✅ 유지
             email: '', // 기본값 추가 (선택적 필드)
-            petList: [], // 빈 배열로 기본값 설정
+            petList: pets, // 빈 배열로 기본값 설정
             petCount: 0, // 기본값 추가
             recentPosts: [], // 빈 배열로 기본값 설정
             followerList: [], // 빈 배열로 기본값 설정

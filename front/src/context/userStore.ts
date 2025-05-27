@@ -8,7 +8,6 @@ import {
 } from '../services/userService';
 import petStore, {loadPetData} from './petStore'; // ✅ 펫 데이터 가져오기
 import boardStore, {loadBoardData} from './boardStore';
-import {ReactNode} from 'react'; // ✅ 게시물 데이터 가져오기
 
 /** ✅ 이미지 소스 타입 정의 */
 type ImageSource = {uri: string};
@@ -184,7 +183,14 @@ const userStore = create<{
           ? {uri: String(user.profileImage)}
           : require('../assets/images/profile-1.png'),
         petCount: 0,
-        petList: [],
+        petList: user.petList.map((pet: any) => ({
+          id: String(pet.petId),
+          name: pet.name,
+          species: pet.type,
+          image: pet.petImg
+            ? {uri: String(pet.petImg)}
+            : require('../assets/images/pets-1.jpg'),
+        })),
         recentPosts: [],
       }));
 
@@ -256,9 +262,11 @@ const userStore = create<{
           ? {uri: String(user.profileImage)}
           : require('../assets/images/user-2.png'),
         petList: (user.petList || []).map((pet: any) => ({
-          id: String(pet.petId),
+          id: String(pet.id || pet.petId), // id가 없을 경우 petId 사용
           name: pet.name,
           species: pet.type,
+          birthday: pet.birthDate,
+          petDetail: pet.petDetail,
           image: pet.petImg
             ? {uri: String(pet.petImg)}
             : require('../assets/images/pets-1.jpg'),
