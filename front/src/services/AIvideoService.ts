@@ -24,7 +24,7 @@ export interface GeneratedVideo {
   createdAt: string;
   updatedAt: string;
   prompt: string;
-  imageUrl: string;
+  imageUrl: string[];
   resultUrl: string | null;
 }
 
@@ -150,13 +150,16 @@ export async function fetchAllGeneratedVideos(): Promise<GeneratedVideo[]> {
   return allVideos.filter((v: GeneratedVideo) => v.resultUrl !== null);
 }
 
-
-export async function fetchLatestBattleVideoByPet(petId: number): Promise<GeneratedVideo | null> {
+export async function fetchLatestBattleVideoByPet(
+  petId: number,
+): Promise<GeneratedVideo | null> {
   const token = await AsyncStorage.getItem('accessToken');
-  if (!token) {throw new Error('로그인이 필요합니다.');}
+  if (!token) {
+    throw new Error('로그인이 필요합니다.');
+  }
 
   const res = await fetch(`${API_BASE_URL}/${petId}`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: {Authorization: `Bearer ${token}`},
   });
 
   if (!res.ok) {
