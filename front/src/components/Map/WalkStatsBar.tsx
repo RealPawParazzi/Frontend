@@ -1,6 +1,6 @@
 // 📁 components/WalkStatsBar.tsx
 import React from 'react';
-import {View, Text, Image, StyleSheet, Platform} from 'react-native';
+import {View, Text, Image, StyleSheet, Platform, Dimensions} from 'react-native';
 
 interface Props {
   pet: {
@@ -9,6 +9,9 @@ interface Props {
   };
   elapsedTime: string;
 }
+
+const screenWidth = Dimensions.get('window').width;
+const isTablet = screenWidth >= 768;
 
 const WalkStatsBar: React.FC<Props> = ({pet, elapsedTime}) => {
   return (
@@ -28,8 +31,9 @@ const styles = StyleSheet.create({
   container: {
     position: 'absolute',
     top: Platform.OS === 'ios' ? 20 : 10,
-    left: 20,
-    right: 20,
+    alignSelf: 'center', // ✅ 중앙 정렬
+    width: '90%',
+    maxWidth: isTablet ? 500 : undefined, // ✅ iPad에서는 최대 너비 제한
     backgroundColor: '#fff',
     padding: 14,
     borderRadius: 16,

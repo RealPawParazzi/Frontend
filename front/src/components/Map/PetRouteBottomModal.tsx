@@ -37,6 +37,9 @@ interface PetRouteBottomModalProps {
   onSelectWalk: (walkId: number) => void;
 }
 
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const isTablet = SCREEN_WIDTH >= 768;
+
 const PetRouteBottomModal: React.FC<PetRouteBottomModalProps> = ({
   isVisible,
   pets,
@@ -174,6 +177,11 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     paddingVertical: 20,
     minHeight: SCREEN_HEIGHT * 0.3,
+
+    // 📱 아이패드 대응
+    width: isTablet ? 500 : '100%',
+    alignSelf: isTablet ? 'center' : 'flex-start',
+    paddingHorizontal: isTablet ? 24 : 20,
   },
   handleBar: {
     width: 60,

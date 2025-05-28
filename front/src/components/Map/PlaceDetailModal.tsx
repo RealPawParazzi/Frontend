@@ -31,6 +31,9 @@ interface PlaceDetailModalProps {
 
 const {height} = Dimensions.get('window');
 
+const screenWidth = Dimensions.get('window').width;
+const isTablet = screenWidth >= 768;
+
 const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
   isVisible,
   place,
@@ -87,6 +90,10 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     minHeight: height * 0.25,
+
+    // ✅ 아이패드 대응
+    width: isTablet ? 480 : '100%',
+    alignSelf: isTablet ? 'center' : 'flex-start',
   },
   header: {
     flexDirection: 'row',

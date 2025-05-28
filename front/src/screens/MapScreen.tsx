@@ -7,7 +7,7 @@ import {
   StyleSheet,
   Image,
   Alert,
-  Platform,
+  Platform, Dimensions,
 } from 'react-native';
 import MapView, {
   Marker,
@@ -38,6 +38,10 @@ declare global {
     interface Timeout {}
   }
 }
+
+
+const screenWidth = Dimensions.get('window').width;
+const isTablet = screenWidth >= 768; // 기준은 iPad
 
 // KST 시간으로 ISO 문자열 생성 함수 추가
 const getKSTISOString = () => {
@@ -641,7 +645,7 @@ const MapScreen = () => {
           <TouchableOpacity
             style={styles.cameraButton}
             onPress={handleCameraLaunch}> {/* 🔧 여기에 연결 */}
-            <Icon name="photo-camera" size={24} color="#333" />
+            <Icon name="photo-camera" size={isTablet ? 28 : 24} color="#333" />
           </TouchableOpacity>
         )}
 
@@ -744,26 +748,26 @@ const MapScreen = () => {
       <View style={styles.rightButtonGroup}>
         <TouchableOpacity onPress={() => setIsFavoritesModalVisible(true)}>
           <View style={styles.iconButton}>
-            <Icon name="star" size={22} color="white" />
+            <Icon name="star" size={isTablet ? 26 : 22} color="white" />
           </View>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => setShouldSearchPlaces(true)}>
           <View style={styles.iconButton}>
-            <Icon name="search" size={22} color="white" />
+            <Icon name="search" size={isTablet ? 26 : 22} color="white" />
           </View>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => setBottomSheetVisible(true)}>
           <View style={styles.iconButton}>
-            <Icon name="pets" size={22} color="white" />
+            <Icon name="pets" size={isTablet ? 26 : 22} color="white" />
           </View>
         </TouchableOpacity>
 
         {/* 📍 현재 위치 버튼 */}
         <TouchableOpacity onPress={getCurrentLocation}>
           <View style={styles.iconButton}>
-            <Icon name="my-location" size={22} color="white" />
+            <Icon name="my-location" size={isTablet ? 26 : 22} color="white" />
           </View>
         </TouchableOpacity>
       </View>
@@ -797,6 +801,8 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 32,
     alignItems: 'center',
+    maxWidth: isTablet ? 320 : undefined, // 💡 아이패드에선 최대 320px
+    alignSelf: isTablet ? 'center' : 'stretch', // 💡 가운데 정렬
   },
   walkButtonText: {color: 'white', fontSize: 18, fontWeight: 'bold'},
 
@@ -817,8 +823,8 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     backgroundColor: '#4D7CFE',
-    padding: 12,
-    borderRadius: 50,
+    padding: isTablet ? 16 : 12, // 💡 패딩 증가
+    borderRadius: isTablet ? 28 : 24, // 💡 원 크기 증가
     marginBottom: 10,
     elevation: 3,
   },

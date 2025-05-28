@@ -6,6 +6,9 @@ import {
   Modal,
   StyleSheet,
   TouchableOpacity,
+  Platform,
+  Dimensions,
+
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 
@@ -261,6 +264,9 @@ const MiniProfileModal = ({visible, onClose, user}: MiniProfileModalProps) => {
   );
 };
 
+const screenWidth = Dimensions.get('window').width;
+const isTablet = Platform.OS === 'ios' && screenWidth >= 768; // iPad 기준
+
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
@@ -269,7 +275,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContainer: {
-    width: '85%',
+    width: isTablet ? 480 : '85%', // 수정된 부분: 아이패드는 고정폭
     backgroundColor: '#FFF',
     borderRadius: 12,
     alignItems: 'center',
