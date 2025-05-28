@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,8 @@ import {
   Platform,
   Alert,
   PermissionsAndroid,
-  Image, ScrollView,
+  Image,
+  ScrollView,
 } from 'react-native';
 import Video from 'react-native-video';
 import RNFS from 'react-native-fs';
@@ -17,6 +18,7 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import {GeneratedVideo} from '../services/AIvideoService';
+import {createThumbnail} from 'react-native-create-thumbnail';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -28,10 +30,27 @@ interface Props {
 }
 
 const VideoPreviewModal: React.FC<Props> = ({visible, onClose, video}) => {
-  if (!video) return null;
+  const [thumbnailUri, setThumbnailUri] = useState<string | null>(null); // $$$$$$$ 썸네일 상태 추가
+
+  useEffect(() => {
+    // 썸네일이 필요한 조건: imageUrl이 없고 resultUrl이 있는 경우
+    if (video && !video.imageUrl && video.resultUrl) {
+      createThumbnail({url: video.resultUrl, timeStamp: 0})
+        .then(res => setThumbnailUri(res.path))
+        .catch(err => console.warn('썸네일 생성 실패:', err));
+    }
+
+    console.log('🚀 원본이미지 확인', video);
+  }, [video]);
+
+  if (!video) {
+    return null;
+  }
 
   const requestAndroidPermission = async () => {
-    if (Platform.OS !== 'android') return true;
+    if (Platform.OS !== 'android') {
+      return true;
+    }
 
     try {
       const granted = await PermissionsAndroid.request(
@@ -85,48 +104,62 @@ const VideoPreviewModal: React.FC<Props> = ({visible, onClose, video}) => {
       <View style={styles.overlay}>
         <View style={styles.modalContent}>
           <ScrollView contentContainerStyle={styles.scrollContent}>
-          {/* 📅 생성일자 */}
-          <Text style={styles.modalTitle}>
-            {dayjs(video.createdAt).tz('Asia/Seoul').format('YYYY년 MM월 DD일 HH:mm')}
-          </Text>
+            {/* 📅 생성일자 */}
+            <Text style={styles.modalTitle}>
+              {dayjs(video.createdAt)
+                .tz('Asia/Seoul')
+                .format('YYYY년 MM월 DD일')}
+            </Text>
 
-          {/* ✏️ 프롬프트 텍스트 */}
-          <Text style={styles.promptText}>✏️ {video.prompt}</Text>
+            {/* ✏️ 프롬프트 텍스트 */}
+            <Text style={styles.promptText}>✏️ {video.prompt}</Text>
 
-          {/* 📸 원본 이미지 */}
-          {video.imageUrl && (
+            {/* 📸 원본 이미지 또는 썸네일 */}
             <>
               <Text style={styles.sectionLabel}>📸 원본 이미지</Text>
-              <Image
-                source={{uri: video.imageUrl}}
-                style={styles.image}
-                resizeMode="cover"
-              />
+              {video.imageUrl ? (
+                <Image
+                  source={{uri: video.imageUrl}}
+                  style={styles.image}
+                  resizeMode="cover"
+                />
+              ) : thumbnailUri ? (
+                <Image
+                  source={{uri: thumbnailUri}}
+                  style={styles.image}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Text style={{color: '#888', marginBottom: 14}}>
+                  이미지가 없습니다.
+                </Text>
+              )}
             </>
-          )}
 
-          {/* ⬇️ 화살표 */}
-          <Text style={styles.arrow}>⬇️</Text>
+            {/* ⬇️ 화살표 */}
+            <Text style={styles.arrow}>⬇️</Text>
 
-          {/* 🎞️ 생성된 영상 */}
-          <Text style={styles.sectionLabel}>🎞️ 생성된 영상</Text>
-          <Video
-            source={{uri: video.resultUrl || ''}}
-            style={styles.video}
-            controls
-            resizeMode="contain"
-          />
+            {/* 🎞️ 생성된 영상 */}
+            <Text style={styles.sectionLabel}>🎞️ 생성된 영상</Text>
+            <Video
+              source={{uri: video.resultUrl || ''}}
+              style={styles.video}
+              controls
+              resizeMode="contain"
+            />
 
-          {/* 공유/닫기 버튼 */}
-          <View style={styles.actionRow}>
-            <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
-              <Text style={styles.actionText}>📤 공유, 저장</Text>
+            {/* 공유/닫기 버튼 */}
+            <View style={styles.actionRow}>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={handleShare}>
+                <Text style={styles.actionText}>📤 공유, 저장</Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+              <Text style={styles.closeText}>닫기</Text>
             </TouchableOpacity>
-          </View>
-
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeText}>닫기</Text>
-          </TouchableOpacity>
           </ScrollView>
         </View>
       </View>

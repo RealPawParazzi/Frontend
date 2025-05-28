@@ -15,6 +15,7 @@ import MiniProfileModal from '../MiniProfileModal';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const DEFAULT_PROFILE_IMAGE = require('../../assets/images/user-2.png');
+const isPad = Platform.OS === 'ios' && Platform.isPad;
 
 /** ✅ 유저 타입 정의 */
 interface User {
@@ -164,6 +165,14 @@ const FollowRecommendations = () => {
   );
 };
 
+const CARD_WIDTH = isPad ? 180 : 150;
+const CARD_HEIGHT = isPad ? 195 : 165;
+const PROFILE_IMAGE_SIZE = isPad ? 75 : 60;
+const NAME_FONT_SIZE = isPad ? 15 : 13.5;
+const BUTTON_FONT_SIZE = isPad ? 13.5 : 12.5;
+const BUTTON_PADDING_H = isPad ? 18 : 14;
+const BUTTON_PADDING_V = isPad ? 8 : 6;
+
 const styles = StyleSheet.create({
   container: {
     marginVertical: 10,
@@ -181,8 +190,8 @@ const styles = StyleSheet.create({
     color: '#000000',
   },
   cardWrapper: {
-    width: 150,
-    height: 165,
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
     marginRight: 10,
     marginVertical: 10,
     borderRadius: 15,
@@ -216,22 +225,22 @@ const styles = StyleSheet.create({
     color: '#999',
   },
   profileImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: PROFILE_IMAGE_SIZE,
+    height: PROFILE_IMAGE_SIZE,
+    borderRadius: PROFILE_IMAGE_SIZE / 2,
     borderWidth: 2,
     borderColor: '#4D7CFE',
     marginBottom: 8,
   },
   nameText: {
-    fontSize: 13.5,
+    fontSize: NAME_FONT_SIZE,
     fontWeight: 'bold',
     marginBottom: 8,
   },
   followButton: {
     backgroundColor: '#4D7CFE',
-    paddingHorizontal: 14,
-    paddingVertical: 6,
+    paddingHorizontal: BUTTON_PADDING_H,
+    paddingVertical: BUTTON_PADDING_V,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: '#4D7CFE',
@@ -246,7 +255,7 @@ const styles = StyleSheet.create({
   followText: {
     color: 'white',
     fontWeight: 'bold',
-    fontSize: 12.5,
+    fontSize: BUTTON_FONT_SIZE,
   },
 
   unfollowText: {
