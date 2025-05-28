@@ -6,7 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
-  Modal,
+  Modal, Dimensions,
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import petStore, {Pet} from '../context/petStore';
@@ -21,6 +21,10 @@ interface PetInfoMiniModalProps {
   onClose: () => void;
   pet: Pet | null;
 }
+
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const IS_TABLET = SCREEN_WIDTH >= 768;
 
 const PetInfoMiniModal: React.FC<PetInfoMiniModalProps> = ({
   visible,
@@ -180,7 +184,9 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     padding: 20,
     alignItems: 'center',
-    height: '88%',
+    height: IS_TABLET ? '80%' : '95%',
+    width: IS_TABLET ? 600 : '100%', // ✅ iPad에서는 고정 너비
+    alignSelf: 'center',             // ✅ 중앙 정렬
   },
   closeButton: {
     alignSelf: 'flex-end',
@@ -188,7 +194,7 @@ const styles = StyleSheet.create({
   },
   petImage: {
     width: '100%',
-    height: 200,
+    height: IS_TABLET ? 400 : 250,
     borderRadius: 12,
     marginVertical: 15,
   },

@@ -6,10 +6,19 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Dimensions,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {createThumbnail} from 'react-native-create-thumbnail';
 import boardStore from '../../context/boardStore';
+
+const screenWidth = Dimensions.get('window').width;
+const isTablet = screenWidth >= 768;
+
+const CARD_MARGIN = 10;
+const CARD_WIDTH = isTablet
+  ? (screenWidth - CARD_MARGIN * 3) / 2 // 2열: 좌우 + 가운데 간격
+  : screenWidth - CARD_MARGIN * 2;      // 1열: 좌우 여백만
 
 
 const DEFAULT_THUMBNAIL = require('../../assets/images/user-2.png');
@@ -102,11 +111,12 @@ const MyVideos: React.FC<Props> = ({userId}) => {
   return (
     <FlatList
       data={videoWithThumbs}
+      numColumns={isTablet ? 2 : 1} // ✅ 아이패드일 경우 2열 출력
       keyExtractor={item => item.boardId.toString()}
       contentContainerStyle={styles.listContainer}
       renderItem={({ item }) => (
         <TouchableOpacity
-          style={styles.card}
+          style={[styles.card, { width: CARD_WIDTH }]} // ✅ 카드 너비 적용
           onPress={() => {
             // @ts-ignore
             navigation.navigate('StorybookDetailScreen', { boardId: item.boardId });
@@ -143,11 +153,12 @@ const MyVideos: React.FC<Props> = ({userId}) => {
 /** ✅ 스타일 정의 */
 const styles = StyleSheet.create({
   listContainer: {
-    paddingHorizontal: 10,
+    paddingHorizontal: CARD_MARGIN,
     paddingBottom: 20,
   },
   card: {
     marginBottom: 16,
+    marginRight: isTablet ? CARD_MARGIN : 0, // ✅ 두 번째 열 마진 제외 가능
     borderRadius: 12,
     overflow: 'hidden',
     backgroundColor: '#f1f1f1',

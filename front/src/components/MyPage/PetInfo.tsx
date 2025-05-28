@@ -21,6 +21,9 @@ const DEFAULT_PET_IMAGE = require('../../assets/images/pets-1.jpg');
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const CARD_SIZE = (SCREEN_WIDTH - 50) / 2; // ✅ 2열 그리드에서 카드 크기 균일하게 유지
 
+const IS_TABLET = SCREEN_WIDTH >= 768;
+const CARD_HEIGHT = IS_TABLET ? 220 : 180;
+
 // ✅ Pet + 추가 버튼 타입 지정
 interface AddPetButton {
   isAddButton: boolean;
@@ -129,7 +132,7 @@ const styles = StyleSheet.create({
   /** ✅ 반려동물 카드 & 추가 버튼 크기 통일 */
   petCard: {
     width: CARD_SIZE, // ✅ 균일한 너비
-    height: 180, // ✅ 균일한 높이
+    height: CARD_HEIGHT,
     backgroundColor: 'white',
     borderRadius: 12,
     paddingBottom: 10,
@@ -143,7 +146,7 @@ const styles = StyleSheet.create({
   /** ✅ 반려동물 이미지 */
   petImage: {
     width: '100%',
-    height: 120,
+    height: IS_TABLET ? 170 : 130,
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
   },
@@ -197,7 +200,7 @@ const styles = StyleSheet.create({
   },
   fullWidthAddCard: {
     width: SCREEN_WIDTH - 30, // 한 줄 전체
-    height: 200,
+    height: IS_TABLET ? 240 : 200,
     alignSelf: 'center',
   },
 });

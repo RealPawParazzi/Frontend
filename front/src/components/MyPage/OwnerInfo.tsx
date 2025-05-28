@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   Alert,
   Modal,
+  Dimensions,
+  Platform,
 } from 'react-native';
 import {createThumbnail} from 'react-native-create-thumbnail';
 import userStore from '../../context/userStore';
@@ -26,6 +28,7 @@ import MyPhotos from './MyPhotos'; // 위치에 따라 경로 조정
 
 // ✅ 기본 프로필 이미지
 const DEFAULT_PROFILE_IMAGE = require('../../assets/images/user-2.png');
+const isTablet = Platform.OS === 'ios' && Dimensions.get('window').width >= 768;
 
 const OwnerInfo = () => {
   const navigation = useNavigation();
@@ -200,7 +203,8 @@ const OwnerInfo = () => {
   // }, [userData]);
 
   // 상단에 추가
-  const realPetCount = userData.petList?.filter(p => Number(p.id) !== 0).length || 0;
+  const realPetCount =
+    userData.petList?.filter(p => Number(p.id) !== 0).length || 0;
 
   return (
     <View style={styles.container}>
@@ -342,7 +346,10 @@ const OwnerInfo = () => {
                 style={styles.memoryCircle}
                 onPress={() => openSingleStory(item)}>
                 <Image
-                  source={getImageSource(memoryThumbnails[item.storyId], DEFAULT_PROFILE_IMAGE)}
+                  source={getImageSource(
+                    memoryThumbnails[item.storyId],
+                    DEFAULT_PROFILE_IMAGE,
+                  )}
                   style={styles.memoryImage}
                 />
               </TouchableOpacity>
@@ -510,11 +517,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statText: {
-    fontSize: 14,
+    fontSize: isTablet ? 16 : 14,
     color: '#888',
   },
   statNumber: {
-    fontSize: 16,
+    fontSize: isTablet ? 20 : 16,
     fontWeight: 'bold',
   },
 
@@ -525,9 +532,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   memoryCircle: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: isTablet ? 100 : 70,
+    height: isTablet ? 100 : 70,
+    borderRadius: isTablet ? 50 : 35,
     borderWidth: 2,
     borderColor: '#4D7CFE',
     justifyContent: 'center',
@@ -536,9 +543,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   memoryImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: isTablet ? 90 : 60,
+    height: isTablet ? 90 : 60,
+    borderRadius: isTablet ? 45 : 30,
   },
 
   tabsContainer: {
