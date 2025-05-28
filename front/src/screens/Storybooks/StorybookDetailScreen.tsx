@@ -345,7 +345,7 @@ const StorybookDetailScreen = ({
                         content.value ? {uri: String(content.value)} : undefined
                       }
                       style={styles.postVideo}
-                      resizeMode="cover"
+                      resizeMode="contain"
                       controls={true}
                       paused={true}
                     />
@@ -357,7 +357,7 @@ const StorybookDetailScreen = ({
                           : require('../../assets/images/profile-1.png')
                       }
                       style={styles.postImage}
-                      resizeMode="cover"
+                      resizeMode="contain"
                     />
                   )}
                 </View>
@@ -465,7 +465,7 @@ const styles = StyleSheet.create({
   },
   postImage: {
     width: '100%',
-    height: 250,
+    height: 350,
     borderRadius: 10,
     marginBottom: 10,
     backgroundColor: '#f0f0f0',
