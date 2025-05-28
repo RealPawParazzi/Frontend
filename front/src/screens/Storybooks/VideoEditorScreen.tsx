@@ -11,7 +11,10 @@ import {
   Image,
   ActivityIndicator,
   Platform,
-  KeyboardAvoidingView, PermissionsAndroid, Animated,
+  KeyboardAvoidingView,
+  PermissionsAndroid,
+  Animated,
+  Dimensions,
 } from 'react-native';
 import {launchImageLibrary} from 'react-native-image-picker';
 import Video from 'react-native-video';
@@ -20,6 +23,9 @@ import RNFS from 'react-native-fs';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import {useNavigation} from '@react-navigation/native';
 import {useAIvideoStore} from '../../context/AIvideoStore';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const IS_TABLET = SCREEN_WIDTH >= 768;
 
 const VideoEditorScreen: React.FC = () => {
   const [prompt, setPrompt] = useState('');
@@ -46,8 +52,6 @@ const VideoEditorScreen: React.FC = () => {
     '공놀이 하는 모습 만들어줘 !',
     '라면 먹고 있는 영상 생성해줘 !',
   ];
-
-
 
   // ✅ 유효성 검사 - 5초 미만 또는 10초 초과일 경우 메시지 설정
   useEffect(() => {
@@ -116,7 +120,9 @@ const VideoEditorScreen: React.FC = () => {
   };
 
   const requestAndroidPermission = async () => {
-    if (Platform.OS !== 'android') {return true;}
+    if (Platform.OS !== 'android') {
+      return true;
+    }
 
     try {
       const granted = await PermissionsAndroid.request(
@@ -223,8 +229,7 @@ const VideoEditorScreen: React.FC = () => {
                 <TouchableOpacity
                   key={idx}
                   style={styles.recommendItem}
-                  onPress={() => setPrompt(item)}
-                >
+                  onPress={() => setPrompt(item)}>
                   <Text style={styles.recommendText}>{item}</Text>
                 </TouchableOpacity>
               ))}
@@ -232,21 +237,21 @@ const VideoEditorScreen: React.FC = () => {
           </View>
           <Text style={styles.subLabel}>영상 길이 선택</Text>
           <View style={styles.durationButtonContainer}>
-            {[5, 10].map((value) => (
+            {[5, 10].map(value => (
               <TouchableOpacity
                 key={value}
                 style={[
                   styles.durationButton,
-                  duration === value.toString() && styles.selectedDurationButton,
+                  duration === value.toString() &&
+                    styles.selectedDurationButton,
                 ]}
-                onPress={() => setDuration(value.toString())}
-              >
+                onPress={() => setDuration(value.toString())}>
                 <Text
                   style={[
                     styles.durationButtonText,
-                    duration === value.toString() && styles.selectedDurationButtonText,
-                  ]}
-                >
+                    duration === value.toString() &&
+                      styles.selectedDurationButtonText,
+                  ]}>
                   {value}초
                 </Text>
               </TouchableOpacity>
@@ -353,14 +358,15 @@ const VideoEditorScreen: React.FC = () => {
             </>
           )}
           {/* 🔗 내가 생성한 동영상들 보러가기 */}
-          <View style={{ marginTop: 30, alignItems: 'center' }}>
+          <View style={{marginTop: 30, alignItems: 'center'}}>
             <TouchableOpacity
               onPress={() => {
                 // @ts-ignore
                 navigation.navigate('MyGeneratedVideosScreen');
-              }}
-            >
-              <Text style={styles.linkText}>내가 생성한 동영상들 보러가기 →</Text>
+              }}>
+              <Text style={styles.linkText}>
+                내가 생성한 동영상들 보러가기 →
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -375,7 +381,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    padding: 20,
+    padding: IS_TABLET ? 100 : 20,
     backgroundColor: '#FFF',
     paddingBottom: Platform.OS === 'ios' ? 34 : 20,
   },
@@ -586,8 +592,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center', // ✅ 중앙 정렬 추가
-    rowGap: 8,                // ✅ 버튼 간 세로 간격
-    columnGap: 8,             // ✅ 버튼 간 좌우 간격 (RN 0.71+ 가능)
+    rowGap: 8, // ✅ 버튼 간 세로 간격
+    columnGap: 8, // ✅ 버튼 간 좌우 간격 (RN 0.71+ 가능)
   },
   recommendItem: {
     backgroundColor: '#E9F0FF',

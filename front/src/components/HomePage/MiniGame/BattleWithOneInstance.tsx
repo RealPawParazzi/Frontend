@@ -10,7 +10,9 @@ import {
   Image,
   Platform,
   KeyboardAvoidingView,
-  ScrollView, PermissionsAndroid,
+  ScrollView,
+  PermissionsAndroid,
+  Dimensions,
 } from 'react-native';
 import {launchImageLibrary} from 'react-native-image-picker';
 import useBattleStore from '../../../context/battleStore';
@@ -22,6 +24,9 @@ import DateTimePicker from 'react-native-modal-datetime-picker';
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
 import {useNavigation} from '@react-navigation/native';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const IS_TABLET = SCREEN_WIDTH >= 768;
 
 const BattleWithOneInstance = () => {
   // ✅ 상태 정의
@@ -175,89 +180,96 @@ const BattleWithOneInstance = () => {
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{flex: 1}}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={{flex: 1}}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.container}>
           <Text style={styles.subtitle}> 🐶 My Instance Pet</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="펫 이름"
-        value={myInstanceName}
-        onChangeText={setMyInstanceName}
-      />
-      <TextInput
-        style={[styles.input, {height: 80}]}
-        placeholder="펫의 특징 설명"
-        multiline
-        value={myInstanceDetail}
-        onChangeText={setMyInstanceDetail}
-      />
-      <CustomDropdown
-        options={[
-          {label: 'DOG', value: 'DOG'},
-          {label: 'CAT', value: 'CAT'},
-        ]}
-        selectedValue={myInstanceType}
-        onSelect={val => setMyInstanceType(val as 'DOG' | 'CAT')}
-        placeholder="종류 선택"
-      />
-      {/** 생년월일 선택 버튼 */}
-      <TouchableOpacity
-        style={styles.input}
-        onPress={() => setShowDatePicker(true)}>
-        <Text>
-          {myInstanceBirth ? `📅 ${myInstanceBirth}` : '생년월일 선택'}
-        </Text>
-      </TouchableOpacity>
-      {showDatePicker && (
-        <DateTimePicker
-          isVisible={showDatePicker}
-          mode="date"
-          onConfirm={handleConfirm}
-          onCancel={() => setShowDatePicker(false)}
-        />
-      )}
-      <TouchableOpacity style={styles.imageButton} onPress={handlePickImage}>
-        <Text>
-          {instanceImage ? '📸 이미지 선택 완료' : '🖼️ 펫 이미지 선택'}
-        </Text>
-      </TouchableOpacity>
-
-      {/* 🐶 내 펫 카드 미리보기 */}
-      {(myInstanceName || myInstanceDetail || instanceImage) && (
-        <View style={styles.petCard}>
-          {instanceImage && (
-            <Image source={{uri: instanceImage.uri}} style={styles.petImage} />
+          <TextInput
+            style={styles.input}
+            placeholder="펫 이름"
+            value={myInstanceName}
+            onChangeText={setMyInstanceName}
+          />
+          <TextInput
+            style={[styles.input, {height: 80}]}
+            placeholder="펫의 특징 설명"
+            multiline
+            value={myInstanceDetail}
+            onChangeText={setMyInstanceDetail}
+          />
+          <CustomDropdown
+            options={[
+              {label: 'DOG', value: 'DOG'},
+              {label: 'CAT', value: 'CAT'},
+            ]}
+            selectedValue={myInstanceType}
+            onSelect={val => setMyInstanceType(val as 'DOG' | 'CAT')}
+            placeholder="종류 선택"
+          />
+          {/** 생년월일 선택 버튼 */}
+          <TouchableOpacity
+            style={styles.input}
+            onPress={() => setShowDatePicker(true)}>
+            <Text>
+              {myInstanceBirth ? `📅 ${myInstanceBirth}` : '생년월일 선택'}
+            </Text>
+          </TouchableOpacity>
+          {showDatePicker && (
+            <DateTimePicker
+              isVisible={showDatePicker}
+              mode="date"
+              onConfirm={handleConfirm}
+              onCancel={() => setShowDatePicker(false)}
+            />
           )}
-          <View>
-            <Text style={styles.petName}>{myInstanceName}</Text>
-            <Text style={styles.petType}>{myInstanceType}</Text>
-            <Text style={styles.petType}>{myInstanceBirth}</Text>
-            <Text style={styles.petType}>{myInstanceDetail}</Text>
-          </View>
-        </View>
-      )}
+          <TouchableOpacity
+            style={styles.imageButton}
+            onPress={handlePickImage}>
+            <Text>
+              {instanceImage ? '📸 이미지 선택 완료' : '🖼️ 펫 이미지 선택'}
+            </Text>
+          </TouchableOpacity>
 
-      <Text style={styles.vsText}>VS</Text>
+          {/* 🐶 내 펫 카드 미리보기 */}
+          {(myInstanceName || myInstanceDetail || instanceImage) && (
+            <View style={styles.petCard}>
+              {instanceImage && (
+                <Image
+                  source={{uri: instanceImage.uri}}
+                  style={styles.petImage}
+                />
+              )}
+              <View>
+                <Text style={styles.petName}>{myInstanceName}</Text>
+                <Text style={styles.petType}>{myInstanceType}</Text>
+                <Text style={styles.petType}>{myInstanceBirth}</Text>
+                <Text style={styles.petType}>{myInstanceDetail}</Text>
+              </View>
+            </View>
+          )}
 
-      {/* 👤 상대 유저 드롭다운 */}
-      <Text style={styles.subtitle}> 🐱 Opponent</Text>
-      <CustomDropdown
-        options={battleOpponents.map(o => ({
-          label: `${o.nickName} (${o.name})`,
-          value: o.id,
-        }))}
-        selectedValue={selectedOpponentId}
-        onSelect={val => {
-          setSelectedOpponentId(val as string);
-          setTargetPetId(null);
-        }}
-        placeholder="상대 유저 선택"
-      />
+          <Text style={styles.vsText}>VS</Text>
 
-      {/* 🐶 상대 펫 선택 드롭다운 */}
-          {targetUser && (
-            targetUser.petList.length > 0 ? (
+          {/* 👤 상대 유저 드롭다운 */}
+          <Text style={styles.subtitle}> 🐱 Opponent</Text>
+          <CustomDropdown
+            options={battleOpponents.map(o => ({
+              label: `${o.nickName} (${o.name})`,
+              value: o.id,
+            }))}
+            selectedValue={selectedOpponentId}
+            onSelect={val => {
+              setSelectedOpponentId(val as string);
+              setTargetPetId(null);
+            }}
+            placeholder="상대 유저 선택"
+          />
+
+          {/* 🐶 상대 펫 선택 드롭다운 */}
+          {targetUser &&
+            (targetUser.petList.length > 0 ? (
               <CustomDropdown
                 options={targetUser.petList.map(p => ({
                   label: p.name,
@@ -271,95 +283,108 @@ const BattleWithOneInstance = () => {
               <Text style={{color: '#999', marginTop: 4, marginBottom: 12}}>
                 해당 유저는 등록된 펫이 없습니다.
               </Text>
-            )
+            ))}
+
+          {/* 🐱 상대 펫 카드 */}
+          {targetUser &&
+            targetPetId &&
+            (() => {
+              const opponentPet = targetUser.petList.find(
+                p => p.id === targetPetId.toString(),
+              );
+              if (!opponentPet) {
+                return null;
+              }
+              return (
+                <View style={styles.petCard}>
+                  <Image
+                    source={{uri: opponentPet.image.uri}}
+                    style={styles.petImage}
+                  />
+                  <View>
+                    <Text style={styles.petName}>{opponentPet.name}</Text>
+                    <Text style={styles.petType}>
+                      {opponentPet.species.toUpperCase()}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })()}
+
+          <TouchableOpacity style={styles.battleButton} onPress={handleBattle}>
+            <Text style={styles.battleButtonText}>⚔️ 배틀 시작</Text>
+          </TouchableOpacity>
+
+          {/* ✅ 로딩 표시 */}
+          {loading && (
+            <View style={styles.videoLoading}>
+              <ActivityIndicator size="large" color="#4D7CFE" />
+              <Text style={{marginTop: 8, color: '#666'}}>
+                Generating Battle...
+              </Text>
+            </View>
+          )}
+          {/* ✅ 결과 출력 */}
+          {battleResult && (
+            <View style={styles.resultBox}>
+              <Text style={styles.resultTitle}>🎉 배틀 결과</Text>
+              <Text>{battleResult.result}</Text>
+              <Text>🏆 승자: {battleResult.winner}</Text>
+              <TouchableOpacity
+                style={styles.generateButton}
+                onPress={handleGenerateVideo}>
+                <Text style={styles.generateButtonText}>🎬 배틀 영상 생성</Text>
+              </TouchableOpacity>
+            </View>
           )}
 
-      {/* 🐱 상대 펫 카드 */}
-      {targetUser &&
-        targetPetId &&
-        (() => {
-          const opponentPet = targetUser.petList.find(
-            p => p.id === targetPetId.toString(),
-          );
-          if (!opponentPet) {
-            return null;
-          }
-          return (
-            <View style={styles.petCard}>
-              <Image
-                source={{uri: opponentPet.image.uri}}
-                style={styles.petImage}
+          {status === 'PENDING' && (
+            <View style={styles.videoLoading}>
+              <ActivityIndicator size="large" color="#4D7CFE" />
+              <Text style={{marginTop: 8, color: '#666'}}>
+                📽️ 영상 생성 중...
+              </Text>
+            </View>
+          )}
+
+          {finalUrl && (
+            <View style={{marginTop: 20}}>
+              <Text style={{fontWeight: 'bold', marginBottom: 8}}>
+                📺 배틀 영상:
+              </Text>
+              <Video
+                source={{uri: finalUrl}}
+                style={{
+                  width: '100%',
+                  height: 200,
+                  borderRadius: 10,
+                  backgroundColor: '#000',
+                }}
+                controls
+                resizeMode="contain"
               />
-              <View>
-                <Text style={styles.petName}>{opponentPet.name}</Text>
-                <Text style={styles.petType}>
-                  {opponentPet.species.toUpperCase()}
-                </Text>
+              <View style={styles.actionRow}>
+                <TouchableOpacity
+                  style={styles.iconButton}
+                  onPress={() => {
+                    //@ts-ignore
+                    navigation.navigate('StorybookScreen', {
+                      videoUri: finalUrl,
+                    });
+                  }}>
+                  <Text style={styles.iconText}>✍️ 게시글 작성</Text>
+                </TouchableOpacity>
+                {/*<TouchableOpacity style={styles.iconButton} onPress={handleSave}>*/}
+                {/*  <Text style={styles.iconText}>💾 저장</Text>*/}
+                {/*</TouchableOpacity>*/}
+                <TouchableOpacity
+                  style={styles.iconButton}
+                  onPress={handleShare}>
+                  <Text style={styles.iconText}>📤 공유, 저장</Text>
+                </TouchableOpacity>
               </View>
             </View>
-          );
-        })()}
-
-      <TouchableOpacity style={styles.battleButton} onPress={handleBattle}>
-        <Text style={styles.battleButtonText}>⚔️ 배틀 시작</Text>
-      </TouchableOpacity>
-
-      {/* ✅ 로딩 표시 */}
-      {loading && <ActivityIndicator size="large" color="#4D7CFE" />}
-
-      {/* ✅ 결과 출력 */}
-      {battleResult && (
-        <View style={styles.resultBox}>
-          <Text style={styles.resultTitle}>🎉 배틀 결과</Text>
-          <Text>{battleResult.result}</Text>
-          <Text>🏆 승자: {battleResult.winner}</Text>
-          <TouchableOpacity
-            style={styles.generateButton}
-            onPress={handleGenerateVideo}>
-            <Text style={styles.generateButtonText}>🎬 배틀 영상 생성</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {status === 'PENDING' && (
-        <View style={styles.videoLoading}>
-          <ActivityIndicator size="large" color="#4D7CFE" />
-          <Text style={{marginTop: 8, color: '#666'}}>📽️ 영상 생성 중...</Text>
-        </View>
-      )}
-
-      {finalUrl && (
-        <View style={{marginTop: 20}}>
-          <Text style={{fontWeight: 'bold', marginBottom: 8}}>
-            📺 배틀 영상:
-          </Text>
-          <Video
-            source={{uri: finalUrl}}
-            style={{
-              width: '100%',
-              height: 200,
-              borderRadius: 10,
-              backgroundColor: '#000',
-            }}
-            controls
-            resizeMode="contain"
-          />
-          <View style={styles.actionRow}>
-            <TouchableOpacity style={styles.iconButton} onPress={() => {
-              //@ts-ignore
-              navigation.navigate('StorybookScreen', {videoUri: finalUrl});
-            }}>
-              <Text style={styles.iconText}>✍️ 게시글 작성</Text>
-            </TouchableOpacity>
-            {/*<TouchableOpacity style={styles.iconButton} onPress={handleSave}>*/}
-            {/*  <Text style={styles.iconText}>💾 저장</Text>*/}
-            {/*</TouchableOpacity>*/}
-            <TouchableOpacity style={styles.iconButton} onPress={handleShare}>
-              <Text style={styles.iconText}>📤 공유, 저장</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
+          )}
 
           {error && <Text style={styles.errorText}>❌ {error}</Text>}
         </View>
@@ -371,13 +396,21 @@ const BattleWithOneInstance = () => {
 const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
+    alignItems: 'center',
   },
-  container: {padding: 20},
+  container: {
+    paddingHorizontal: IS_TABLET ? 60 : 20,
+    paddingTop: 20,
+    paddingBottom: 40,
+    width: '100%',
+    maxWidth: IS_TABLET ? 600 : '100%',
+  },
   title: {
-    fontSize: 18,
+    fontSize: IS_TABLET ? 22 : 18,
     fontWeight: 'bold',
     marginBottom: 16,
     color: '#4D7CFE',
+    textAlign: IS_TABLET ? 'center' : 'left',
   },
   subtitle: {
     fontSize: 15,
@@ -398,6 +431,9 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
     marginBottom: 12,
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: IS_TABLET ? 600 : '100%',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -445,6 +481,9 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 10,
     alignItems: 'center',
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: IS_TABLET ? 600 : '100%',
   },
   battleButtonText: {
     color: '#FFF',
@@ -455,6 +494,9 @@ const styles = StyleSheet.create({
     marginTop: 20,
     padding: 14,
     borderRadius: 10,
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: IS_TABLET ? 600 : '100%',
   },
   resultTitle: {
     fontSize: 16,
@@ -482,15 +524,19 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   actionRow: {
-    flexDirection: 'row',
+    flexDirection: IS_TABLET ? 'row' : 'column',
     justifyContent: 'space-between',
     marginTop: 16,
+    width: '100%',
+    maxWidth: IS_TABLET ? 600 : '100%',
+    alignSelf: 'center',
   },
   iconButton: {
     flex: 1,
     backgroundColor: '#F1F3F5',
     paddingVertical: 12,
     marginHorizontal: 4,
+    marginVertical: IS_TABLET ? 0 : 4,
     borderRadius: 8,
     alignItems: 'center',
   },
@@ -500,6 +546,5 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 });
-
 
 export default BattleWithOneInstance;

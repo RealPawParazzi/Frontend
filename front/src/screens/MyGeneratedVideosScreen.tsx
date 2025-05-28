@@ -8,6 +8,7 @@ import {
   StyleSheet,
   SafeAreaView,
   Image,
+  useWindowDimensions,
 } from 'react-native';
 import {createThumbnail} from 'react-native-create-thumbnail';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -31,6 +32,9 @@ const MyGeneratedVideosScreen = () => {
   );
   const [modalVisible, setModalVisible] = useState(false);
   const [thumbnails, setThumbnails] = useState<{[key: number]: string}>({});
+
+  const {width} = useWindowDimensions(); // $$$$$$
+  const isTablet = width >= 768; // $$$$$$
 
   // ✅ 영상 불러오기
   useEffect(() => {
@@ -64,7 +68,6 @@ const MyGeneratedVideosScreen = () => {
     }
   }, [videos]);
 
-
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: '#fff'}}>
       {/* 🔙 헤더 */}
@@ -80,9 +83,18 @@ const MyGeneratedVideosScreen = () => {
         data={videos}
         keyExtractor={item => item.requestId.toString()}
         contentContainerStyle={styles.listContainer}
+        numColumns={isTablet ? 2 : 1} // 아이패드는 2열, 아이폰은 1열
+        columnWrapperStyle={
+          isTablet ? {justifyContent: 'space-between'} : undefined
+        }
         renderItem={({item}) => (
           <TouchableOpacity
-            style={styles.card}
+            style={[
+              styles.card,
+              {
+                width: isTablet ? (width - 48) / 2 : '100%', // $$$$$$ 카드 너비 유동 조정
+              },
+            ]}
             onPress={() => {
               setSelectedVideo(item as GeneratedVideo);
               setModalVisible(true);
