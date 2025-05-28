@@ -11,7 +11,10 @@ import {
   StatusBar,
   TextInput,
   KeyboardAvoidingView,
-  TouchableWithoutFeedback, Platform, Keyboard,
+  TouchableWithoutFeedback,
+  Platform,
+  Keyboard,
+  Dimensions,
 } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import {launchImageLibrary} from 'react-native-image-picker';
@@ -32,6 +35,9 @@ type RouteParams = {
     };
   };
 };
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const IS_TABLET = SCREEN_WIDTH >= 768;
 
 const PetEditScreen = () => {
   const navigation = useNavigation();
@@ -127,76 +133,86 @@ const PetEditScreen = () => {
   return (
     <SafeAreaView style={styles.safeContainer}>
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
+        style={{flex: 1}}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0} // 필요시 조절
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <ScrollView
-            style={styles.scroll}
-            keyboardShouldPersistTaps="handled"
-          >
-        <Text style={styles.headerTitle}>반려동물 정보 수정</Text>
+          <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled">
+            <Text style={styles.headerTitle}>반려동물 정보 수정</Text>
 
-        <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
-          <Image
-            source={petImage ? { uri: String(petImage) } : require('../../assets/images/pets-1.jpg')}
-            style={styles.petImage}
-          />
-          <View style={styles.addImageIcon}>
-            <MaterialIcons name="edit" size={24} color="white" />
-          </View>
-        </TouchableOpacity>
+            <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
+              <Image
+                source={
+                  petImage
+                    ? {uri: String(petImage)}
+                    : require('../../assets/images/pets-1.jpg')
+                }
+                style={styles.petImage}
+              />
+              <View style={styles.addImageIcon}>
+                <MaterialIcons name="edit" size={24} color="white" />
+              </View>
+            </TouchableOpacity>
 
-        <Text style={styles.label}>종류</Text>
-        <View style={styles.buttonGroup}>
-          {[{ label: '고양이', value: 'CAT' }, { label: '강아지', value: 'DOG' }].map((item) => (
-            <TouchableOpacity
-              key={item.value}
-              style={[styles.typeButton, petType === item.value && styles.selectedTypeButton]}
-              onPress={() => setPetType(item.value as 'CAT' | 'DOG')}
-            >
-              <Text style={[styles.typeButtonText, petType === item.value && styles.selectedTypeText]}>
-                {item.label}
+            <Text style={styles.label}>종류</Text>
+            <View style={styles.buttonGroup}>
+              {[
+                {label: '고양이', value: 'CAT'},
+                {label: '강아지', value: 'DOG'},
+              ].map(item => (
+                <TouchableOpacity
+                  key={item.value}
+                  style={[
+                    styles.typeButton,
+                    petType === item.value && styles.selectedTypeButton,
+                  ]}
+                  onPress={() => setPetType(item.value as 'CAT' | 'DOG')}>
+                  <Text
+                    style={[
+                      styles.typeButtonText,
+                      petType === item.value && styles.selectedTypeText,
+                    ]}>
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={styles.label}>이름</Text>
+            <TextInput
+              style={styles.input}
+              maxLength={8}
+              value={petName}
+              onChangeText={setPetName}
+            />
+
+            <Text style={styles.label}>생년월일</Text>
+            <TouchableOpacity style={styles.input} onPress={showDatePicker}>
+              <Text style={{color: petBirthDate ? 'black' : '#aaa'}}>
+                {petBirthDate || '생일을 선택하세요'}
               </Text>
             </TouchableOpacity>
-          ))}
-        </View>
+            <DateTimePickerModal
+              isVisible={isDatePickerVisible}
+              mode="date"
+              onConfirm={handleConfirm}
+              onCancel={() => setDatePickerVisibility(false)}
+            />
 
-        <Text style={styles.label}>이름</Text>
-        <TextInput
-          style={styles.input}
-          maxLength={8}
-          value={petName}
-          onChangeText={setPetName}
-        />
+            <Text style={styles.label}>설명</Text>
+            <TextInput
+              style={[styles.input, {height: 100, textAlignVertical: 'top'}]}
+              placeholder="성격, 특징 등을 간단히 적어주세요."
+              multiline
+              maxLength={200}
+              value={petDetail}
+              onChangeText={setPetDetail}
+            />
 
-        <Text style={styles.label}>생년월일</Text>
-        <TouchableOpacity style={styles.input} onPress={showDatePicker}>
-          <Text style={{ color: petBirthDate ? 'black' : '#aaa' }}>
-            {petBirthDate || '생일을 선택하세요'}
-          </Text>
-        </TouchableOpacity>
-        <DateTimePickerModal
-          isVisible={isDatePickerVisible}
-          mode="date"
-          onConfirm={handleConfirm}
-          onCancel={() => setDatePickerVisibility(false)}
-        />
-
-        <Text style={styles.label}>설명</Text>
-        <TextInput
-          style={[styles.input, { height: 100, textAlignVertical: 'top' }]}
-          placeholder="성격, 특징 등을 간단히 적어주세요."
-          multiline
-          maxLength={200}
-          value={petDetail}
-          onChangeText={setPetDetail}
-        />
-
-        <TouchableOpacity style={styles.submitButton} onPress={handleSave}>
-          <Text style={styles.submitText}>저장</Text>
-        </TouchableOpacity>
+            <TouchableOpacity style={styles.submitButton} onPress={handleSave}>
+              <Text style={styles.submitText}>저장</Text>
+            </TouchableOpacity>
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
@@ -213,9 +229,12 @@ const styles = StyleSheet.create({
   scroll: {
     flex: 1,
     backgroundColor: 'white',
+    paddingHorizontal: IS_TABLET ? 60 : 25, // $$$$$$$$ iPad padding 대응
+    alignSelf: 'center',                    // $$$$$$$$ 가운데 정렬
+    width: IS_TABLET ? 600 : '100%',        // $$$$$$$$ iPad 너비 제한
   },
   container: {
-    paddingHorizontal: 20,
+    flex: 1,
     paddingBottom: 50,
     backgroundColor: 'white',
     flexGrow: 1,

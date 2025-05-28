@@ -14,11 +14,15 @@ import {
   TouchableWithoutFeedback,
   Platform,
   Keyboard,
+  Dimensions,
 } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import {launchImageLibrary} from 'react-native-image-picker';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import petStore from '../../context/petStore';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const IS_TABLET = SCREEN_WIDTH >= 768;
 
 /**
  * 📌 반려동물 추가 화면
@@ -103,13 +107,12 @@ const PetRegistrationScreen = ({navigation}: {navigation: any}) => {
       <KeyboardAvoidingView
         style={{flex: 1}}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0} // ✅ 키보드 높이 보정
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0} // ✅ 키보드 높이 보정
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <ScrollView
             contentContainerStyle={styles.container}
-            keyboardShouldPersistTaps="handled"
-          >
+            keyboardShouldPersistTaps="handled">
             <Text style={styles.headerTitle}>반려동물 등록</Text>
 
             <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
@@ -198,8 +201,12 @@ const styles = StyleSheet.create({
   },
   container: {
     padding: 30,
+    paddingBottom: 60,
     backgroundColor: 'white',
     flexGrow: 1, // ✅ 스크롤뷰 내부가 키보드 토글 시 꽉 차도록
+    paddingHorizontal: IS_TABLET ? 60 : 25, // $$$$$$$$ iPad padding 대응
+    alignSelf: 'center',                    // $$$$$$$$ 가운데 정렬
+    width: IS_TABLET ? 600 : '100%',        // $$$$$$$$ iPad 너비 제한
   },
   headerTitle: {
     fontSize: 24,
