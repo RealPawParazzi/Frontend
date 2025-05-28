@@ -8,7 +8,6 @@ import {
   StyleSheet,
   TouchableWithoutFeedback,
   Animated,
-  Dimensions,
   Alert,
   ActionSheetIOS,
 } from 'react-native';

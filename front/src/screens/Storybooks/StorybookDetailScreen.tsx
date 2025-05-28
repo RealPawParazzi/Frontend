@@ -23,6 +23,16 @@ import CommentList from '../../components/Comments/CommentList'; // ✅ 댓글 �
 import CommentInput from '../../components/Comments/CommentInput'; // ✅ 댓글 입력 바 컴포넌트
 import {RouteProp} from '@react-navigation/native';
 import {RootStackParamList} from '../../navigation/AppNavigator';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.extend(relativeTime); // ✅ 이 순서도 중요
+
+dayjs.tz.setDefault('Asia/Seoul');
 
 /**
  * 📄 스토리북 상세 조회 화면
@@ -239,18 +249,21 @@ const StorybookDetailScreen = ({
 
   // ✅ 게시글 날짜 포맷팅 함수
   const formatDate = (dateString: string) => {
-    if (!dateString) return '';
+    if (!dateString) {
+      return '';
+    }
 
     try {
-      const date = new Date(dateString);
+      const kstDate = dayjs.utc(dateString).tz('Asia/Seoul'); // ✅ UTC → KST 변환
 
-      // ✅ 오전/오후 시간 포맷 생성
-      const isAM = date.getHours() < 12;
-      const hour12 = date.getHours() % 12 || 12;
+      const isAM = kstDate.hour() < 12;
+      const hour12 = kstDate.hour() % 12 || 12;
       const ampm = isAM ? '오전' : '오후';
-      const minute = date.getMinutes().toString().padStart(2, '0');
+      const minute = kstDate.minute().toString().padStart(2, '0');
 
-      return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일 ${ampm} ${hour12}시 ${minute}분`;
+      return `${kstDate.year()}년 ${
+        kstDate.month() + 1
+      }월 ${kstDate.date()}일`;
     } catch (error) {
       console.error('날짜 포맷팅 오류:', error);
       return dateString;
@@ -321,7 +334,10 @@ const StorybookDetailScreen = ({
                 {selectedBoard.author?.nickname || '알 수 없음'}
               </Text>
               <Text style={styles.postDate}>
-                {formatDate(selectedBoard.writeDatetime)}
+                {dayjs
+                  .utc(selectedBoard.writeDatetime)
+                  .tz('Asia/Seoul')
+                  .fromNow()}{' '}
               </Text>
             </View>
           </View>
@@ -408,7 +424,8 @@ const StorybookDetailScreen = ({
           <CommentList boardId={boardId} />
         </ScrollView>
       </View>
-      <Animated.View style={[styles.commentInputContainer, { bottom: inputBarAnim }]}>
+      <Animated.View
+        style={[styles.commentInputContainer, {bottom: inputBarAnim}]}>
         <CommentInput boardId={boardId} />
       </Animated.View>
     </SafeAreaView>
