@@ -9,7 +9,7 @@ import {
   Alert,
   PermissionsAndroid,
   Image,
-  ScrollView,
+  ScrollView, Dimensions,
 } from 'react-native';
 import Video from 'react-native-video';
 import RNFS from 'react-native-fs';
@@ -29,8 +29,12 @@ interface Props {
   video: GeneratedVideo | null;
 }
 
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const IS_TABLET = SCREEN_WIDTH >= 768;
+
 const VideoPreviewModal: React.FC<Props> = ({visible, onClose, video}) => {
-  const [thumbnailUri, setThumbnailUri] = useState<string | null>(null); // $$$$$$$ 썸네일 상태 추가
+  const [thumbnailUri, setThumbnailUri] = useState<string | null>(null); // 썸네일 상태 추가
 
   useEffect(() => {
     // 썸네일이 필요한 조건: imageUrl이 없고 resultUrl이 있는 경우
@@ -40,7 +44,7 @@ const VideoPreviewModal: React.FC<Props> = ({visible, onClose, video}) => {
         .catch(err => console.warn('썸네일 생성 실패:', err));
     }
 
-    console.log('🚀 원본이미지 확인', video);
+    console.log('🚀 원본이미지 확인', video?.imageUrl);
   }, [video]);
 
   if (!video) {
@@ -118,11 +122,16 @@ const VideoPreviewModal: React.FC<Props> = ({visible, onClose, video}) => {
             <>
               <Text style={styles.sectionLabel}>📸 원본 이미지</Text>
               {video.imageUrl ? (
-                <Image
-                  source={{uri: video.imageUrl}}
-                  style={styles.image}
-                  resizeMode="cover"
-                />
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageGallery}>
+                  {video.imageUrl.map((uri, index) => (
+                    <Image
+                      key={index}
+                      source={{ uri }}
+                      style={styles.image}
+                      resizeMode="cover"
+                    />
+                  ))}
+                </ScrollView>
               ) : thumbnailUri ? (
                 <Image
                   source={{uri: thumbnailUri}}
@@ -173,12 +182,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000AA',
     justifyContent: 'center',
     padding: 20,
+    paddingHorizontal:IS_TABLET ? 70 : 20,
   },
   modalContent: {
     backgroundColor: '#fff',
     borderRadius: 14,
     maxHeight: '85%',
     padding: 10,
+    width: IS_TABLET ? '90%' : '100%', // 💻 태블릿이면 살짝 여백 줌
+    alignSelf: 'center',
   },
   scrollContent: {
     alignItems: 'center',
@@ -202,22 +214,25 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 6,
-    alignSelf: 'flex-start',
+    alignSelf: 'center',
+  },
+  imageGallery: {
+    marginVertical: 12,
+    flexDirection: 'row',
   },
   image: {
-    width: 280,
-    height: 180,
-    borderRadius: 8,
-    marginBottom: 14,
-    backgroundColor: '#eee',
+    width: IS_TABLET ? 280 : 200, // 💻 태블릿이면 이미지도 큼직하게
+    height: IS_TABLET ? 280 : 200,
+    borderRadius: 12,
+    marginRight: 10,
   },
   arrow: {
     fontSize: 22,
     marginBottom: 14,
   },
   video: {
-    width: 280,
-    height: 180,
+    width: IS_TABLET ? 420 : 280, // 💻 태블릿이면 더 넓게
+    height: IS_TABLET ? 280 : 180,
     backgroundColor: '#000',
     marginBottom: 20,
     borderRadius: 8,

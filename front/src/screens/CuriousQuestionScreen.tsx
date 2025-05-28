@@ -10,7 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  ScrollView,
+  ScrollView, Dimensions,
 } from 'react-native';
 import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
 import useQuestionStore from '../context/questionStore';
@@ -30,6 +30,14 @@ type RouteParams = {
   };
 };
 
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const IS_TABLET = SCREEN_WIDTH >= 768;
+/**
+ * 📌 궁금한 점 문의하기 화면
+ * - 운영진에게 직접 질문을 남길 수 있는 화면입니다.
+ * - 제목 옵션 선택 및 직접 입력 기능 제공
+ * - 문의 내용 작성 후 제출 가능
+ */
 const CuriousQuestionScreen = () => {
   const navigation = useNavigation();
   const {submitInquiry, isLoading} = useQuestionStore();
