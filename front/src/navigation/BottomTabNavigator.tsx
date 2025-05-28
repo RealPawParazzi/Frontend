@@ -19,6 +19,11 @@ import HomeScreen from '../screens/HomeScreen';
 import Header from '../components/Header';
 import SearchScreen from '../screens/SearchScreen';
 import MapImageScreen from '../screens/MapImageScreen'; // ✅ 안드로이드 전용 맵 스크린 추가
+import { Dimensions } from 'react-native';
+
+const screenWidth = Dimensions.get('window').width;
+const isPad = screenWidth >= 768;
+
 
 const Tab = createBottomTabNavigator();
 
@@ -88,8 +93,9 @@ const BottomTabNavigator = ({navigation}: any) => {
           tabBarActiveTintColor: '#4D7CFE',
           tabBarInactiveTintColor: 'gray',
           tabBarStyle: {
-            height: Platform.OS === 'ios' ? 40 : 60,
-            paddingBottom: Platform.OS === 'ios' ? 15 : 15,
+            height: Platform.OS === 'ios' ? 50 : 60,
+            paddingBottom: Platform.OS === 'ios' ? (isPad ? 10 : 15) : 15,
+            paddingHorizontal: isPad ? 60 : 0,
           }, // ✅ 탭 바 높이를 조정해서 통일
         })}>
         <Tab.Screen
@@ -191,6 +197,7 @@ const BottomTabNavigator = ({navigation}: any) => {
     </SafeAreaView>
   );
 };
+
 
 // ✅ 스타일 정의
 const styles = StyleSheet.create({

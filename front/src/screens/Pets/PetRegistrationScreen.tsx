@@ -102,11 +102,14 @@ const PetRegistrationScreen = ({navigation}: {navigation: any}) => {
     <SafeAreaView style={styles.safeContainer}>
       <KeyboardAvoidingView
         style={{flex: 1}}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0} // ✅ 키보드 높이 보정
+      >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <ScrollView
             contentContainerStyle={styles.container}
-            keyboardShouldPersistTaps="handled">
+            keyboardShouldPersistTaps="handled"
+          >
             <Text style={styles.headerTitle}>반려동물 등록</Text>
 
             <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
@@ -151,27 +154,6 @@ const PetRegistrationScreen = ({navigation}: {navigation: any}) => {
               onChangeText={setPetName}
               placeholder="이름을 입력하세요"
             />
-
-            {/*<Text style={styles.label}>성별</Text>*/}
-            {/*<View style={styles.buttonGroup}>*/}
-            {/*  {['암컷', '수컷'].map(gender => (*/}
-            {/*    <TouchableOpacity*/}
-            {/*      key={gender}*/}
-            {/*      style={[*/}
-            {/*        styles.typeButton,*/}
-            {/*        petGender === gender && styles.selectedTypeButton,*/}
-            {/*      ]}*/}
-            {/*      onPress={() => setPetGender(gender as '암컷' | '수컷')}>*/}
-            {/*      <Text*/}
-            {/*        style={[*/}
-            {/*          styles.typeButtonText,*/}
-            {/*          petGender === gender && styles.selectedTypeText,*/}
-            {/*        ]}>*/}
-            {/*        {gender}*/}
-            {/*      </Text>*/}
-            {/*    </TouchableOpacity>*/}
-            {/*  ))}*/}
-            {/*</View>*/}
 
             <Text style={styles.label}>생년월일</Text>
             <TouchableOpacity style={styles.input} onPress={showDatePicker}>

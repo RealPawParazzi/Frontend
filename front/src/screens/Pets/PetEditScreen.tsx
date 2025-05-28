@@ -127,10 +127,15 @@ const PetEditScreen = () => {
   return (
     <SafeAreaView style={styles.safeContainer}>
       <KeyboardAvoidingView
-        style={{flex: 1}}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0} // 필요시 조절
+      >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+          <ScrollView
+            style={styles.scroll}
+            keyboardShouldPersistTaps="handled"
+          >
         <Text style={styles.headerTitle}>반려동물 정보 수정</Text>
 
         <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
@@ -205,12 +210,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     paddingTop: StatusBar.currentHeight || 20,
   },
+  scroll: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
   container: {
     paddingHorizontal: 20,
     paddingBottom: 50,
     backgroundColor: 'white',
-    flexGrow: 1, // ✅ 스크롤뷰 내부가 키보드 토글 시 꽉 차도록
-
+    flexGrow: 1,
   },
   headerTitle: {
     fontSize: 24,
