@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
   ScrollView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -29,6 +30,10 @@ interface Props {
 
 const SignupScreen: React.FC<Props> = ({navigation}) => {
   const {register} = authStore(); // ✅ authStore에서 register 함수 가져오기
+
+  // ✅ 화면 너비 판단
+  const screenWidth = Dimensions.get('window').width;
+  const isTablet = screenWidth >= 768; // iPad 기준
 
   // ✅ 회원가입 입력 필드 상태 관리
   const [email, setEmail] = useState('');
@@ -114,8 +119,10 @@ const SignupScreen: React.FC<Props> = ({navigation}) => {
       <ScrollView
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled">
-        <Text style={styles.logo}>PawParazzi</Text>
-        <Text style={styles.subtitle}>
+        {/* ✅ iPad 대응용 래퍼 뷰 추가 */}
+        <View style={[styles.container, isTablet && styles.tabletWrapper]}>
+          <Text style={styles.logo}>PawParazzi</Text>
+          <Text style={styles.subtitle}>
           Fill your information below or register with your social media
           account.
         </Text>
@@ -188,6 +195,7 @@ const SignupScreen: React.FC<Props> = ({navigation}) => {
             <Text style={styles.signupButtonText}>Sign up</Text>
           )}
         </TouchableOpacity>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -206,6 +214,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 20,
+  },
+  // ✅ 태블릿 전용 스타일
+  tabletWrapper: {
+    maxWidth: 500, // 너무 넓지 않게 제한
+    alignSelf: 'center', // 가운데 정렬
+    width: '100%',
   },
   subtitle: {
     fontSize: 14,

@@ -9,7 +9,9 @@ import {
   Image,
   KeyboardAvoidingView,
   ScrollView,
-  Platform, Alert,
+  Platform,
+  Alert,
+  PermissionsAndroid,
 } from 'react-native';
 import petStore from '../../../context/petStore';
 import useBattleStore from '../../../context/battleStore';
@@ -19,8 +21,13 @@ import Video from 'react-native-video';
 import CustomDropdown from '../../../common/CustomDropdown';
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
+import {useNavigation} from '@react-navigation/native';
 
-const BattleWithOthers: React.FC = () => {
+const BattleWithOthers: React.FC<{
+  preSelectedOpponent?: {opponentUserId: string; petId: number};
+}> = ({preSelectedOpponent}) => {
+  const navigation = useNavigation();
+
   const {pets} = petStore();
   const [myPetId, setMyPetId] = useState<number | null>(pets[0]?.petId || null);
   const {battleOpponents, loadBattleOpponents} = userStore();
@@ -49,16 +56,23 @@ const BattleWithOthers: React.FC = () => {
   } = useAIvideoStore();
 
   useEffect(() => {
-    loadBattleOpponents();
-    // resetVideo();
+    loadBattleOpponents(); // 최초 1회만 호출
+    console.log('✅ 배틀 상대 리스트 불러오기', battleOpponents);
+  }, []); // ✅ 의존성 배열 비워야 한 번만 실행됨
 
-  }, [loadBattleOpponents]);
+  useEffect(() => {
+    if (preSelectedOpponent && battleOpponents.length > 0) {
+      setSelectedOpponentId(preSelectedOpponent.opponentUserId);
+      setTargetPetId(preSelectedOpponent.petId);
+    }
+  }, [preSelectedOpponent, battleOpponents]);
 
   const handleStartBattle = async () => {
     if (!myPetId || !targetPetId) {
       return;
     }
     resetVideo();
+    console.log('🚀 배틀 시작 요청', myPetId, targetPetId);
     await requestBattleAction(myPetId, targetPetId);
   };
 
@@ -69,24 +83,53 @@ const BattleWithOthers: React.FC = () => {
     startBattleVideoGeneration(battleResult.battleId);
   };
 
-  const handleSave = async () => {
+  const requestAndroidPermission = async () => {
+    if (Platform.OS !== 'android') {
+      return true;
+    }
+
     try {
-      const fileName = `Pawparazzi_${Date.now()}.mp4`;
-      const destPath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
-      await RNFS.copyFile(finalUrl || '', destPath);
-      Alert.alert('성공', '기기에 저장되었습니다!');
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+        {
+          title: '저장 공간 권한 요청',
+          message: '동영상을 저장하려면 저장 공간 접근 권한이 필요합니다.',
+          buttonNeutral: '나중에',
+          buttonNegative: '거부',
+          buttonPositive: '허용',
+        },
+      );
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
     } catch (err) {
-      Alert.alert('실패', '파일 저장에 실패했습니다.');
+      console.warn(err);
+      return false;
     }
   };
 
   const handleShare = async () => {
+    const hasPermission = await requestAndroidPermission();
+    if (!hasPermission) {
+      Alert.alert('권한 필요', '저장을 위해 권한을 허용해주세요.');
+      return;
+    }
+
     try {
       const fileName = `Pawparazzi_${Date.now()}.mp4`;
       const destPath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
-      await RNFS.copyFile(finalUrl || '', destPath);
-      const fileUrl = `file://${destPath}`;
-      await Share.open({url: fileUrl, type: 'video/mp4', failOnCancel: false});
+      const exists = await RNFS.exists(destPath);
+
+      if (!exists) {
+        await RNFS.downloadFile({
+          fromUrl: finalUrl || '',
+          toFile: destPath,
+        }).promise;
+      }
+
+      await Share.open({
+        url: `file://${destPath}`,
+        type: 'video/mp4',
+        failOnCancel: false,
+      });
     } catch (err) {
       Alert.alert('공유 실패', '파일 공유 중 문제가 발생했습니다.');
     }
@@ -100,104 +143,114 @@ const BattleWithOthers: React.FC = () => {
         <View style={styles.container}>
           <Text style={styles.sectionTitle}> 🐶 My Pet</Text>
 
-      {/* 🐶 내 펫 드롭다운 */}
-      <CustomDropdown
-        options={pets.map(p => ({label: p.name, value: p.petId}))}
-        selectedValue={myPetId}
-        onSelect={(val) => setMyPetId(val as number)}
-        placeholder="내 펫 선택"
-      />
+          {/* 🐶 내 펫 드롭다운 */}
+          <CustomDropdown
+            options={pets.map(p => ({label: p.name, value: p.petId}))}
+            selectedValue={myPetId}
+            onSelect={val => setMyPetId(val as number)}
+            placeholder="내 펫 선택"
+          />
 
-      {/* 🐶 내 펫 카드 */}
-      {myPetId &&
-        (() => {
-          const pet = pets.find(p => p.petId === myPetId);
-          if (!pet) {
-            return null;
-          }
-          return (
-            <View style={styles.petCard}>
-              <Image source={{uri: pet.petImg}} style={styles.petImage} />
-              <View>
-                <Text style={styles.petName}>{pet.name}</Text>
-                <Text style={styles.petType}>{pet.type.toUpperCase()}</Text>
-                <Text style={styles.petInfo}>{pet.birthDate}</Text>
-                <Text style={styles.petInfo}>{pet.petDetail}</Text>
-              </View>
-            </View>
-          );
-        })()}
+          {/* 🐶 내 펫 카드 */}
+          {myPetId &&
+            (() => {
+              const pet = pets.find(p => p.petId === myPetId);
+              if (!pet) {
+                return null;
+              }
+              return (
+                <View style={styles.petCard}>
+                  <Image source={{uri: pet.petImg}} style={styles.petImage} />
+                  <View>
+                    <Text style={styles.petName}>{pet.name}</Text>
+                    <Text style={styles.petType}>{pet.type.toUpperCase()}</Text>
+                    <Text style={styles.petInfo}>{pet.birthDate}</Text>
+                    <Text style={styles.petInfo}>{pet.petDetail}</Text>
+                  </View>
+                </View>
+              );
+            })()}
 
-      <Text style={styles.vsText}>VS</Text>
+          <Text style={styles.vsText}>VS</Text>
 
+          <Text style={styles.sectionTitle}> 🐱 Opponent </Text>
 
-      <Text style={styles.sectionTitle}> 🐱 Opponent </Text>
+          {/* 👤 상대 유저 드롭다운 */}
+          <CustomDropdown
+            options={battleOpponents.map(o => ({
+              label: `${o.nickName} (${o.name})`,
+              value: o.id,
+            }))}
+            selectedValue={selectedOpponentId}
+            onSelect={val => {
+              setSelectedOpponentId(val as string);
+              setTargetPetId(null);
+            }}
+            placeholder="상대 유저 선택"
+          />
 
-      {/* 👤 상대 유저 드롭다운 */}
-      <CustomDropdown
-        options={battleOpponents.map(o => ({
-          label: `${o.nickName} (${o.name})`,
-          value: o.id,
-        }))}
-        selectedValue={selectedOpponentId}
-        onSelect={val => {
-          setSelectedOpponentId(val as string);
-          setTargetPetId(null);
-        }}
-        placeholder="상대 유저 선택"
-      />
-
-      {selectedOpponent && (
-        <CustomDropdown
-          options={selectedOpponent.petList.map(p => ({
-            label: p.name,
-            value: Number(p.id),
-          }))}
-          selectedValue={targetPetId}
-          onSelect={val => setTargetPetId(Number(val))}
-          placeholder="상대 펫 선택"
-        />
-      )}
-
-      {/* 🐱 상대 펫 카드 */}
-      {selectedOpponent &&
-        targetPetId &&
-        (() => {
-          const opponentPet = selectedOpponent.petList.find(
-            p => p.id === targetPetId.toString(),
-          );
-          if (!opponentPet) {
-            return null;
-          }
-          return (
-            <View style={styles.petCard}>
-              <Image
-                source={{uri: opponentPet.image.uri}}
-                style={styles.petImage}
+          {selectedOpponent &&
+            (selectedOpponent.petList.length > 0 ? (
+              <CustomDropdown
+                options={selectedOpponent.petList.map(p => ({
+                  label: p.name,
+                  value: Number(p.id),
+                }))}
+                selectedValue={targetPetId}
+                onSelect={val => setTargetPetId(Number(val))}
+                placeholder="상대 펫 선택"
               />
-              <View>
-                <Text style={styles.petName}>{opponentPet.name}</Text>
-                <Text style={styles.petType}>
-                  {opponentPet.species.toUpperCase()}
-                </Text>
-              </View>
-            </View>
-          );
-        })()}
+            ) : (
+              <Text style={{color: '#999', marginTop: 4, marginBottom: 12}}>
+                해당 유저는 등록된 펫이 없습니다.
+              </Text>
+            ))}
 
-      {/* ⚔️ 배틀 시작 버튼 */}
-      <TouchableOpacity style={styles.battleButton} onPress={handleStartBattle}>
-        <Text style={styles.battleButtonText}>⚔️ Start Battle</Text>
-      </TouchableOpacity>
+          {/* 🐱 상대 펫 카드 */}
+          {selectedOpponent &&
+            targetPetId &&
+            (() => {
+              const opponentPet = selectedOpponent.petList.find(
+                p => p.id === targetPetId.toString(),
+              );
+              if (!opponentPet) {
+                return null;
+              }
+              return (
+                <View style={styles.petCard}>
+                  <Image
+                    source={{uri: opponentPet.image.uri}}
+                    style={styles.petImage}
+                  />
+                  <View>
+                    <Text style={styles.petName}>{opponentPet.name}</Text>
+                    <Text style={styles.petType}>
+                      {opponentPet.species.toUpperCase()}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })()}
 
-      {/* 🔄 로딩 */}
-      {loading && <ActivityIndicator size="large" color="#4D7CFE" />}
+          {/* ⚔️ 배틀 시작 버튼 */}
+          <TouchableOpacity
+            style={styles.battleButton}
+            onPress={handleStartBattle}>
+            <Text style={styles.battleButtonText}>⚔️ Start Battle</Text>
+          </TouchableOpacity>
+
+          {/* 🔄 로딩 */}
+          {loading && <ActivityIndicator size="large" color="#4D7CFE" />}
 
           {battleResult && (
             <View style={styles.resultBox}>
+              {' '}
+              {/* 배틀 결과 스타일 개선 */}
               <Text style={styles.resultTitle}>🎉 배틀 결과</Text>
               <Text>{battleResult.result}</Text>
-              <Text>🏆 승자: {battleResult.winner}</Text>
+              <Text style={{fontWeight: 'bold', marginTop: 4}}>
+                🏆 승자: {battleResult.winner}
+              </Text>
               <TouchableOpacity
                 style={styles.generateButton}
                 onPress={handleGenerateVideo}>
@@ -206,39 +259,47 @@ const BattleWithOthers: React.FC = () => {
             </View>
           )}
 
-      {/* 📽️ 영상 생성 중 */}
-      {status === 'IN_PROGRESS' && (
-        <View style={styles.videoLoading}>
-          <ActivityIndicator size="large" color="#4D7CFE" />
-          <Text style={{marginTop: 8, color: '#666'}}>Generating video...</Text>
-        </View>
-      )}
+          {/* 📽️ 영상 생성 중 */}
+          {status === 'PENDING' && (
+            <View style={styles.videoLoading}>
+              <ActivityIndicator size="large" color="#4D7CFE" />
+              <Text style={{marginTop: 8, color: '#666'}}>
+                Generating video...
+              </Text>
+            </View>
+          )}
 
-      {/* 📺 최종 영상 출력 */}
-      {finalUrl && (
-        <View style={{marginTop: 16}}>
-          <Video
-            source={{uri: finalUrl}}
-            style={styles.videoPlayer}
-            controls
-            resizeMode="contain"
-          />
-          <View style={styles.actionRow}>
-            <TouchableOpacity style={styles.iconButton} onPress={() => {
-              //@ts-ignore
-              navigation.navigate('StorybookScreen', {videoUri: finalUrl});
-            }}>
-              <Text style={styles.iconText}>✍️ 게시글 작성</Text>
-            </TouchableOpacity>
-            {/*<TouchableOpacity style={styles.iconButton} onPress={handleSave}>*/}
-            {/*  <Text style={styles.iconText}>💾 저장</Text>*/}
-            {/*</TouchableOpacity>*/}
-            <TouchableOpacity style={styles.iconButton} onPress={handleShare}>
-              <Text style={styles.iconText}>📤 공유, 저장</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
+          {/* 📺 최종 영상 출력 */}
+          {finalUrl && (
+            <View style={{marginTop: 16}}>
+              <Video
+                source={{uri: finalUrl}}
+                style={styles.videoPlayer}
+                controls
+                resizeMode="contain"
+              />
+              <View style={styles.actionRow}>
+                <TouchableOpacity
+                  style={styles.iconButton}
+                  onPress={() => {
+                    //@ts-ignore
+                    navigation.navigate('StorybookScreen', {
+                      videoUri: finalUrl,
+                    });
+                  }}>
+                  <Text style={styles.iconText}>✍️ 게시글 작성</Text>
+                </TouchableOpacity>
+                {/*<TouchableOpacity style={styles.iconButton} onPress={handleSave}>*/}
+                {/*  <Text style={styles.iconText}>💾 저장</Text>*/}
+                {/*</TouchableOpacity>*/}
+                <TouchableOpacity
+                  style={styles.iconButton}
+                  onPress={handleShare}>
+                  <Text style={styles.iconText}>📤 공유, 저장</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
 
           {error && <Text style={styles.errorText}>❌ {error}</Text>}
         </View>
@@ -383,6 +444,5 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 });
-
 
 export default BattleWithOthers;

@@ -46,8 +46,12 @@ export type RootStackParamList = {
   EditProfileScreen: undefined;
   CuriousScreen: undefined; // ❇️ 새로 만들 화면
   HallOfFame: undefined; // ❇️ 새로 만들 화면
-  MiniGameScreen: undefined; // ❇️ 새로 만들 화면
-  CuriousQuestionScreen: undefined; // ❇️ 새로 만들 화면
+  MiniGameScreen: {
+    preSelectedOpponent?: {
+      opponentUserId: string;
+      petId: number;
+    };
+  };  CuriousQuestionScreen: undefined; // ❇️ 새로 만들 화면
   TeamInfoScreen: undefined; // ❇️ 새로 만들 화면
   FollowListScreen: {type: 'followers' | 'following'}; // 🆕 팔로워/팔로잉 목록 네비게이션 추가
   UserPostsScreen: {userId: number; userName: string}; // 🆕 특정 유저 게시글 목록 추가

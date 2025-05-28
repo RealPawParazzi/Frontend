@@ -824,8 +824,8 @@ const styles = StyleSheet.create({
   },
 
   favoriteMarker: {
-    width: 36,
-    height: 36,
+    width: 30,
+    height: 30,
     borderRadius: 18,
     backgroundColor: '#FFD700',
     justifyContent: 'center',
@@ -843,10 +843,10 @@ const styles = StyleSheet.create({
   },
 
   pawMarker: {
-    width: 36,
-    height: 36,
+    width: 30,
+    height: 30,
     borderRadius: 18,
-    backgroundColor: '#8888ff',
+    backgroundColor: '#a0a0fb',
     justifyContent: 'center',
     alignItems: 'center',
     borderColor: '#fff',

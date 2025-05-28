@@ -13,7 +13,8 @@ import {
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import replyStore from '../../../context/replyStore';
 import { fetchReplyLikes } from '../../../services/replyService';
-import userStore from '../../../context/userStore'; // ✅ 현재 로그인한 유저 정보 가져오기
+import userStore from '../../../context/userStore';
+import dayjs from 'dayjs'; // ✅ 현재 로그인한 유저 정보 가져오기
 
 interface ReplyCardProps {
     reply: {
@@ -196,7 +197,10 @@ const ReplyCard = ({ reply, commentId }: ReplyCardProps) => {
                 />
                 <View style={styles.textWrapper}>
                     <Text style={styles.nickname}>{reply.replyMember.nickname}</Text>
-                    <Text style={styles.date}>{formatDate(reply.createdAt)}</Text>
+                    <Text style={styles.date}>{dayjs
+                      .utc(reply.createdAt)
+                      .tz('Asia/Seoul')
+                      .fromNow()}{' '}</Text>
                 </View>
 
                 {/* 옵션 메뉴 (햄버거 아이콘) */}

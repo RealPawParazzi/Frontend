@@ -24,7 +24,8 @@ import {RouteProp} from '@react-navigation/native';
 import {RootStackParamList} from '../../navigation/AppNavigator';
 import TagInputModal from '../../components/TagInputModal';
 import {createThumbnail} from 'react-native-create-thumbnail';
-import {detectDogBreed, predictDogBreed} from '../../services/dogBreedService';
+import {predictPetBreed} from '../../services/breedService';
+import {useDiaryStore} from '../../context/diaryStore'; // ✅ 추가: 다이어리 스토어
 
 /**
  * 📄 스토리북 게시글 수정 화면
@@ -46,9 +47,9 @@ type EditStorybookScreenRouteProp = RouteProp<
 >;
 
 const EditStorybookScreen = ({
-                               route,
-                               navigation,
-                             }: {
+  route,
+  navigation,
+}: {
   route: EditStorybookScreenRouteProp;
   navigation: any;
 }) => {
@@ -69,6 +70,13 @@ const EditStorybookScreen = ({
   const [tagModalVisible, setTagModalVisible] = useState(false);
 
   const bottomBarAnim = useRef(new Animated.Value(0)).current;
+
+  const [isPredicting, setIsPredicting] = useState(false);
+
+  const {createDiary} = useDiaryStore(); // ✅ 다이어리 생성 메서드 가져오기
+  const [generatingDiary, setGeneratingDiary] = useState(false); // ✅ 추가: AI 일기 생성 상태
+
+
 
   useEffect(() => {
     const show = Keyboard.addListener('keyboardWillShow', e => {
@@ -214,8 +222,9 @@ const EditStorybookScreen = ({
     }
 
     try {
+      setIsPredicting(true); // 🔄 시작
       const finalImageUri = await generateThumbnailIfNeeded(imageUri);
-      const result = await predictDogBreed(finalImageUri);
+      const result = await predictPetBreed(finalImageUri);
       console.log('✅ 예측된 품종:', result);
 
       // 이미 존재하지 않는 경우에만 태그로 추가
@@ -223,9 +232,11 @@ const EditStorybookScreen = ({
         setTags(prev => [...prev, result.breed]);
       }
 
-      Alert.alert('🐶 품종 예측 완료', `예측된 품종: ${result.breed}`);
+      Alert.alert('🐶 AI 태그 생성 완료', `생성된 태그: ${result.breed}`);
     } catch (err) {
-      Alert.alert('❌ 예측 실패', '이미지 분석 중 오류가 발생했습니다.');
+      Alert.alert('❌ AI 태그 생성 실패', '이미지 분석 중 오류가 발생했습니다.');
+    } finally {
+      setIsPredicting(false); // 🔁 종료
     }
   };
 
@@ -253,10 +264,10 @@ const EditStorybookScreen = ({
     // 🔸 대표 이미지 coverImage (없으면 undefined)
     const coverImage = titleImage
       ? {
-        uri: titleImage,
-        name: titleImage.split('/').pop() || `cover_${Date.now()}`,
-        type: titleImage.endsWith('.mp4') ? 'video/mp4' : 'image/jpeg',
-      }
+          uri: titleImage,
+          name: titleImage.split('/').pop() || `cover_${Date.now()}`,
+          type: titleImage.endsWith('.mp4') ? 'video/mp4' : 'image/jpeg',
+        }
       : undefined;
 
     // 🔸 유효성 검사
@@ -313,6 +324,27 @@ const EditStorybookScreen = ({
       Alert.alert('❌ 수정 실패', '게시글 수정 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAIContentGeneration = async () => {
+    const firstText = blocks.find(b => b.type === 'Text' && b.value.trim());
+    if (!title.trim() || !firstText) {
+      return Alert.alert('⚠️ 조건 누락', '제목과 내용 중 하나 이상이 필요합니다.');
+    }
+
+    try {
+      setGeneratingDiary(true); // ✅ 시작
+      const createdDiary = await createDiary(title, firstText.value);
+      if (createdDiary) {
+        setTitle(createdDiary.title || '');
+        setBlocks([{type: 'Text', value: createdDiary.content || ''}]);
+      }
+      Alert.alert('✅ 생성 완료', 'AI 일기가 성공적으로 생성되었습니다.');
+    } catch (err: any) {
+      Alert.alert('❌ 생성 실패', err.message || 'AI 일기 생성 중 오류');
+    } finally {
+      setGeneratingDiary(false); // ✅ 종료
     }
   };
 
@@ -424,11 +456,17 @@ const EditStorybookScreen = ({
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.representativeTag, {top: 45}]} // 위치 조정
-                    onPress={() => handleBreedPrediction(block.value)}>
-                    <Text style={{color: 'white', fontWeight: 'bold'}}>
-                      + 자동 태그
-                    </Text>
+                    style={[styles.representativeTag, {top: 45}]}
+                    onPress={() => handleBreedPrediction(block.value)}
+                    disabled={isPredicting} // 로딩 중 중복 클릭 방지
+                  >
+                    {isPredicting ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <Text style={{color: 'white', fontWeight: 'bold'}}>
+                        + AI 태그
+                      </Text>
+                    )}
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.deleteButton}
@@ -492,10 +530,13 @@ const EditStorybookScreen = ({
 
         <TouchableOpacity
           style={styles.bottomIcon}
-          onPress={() =>
-            Alert.alert('준비 중!', 'AI 기능은 곧 추가될 예정입니다.')
-          }>
-          <MaterialIcons name="smart-toy" size={28} color="#aaa" />
+          disabled={generatingDiary}
+          onPress={handleAIContentGeneration}>
+          {generatingDiary ? (
+            <ActivityIndicator size="small" color="#4D7CFE" />
+          ) : (
+            <MaterialIcons name="smart-toy" size={28} color="#4D7CFE" />
+          )}
         </TouchableOpacity>
       </Animated.View>
     </SafeAreaView>

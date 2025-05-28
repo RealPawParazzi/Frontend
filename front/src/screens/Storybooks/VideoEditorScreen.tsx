@@ -11,7 +11,7 @@ import {
   Image,
   ActivityIndicator,
   Platform,
-  KeyboardAvoidingView, PermissionsAndroid,
+  KeyboardAvoidingView, PermissionsAndroid, Animated,
 } from 'react-native';
 import {launchImageLibrary} from 'react-native-image-picker';
 import Video from 'react-native-video';
@@ -40,6 +40,14 @@ const VideoEditorScreen: React.FC = () => {
 
   // ✅ 유효성 검사 상태 추가
   const [durationError, setDurationError] = useState('');
+
+  const recommendedPrompts = [
+    '산책 중인 영상!',
+    '공놀이 하는 모습 만들어줘 !',
+    '라면 먹고 있는 영상 생성해줘 !',
+  ];
+
+
 
   // ✅ 유효성 검사 - 5초 미만 또는 10초 초과일 경우 메시지 설정
   useEffect(() => {
@@ -90,7 +98,7 @@ const VideoEditorScreen: React.FC = () => {
     }
     const parsedDuration = Number(duration); // 숫자 변환 추가
     if (isNaN(parsedDuration) || parsedDuration <= 0) {
-      Alert.alert('입력 오류', '유효한 지속 시간(초)을 입력해주세요.');
+      Alert.alert('입력 오류', '영상 길이를 선택해주세요.');
       return;
     }
 
@@ -128,24 +136,24 @@ const VideoEditorScreen: React.FC = () => {
     }
   };
 
-  const handleSave = async (url: string) => {
-    const hasPermission = await requestAndroidPermission();
-    if (!hasPermission) {
-      Alert.alert('권한 필요', '저장을 위해 권한을 허용해주세요.');
-      return;
-    }
-
-    try {
-      const fileName = `Pawparazzi_${Date.now()}.mp4`;
-      const destPath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
-
-      await RNFS.downloadFile({fromUrl: url, toFile: destPath}).promise;
-
-      Alert.alert('성공', '기기에 저장되었습니다!');
-    } catch (e) {
-      Alert.alert('저장 실패', '문제가 발생했습니다.');
-    }
-  };
+  // const handleSave = async (url: string) => {
+  //   const hasPermission = await requestAndroidPermission();
+  //   if (!hasPermission) {
+  //     Alert.alert('권한 필요', '저장을 위해 권한을 허용해주세요.');
+  //     return;
+  //   }
+  //
+  //   try {
+  //     const fileName = `Pawparazzi_${Date.now()}.mp4`;
+  //     const destPath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
+  //
+  //     await RNFS.downloadFile({fromUrl: url, toFile: destPath}).promise;
+  //
+  //     Alert.alert('성공', '기기에 저장되었습니다!');
+  //   } catch (e) {
+  //     Alert.alert('저장 실패', '문제가 발생했습니다.');
+  //   }
+  // };
 
   const handleShare = async (url: string) => {
     const hasPermission = await requestAndroidPermission();
@@ -200,24 +208,50 @@ const VideoEditorScreen: React.FC = () => {
 
           <Text style={styles.title}>동영상을 생성해보자 !</Text>
 
+          <Text style={styles.subLabel}>줄거리 입력</Text>
+
           <TextInput
             style={styles.input}
             placeholder="원하는 동영상 줄거리 입력하기"
             value={prompt}
             onChangeText={setPrompt}
           />
-          <TextInput
-            style={styles.input}
-            placeholder="몇초짜리 영상을 만들까? (ex: 5)"
-            keyboardType="numeric"
-            value={duration}
-            onChangeText={setDuration}
-          />
-
-          {/* ✅ 유효성 경고 메시지 */}
-          {durationError ? (
-            <Text style={styles.durationErrorText}>{durationError}</Text>
-          ) : null}
+          {/* ✅ 추천 줄거리 리스트 */}
+          <View style={styles.recommendContainer}>
+            <View style={styles.recommendList}>
+              {recommendedPrompts.map((item, idx) => (
+                <TouchableOpacity
+                  key={idx}
+                  style={styles.recommendItem}
+                  onPress={() => setPrompt(item)}
+                >
+                  <Text style={styles.recommendText}>{item}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+          <Text style={styles.subLabel}>영상 길이 선택</Text>
+          <View style={styles.durationButtonContainer}>
+            {[5, 10].map((value) => (
+              <TouchableOpacity
+                key={value}
+                style={[
+                  styles.durationButton,
+                  duration === value.toString() && styles.selectedDurationButton,
+                ]}
+                onPress={() => setDuration(value.toString())}
+              >
+                <Text
+                  style={[
+                    styles.durationButtonText,
+                    duration === value.toString() && styles.selectedDurationButtonText,
+                  ]}
+                >
+                  {value}초
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
 
           {/* ✅ 이미지 미리보기 박스 (업로드 전/후 상태 구분) */}
           <TouchableOpacity onPress={pickImage} activeOpacity={0.9}>
@@ -374,13 +408,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#495057',
   },
-  durationErrorText: {
-    color: '#DC3545',
-    fontSize: 13,
-    marginBottom: 10,
-    marginTop: -12,
-    paddingLeft: 4,
-  },
+
   // ✅ 점선 박스 스타일
   previewBox: {
     width: '100%',
@@ -506,6 +534,73 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#4D7CFE',
     textDecorationLine: 'underline',
+  },
+  subLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    marginBottom: 8,
+    color: '#2C3E50',
+  },
+
+  durationButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+
+  durationButton: {
+    flex: 1,
+    paddingVertical: 12,
+    marginHorizontal: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#CED4DA',
+    backgroundColor: '#F1F3F5',
+    alignItems: 'center',
+  },
+
+  selectedDurationButton: {
+    backgroundColor: '#4D7CFE',
+    borderColor: '#4D7CFE',
+  },
+
+  durationButtonText: {
+    color: '#495057',
+    fontWeight: '500',
+    fontSize: 15,
+  },
+
+  selectedDurationButtonText: {
+    color: '#FFF',
+  },
+  recommendContainer: {
+    marginBottom: 16,
+  },
+  recommendLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#2C3E50',
+    marginBottom: 8,
+  },
+  recommendList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center', // ✅ 중앙 정렬 추가
+    rowGap: 8,                // ✅ 버튼 간 세로 간격
+    columnGap: 8,             // ✅ 버튼 간 좌우 간격 (RN 0.71+ 가능)
+  },
+  recommendItem: {
+    backgroundColor: '#E9F0FF',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 20,
+    marginHorizontal: 4,
+    marginBottom: 8,
+  },
+  recommendText: {
+    color: '#4D7CFE',
+    fontSize: 13,
+    fontWeight: '500',
   },
 });
 

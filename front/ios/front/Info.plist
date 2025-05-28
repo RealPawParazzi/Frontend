@@ -33,15 +33,23 @@
 		<key>NSExceptionDomains</key>
 		<dict>
             <key>www.pawparazzibackoffice.online</key>
-            <dict>
-              <key>NSIncludesSubdomains</key>
-              <true/>
-              <key>NSExceptionAllowsInsecureHTTPLoads</key>
-              <true/>
-            </dict>
-        </dict>
+                <dict>
+                  <key>NSIncludesSubdomains</key>
+                  <true/>
+                  <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                  <true/>
+                </dict>
 
-		<key>NSAllowsLocalNetworking</key>
+                <key>34.64.201.17</key>
+                <dict>
+                  <key>NSIncludesSubdomains</key>
+                  <true/>
+                  <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                  <true/>
+                </dict>
+              </dict>
+
+              <key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
 	<key>NSCameraUsageDescription</key>

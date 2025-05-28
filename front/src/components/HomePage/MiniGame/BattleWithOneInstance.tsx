@@ -10,7 +10,7 @@ import {
   Image,
   Platform,
   KeyboardAvoidingView,
-  ScrollView,
+  ScrollView, PermissionsAndroid,
 } from 'react-native';
 import {launchImageLibrary} from 'react-native-image-picker';
 import useBattleStore from '../../../context/battleStore';
@@ -21,9 +21,12 @@ import CustomDropdown from '../../../common/CustomDropdown';
 import DateTimePicker from 'react-native-modal-datetime-picker';
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
+import {useNavigation} from '@react-navigation/native';
 
 const BattleWithOneInstance = () => {
   // ✅ 상태 정의
+  const navigation = useNavigation();
+
   const [selectedOpponentId, setSelectedOpponentId] = useState<string | null>(
     null,
   );
@@ -55,8 +58,7 @@ const BattleWithOneInstance = () => {
 
   useEffect(() => {
     loadBattleOpponents();
-    // resetVideo();
-  }, [loadBattleOpponents]);
+  }, []);
 
   // ✅ 이미지 선택 핸들러
   const handlePickImage = async () => {
@@ -120,24 +122,53 @@ const BattleWithOneInstance = () => {
     setShowDatePicker(false);
   };
 
-  const handleSave = async () => {
+  const requestAndroidPermission = async () => {
+    if (Platform.OS !== 'android') {
+      return true;
+    }
+
     try {
-      const fileName = `Pawparazzi_${Date.now()}.mp4`;
-      const destPath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
-      await RNFS.copyFile(finalUrl || '', destPath);
-      Alert.alert('성공', '기기에 저장되었습니다!');
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+        {
+          title: '저장 공간 권한 요청',
+          message: '동영상을 저장하려면 저장 공간 접근 권한이 필요합니다.',
+          buttonNeutral: '나중에',
+          buttonNegative: '거부',
+          buttonPositive: '허용',
+        },
+      );
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
     } catch (err) {
-      Alert.alert('실패', '파일 저장에 실패했습니다.');
+      console.warn(err);
+      return false;
     }
   };
 
   const handleShare = async () => {
+    const hasPermission = await requestAndroidPermission();
+    if (!hasPermission) {
+      Alert.alert('권한 필요', '저장을 위해 권한을 허용해주세요.');
+      return;
+    }
+
     try {
       const fileName = `Pawparazzi_${Date.now()}.mp4`;
       const destPath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
-      await RNFS.copyFile(finalUrl || '', destPath);
-      const fileUrl = `file://${destPath}`;
-      await Share.open({url: fileUrl, type: 'video/mp4', failOnCancel: false});
+      const exists = await RNFS.exists(destPath);
+
+      if (!exists) {
+        await RNFS.downloadFile({
+          fromUrl: finalUrl || '',
+          toFile: destPath,
+        }).promise;
+      }
+
+      await Share.open({
+        url: `file://${destPath}`,
+        type: 'video/mp4',
+        failOnCancel: false,
+      });
     } catch (err) {
       Alert.alert('공유 실패', '파일 공유 중 문제가 발생했습니다.');
     }
@@ -225,17 +256,23 @@ const BattleWithOneInstance = () => {
       />
 
       {/* 🐶 상대 펫 선택 드롭다운 */}
-      {targetUser && (
-        <CustomDropdown
-          options={targetUser.petList.map(p => ({
-            label: p.name,
-            value: Number(p.id),
-          }))}
-          selectedValue={targetPetId}
-          onSelect={val => setTargetPetId(val as number)}
-          placeholder="상대 펫 선택"
-        />
-      )}
+          {targetUser && (
+            targetUser.petList.length > 0 ? (
+              <CustomDropdown
+                options={targetUser.petList.map(p => ({
+                  label: p.name,
+                  value: Number(p.id),
+                }))}
+                selectedValue={targetPetId}
+                onSelect={val => setTargetPetId(val as number)}
+                placeholder="상대 펫 선택"
+              />
+            ) : (
+              <Text style={{color: '#999', marginTop: 4, marginBottom: 12}}>
+                해당 유저는 등록된 펫이 없습니다.
+              </Text>
+            )
+          )}
 
       {/* 🐱 상대 펫 카드 */}
       {targetUser &&
@@ -284,7 +321,7 @@ const BattleWithOneInstance = () => {
         </View>
       )}
 
-      {status === 'IN_PROGRESS' && (
+      {status === 'PENDING' && (
         <View style={styles.videoLoading}>
           <ActivityIndicator size="large" color="#4D7CFE" />
           <Text style={{marginTop: 8, color: '#666'}}>📽️ 영상 생성 중...</Text>

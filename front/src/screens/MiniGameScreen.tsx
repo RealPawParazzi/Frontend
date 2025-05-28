@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -7,23 +7,29 @@ import {
   SafeAreaView,
   ScrollView,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native'; // ✅ navigation 사용
+import {useNavigation, useRoute} from '@react-navigation/native'; // ✅ navigation 사용
 import Icon from 'react-native-vector-icons/MaterialIcons'; // ✅ Material 아이콘 import
 import BattleWithOthers from '../components/HomePage/MiniGame/BattleWithOthers';
 import BattleWithOneInstance from '../components/HomePage/MiniGame/BattleWithOneInstance';
 import BattleWithTwoInstance from '../components/HomePage/MiniGame/BattleWithTwoInstance';
+import { RouteProp } from '@react-navigation/native';
+import { RootStackParamList } from '../navigation/AppNavigator'; // 경로에 맞게 수정
+
+type MiniGameRouteProp = RouteProp<RootStackParamList, 'MiniGameScreen'>;
 
 const MiniGameScreen = () => {
-  const [tab, setTab] = useState<'others' | 'instance-one' | 'instance-two'>('others');
   const navigation = useNavigation(); // ✅ navigation 객체
+  const route = useRoute<MiniGameRouteProp>();
 
+  const {preSelectedOpponent} = route.params || {};
+  const [tab, setTab] = useState<'others' | 'instance-one' | 'instance-two'>(
+    preSelectedOpponent ? 'others' : 'others',
+  );
 
   const renderTab = () => {
-
-
     switch (tab) {
       case 'others':
-        return <BattleWithOthers />;
+        return <BattleWithOthers preSelectedOpponent={preSelectedOpponent} />;
       case 'instance-one':
         return <BattleWithOneInstance />;
       case 'instance-two':
@@ -34,7 +40,7 @@ const MiniGameScreen = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF', height: '100%'}}>
+    <SafeAreaView style={{flex: 1, backgroundColor: '#FFFFFF', height: '100%'}}>
       {/* ✅ 뒤로가기 아이콘 (MaterialIcons) */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -47,31 +53,46 @@ const MiniGameScreen = () => {
         <View style={styles.tabBox}>
           <TouchableOpacity
             style={[styles.tabItem, tab === 'others' && styles.activeTabItem]}
-            onPress={() => setTab('others')}
-          >
-            <Text style={[styles.tabItemText, tab === 'others' && styles.activeTabText]}>
+            onPress={() => setTab('others')}>
+            <Text
+              style={[
+                styles.tabItemText,
+                tab === 'others' && styles.activeTabText,
+              ]}>
               다른 펫과
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.tabItem, tab === 'instance-one' && styles.activeTabItem]}
-            onPress={() => setTab('instance-one')}
-          >
-            <Text style={[styles.tabItemText, tab === 'instance-one' && styles.activeTabText]}>
+            style={[
+              styles.tabItem,
+              tab === 'instance-one' && styles.activeTabItem,
+            ]}
+            onPress={() => setTab('instance-one')}>
+            <Text
+              style={[
+                styles.tabItemText,
+                tab === 'instance-one' && styles.activeTabText,
+              ]}>
               즉석 펫과
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.tabItem, tab === 'instance-two' && styles.activeTabItem]}
-            onPress={() => setTab('instance-two')}
-          >
-            <Text style={[styles.tabItemText, tab === 'instance-two' && styles.activeTabText]}>
+            style={[
+              styles.tabItem,
+              tab === 'instance-two' && styles.activeTabItem,
+            ]}
+            onPress={() => setTab('instance-two')}>
+            <Text
+              style={[
+                styles.tabItemText,
+                tab === 'instance-two' && styles.activeTabText,
+              ]}>
               즉석 펫끼리
             </Text>
           </TouchableOpacity>
         </View>
       </View>
-      <ScrollView contentContainerStyle={{ padding: 20 }}>
+      <ScrollView contentContainerStyle={{padding: 20}}>
         {renderTab()}
       </ScrollView>
     </SafeAreaView>
@@ -113,7 +134,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,

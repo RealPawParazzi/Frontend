@@ -9,7 +9,6 @@ import {
   Alert,
   SafeAreaView,
   ActivityIndicator,
-  Switch,
   ScrollView,
   KeyboardAvoidingView,
   Keyboard,
@@ -23,9 +22,8 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import boardStore from '../../context/boardStore';
 import TagInputModal from '../../components/TagInputModal';
 import {createThumbnail} from 'react-native-create-thumbnail';
-import {detectDogBreed, predictDogBreed} from '../../services/dogBreedService';
-import {createAIDiary} from '../../services/diaryService'; // ✅ AI 일기 생성 서비스 추가
-
+import {predictPetBreed} from '../../services/breedService';
+import {useDiaryStore} from '../../context/diaryStore'; // ✅ Zustand store 사용으로 변경
 
 // 🧩 콘텐츠 블록 타입 정의
 interface BlockItem {
@@ -52,8 +50,11 @@ const StorybookScreen = ({navigation, route}: any) => {
   const scrollRef = useRef<ScrollView>(null);
   const inputRefs = useRef<Array<TextInput | null>>([]);
   const createNewBoard = boardStore(state => state.createNewBoard); // Zustand에서 게시글 생성 함수 가져오기
+  const {createDiary} = useDiaryStore(); // ✅ 상태에서 일기 생성 메서드 가져오기
 
   const bottomBarAnim = useRef(new Animated.Value(0)).current;
+
+  const [isPredicting, setIsPredicting] = useState(false);
 
   // 🔥 전달받은 영상이 있을 경우 블록 초기화
   useEffect(() => {
@@ -189,9 +190,10 @@ const StorybookScreen = ({navigation, route}: any) => {
     }
 
     try {
+      setIsPredicting(true); // 🔄 시작
       const finalImageUri = await generateThumbnailIfNeeded(imageUri);
       console.log('🔍 이미지 URI:', finalImageUri);
-      const result = await predictDogBreed(finalImageUri);
+      const result = await predictPetBreed(finalImageUri);
       console.log('✅ 예측된 품종:', result);
 
       // 이미 존재하지 않는 경우에만 태그로 추가
@@ -199,9 +201,14 @@ const StorybookScreen = ({navigation, route}: any) => {
         setTags(prev => [...prev, result.breed]);
       }
 
-      Alert.alert('🐶 품종 예측 완료', `예측된 품종: ${result.breed}`);
+      Alert.alert('🐶 AI 태그 생성 완료', `생성된 태그: ${result.breed}`);
     } catch (err) {
-      Alert.alert('❌ 예측 실패', '이미지 분석 중 오류가 발생했습니다.');
+      Alert.alert(
+        '❌ AI 태그 생성 실패',
+        '이미지 분석 중 오류가 발생했습니다.',
+      );
+    } finally {
+      setIsPredicting(false); // 🔁 종료
     }
   };
 
@@ -216,16 +223,22 @@ const StorybookScreen = ({navigation, route}: any) => {
   const handleAIContentGeneration = async () => {
     const firstText = blocks.find(b => b.type === 'Text' && b.value.trim());
     if (!title.trim() || !firstText) {
-      return Alert.alert('⚠️ 조건 누락', '제목과 내용 중 하나 이상이 필요합니다.');
+      return Alert.alert(
+        '⚠️ 조건 누락',
+        '제목과 내용 중 하나 이상이 필요합니다.',
+      );
     }
-
+    console.log('AI 일기 생성 요청 내용:', title, firstText.value);
     try {
       setGeneratingDiary(true);
-      const res = await createAIDiary(title, firstText.value);
-      if (res?.data?.content) {
-        setTitle(res.data.title);
-        setBlocks([{type: 'Text', value: res.data.content}]);
+      const createdDiary = await createDiary(title, firstText.value); // ✅ 생성된 일기 받기
+      if (createdDiary) {
+        setTitle(createdDiary.title || '');
+        setBlocks([{type: 'Text', value: createdDiary.content || ''}]);
       }
+
+      console.log('AI 일기 생성 결과:', createdDiary);
+      Alert.alert('✅ 생성 완료', 'AI 일기가 성공적으로 생성되었습니다.');
     } catch (err: any) {
       Alert.alert('❌ 생성 실패', err.message || 'AI 일기 생성 중 오류');
     } finally {
@@ -233,8 +246,9 @@ const StorybookScreen = ({navigation, route}: any) => {
     }
   };
 
-  const hasTextOrTitle = title.trim() !== '' || blocks.some(b => b.type === 'Text' && b.value.trim() !== '');
-
+  const hasTextOrTitle =
+    title.trim() !== '' ||
+    blocks.some(b => b.type === 'Text' && b.value.trim() !== '');
 
   // ✅ 게시글 저장하기
   const handleSavePost = async () => {
@@ -292,14 +306,14 @@ const StorybookScreen = ({navigation, route}: any) => {
       // ✅ 대표 이미지도 타입 맞춰 처리
       const coverImage = titleImage
         ? {
-          uri: String(titleImage),
-          name: titleImage.split('/').pop() || `cover_${Date.now()}`,
-          type:
-            titleImage.toLowerCase().endsWith('.mp4') ||
-            titleImage.toLowerCase().includes('video')
-              ? 'video/mp4'
-              : 'image/jpeg',
-        }
+            uri: String(titleImage),
+            name: titleImage.split('/').pop() || `cover_${Date.now()}`,
+            type:
+              titleImage.toLowerCase().endsWith('.mp4') ||
+              titleImage.toLowerCase().includes('video')
+                ? 'video/mp4'
+                : 'image/jpeg',
+          }
         : undefined;
 
       const boardPayload = {
@@ -441,11 +455,17 @@ const StorybookScreen = ({navigation, route}: any) => {
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.representativeTag, {top: 45}]} // 위치 조정
-                    onPress={() => handleBreedPrediction(block.value)}>
-                    <Text style={{color: 'white', fontWeight: 'bold'}}>
-                      + 자동 태그
-                    </Text>
+                    style={[styles.representativeTag, {top: 45}]}
+                    onPress={() => handleBreedPrediction(block.value)}
+                    disabled={isPredicting} // 로딩 중 중복 클릭 방지
+                  >
+                    {isPredicting ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <Text style={{color: 'white', fontWeight: 'bold'}}>
+                        + AI 태그
+                      </Text>
+                    )}
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.deleteButton}

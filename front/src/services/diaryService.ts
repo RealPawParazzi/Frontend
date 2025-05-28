@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {API_ROOT_URL} from '../config/apiConfig';
 
 // 🔹 백엔드 API 기본 URL
-const API_BASE_URL = `${API_ROOT_URL}/api/diary`;
+const API_BASE_URL = `${API_ROOT_URL}/diary`;
 
 /** ✅ 토큰 가져오기 함수 */
 const getAccessToken = async (): Promise<string | null> => {
@@ -12,7 +12,9 @@ const getAccessToken = async (): Promise<string | null> => {
 /** ✅ AI 일기 생성 */
 export const createAIDiary = async (title: string, content: string) => {
   const token = await getAccessToken();
-  if (!token) {throw new Error('로그인이 필요합니다.');}
+  if (!token) {
+    throw new Error('로그인이 필요합니다.');
+  }
 
   const res = await fetch(`${API_BASE_URL}`, {
     method: 'POST',
@@ -34,7 +36,9 @@ export const createAIDiary = async (title: string, content: string) => {
 /** ✅ 내 일기 전체 조회 */
 export const fetchMyDiaries = async () => {
   const token = await getAccessToken();
-  if (!token) {throw new Error('로그인이 필요합니다.');}
+  if (!token) {
+    throw new Error('로그인이 필요합니다.');
+  }
 
   const res = await fetch(`${API_BASE_URL}/my`, {
     method: 'GET',
@@ -54,7 +58,9 @@ export const fetchMyDiaries = async () => {
 /** ✅ 일기 상세 조회 */
 export const fetchDiaryDetail = async (diaryId: number) => {
   const token = await getAccessToken();
-  if (!token) {throw new Error('로그인이 필요합니다.');}
+  if (!token) {
+    throw new Error('로그인이 필요합니다.');
+  }
 
   const res = await fetch(`${API_BASE_URL}/${diaryId}`, {
     method: 'GET',
@@ -74,7 +80,9 @@ export const fetchDiaryDetail = async (diaryId: number) => {
 /** ✅ 일기 삭제 */
 export const deleteDiary = async (diaryId: number) => {
   const token = await getAccessToken();
-  if (!token) {throw new Error('로그인이 필요합니다.');}
+  if (!token) {
+    throw new Error('로그인이 필요합니다.');
+  }
 
   const res = await fetch(`${API_BASE_URL}/${diaryId}`, {
     method: 'DELETE',

@@ -15,7 +15,8 @@ import userStore from '../../context/userStore';
 import commentStore from '../../context/commentStore';
 import replyStore from '../../context/replyStore'; // ✅ 대댓글 상태 추가
 import ReplyCard from './Replys/ReplyCard'; // ✅ 대댓글 카드 추가
-import ReplyInput from './Replys/ReplyInput'; // ✅ 대댓글 입력창 추가
+import ReplyInput from './Replys/ReplyInput';
+import dayjs from 'dayjs'; // ✅ 대댓글 입력창 추가
 
 interface CommentCardProps {
   comment: {
@@ -217,7 +218,10 @@ const CommentCard = ({comment, boardId}: CommentCardProps) => {
         />
         <View style={styles.info}>
           <Text style={styles.nickname}>{comment.commentMember.nickname}</Text>
-          <Text style={styles.date}>{formatDate(comment.createdAt)}</Text>
+          <Text style={styles.date}>{dayjs
+            .utc(comment.createdAt)
+            .tz('Asia/Seoul')
+            .fromNow()}{' '}</Text>
         </View>
 
         {/* 옵션 메뉴 (햄버거 아이콘) */}
