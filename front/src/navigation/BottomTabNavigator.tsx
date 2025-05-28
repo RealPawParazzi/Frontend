@@ -18,6 +18,7 @@ import MyPageScreen from '../screens/MyPageScreen';
 import HomeScreen from '../screens/HomeScreen';
 import Header from '../components/Header';
 import SearchScreen from '../screens/SearchScreen';
+import MapImageScreen from '../screens/MapImageScreen'; // ✅ 안드로이드 전용 맵 스크린 추가
 
 const Tab = createBottomTabNavigator();
 
@@ -66,13 +67,6 @@ const BottomTabNavigator = ({navigation}: any) => {
         />
       )}
 
-      {/*/!* ✅ 전역 Snackbar *!/*/}
-      {/*<GlobalSnackbar*/}
-      {/*  message={message}*/}
-      {/*  visible={visible}*/}
-      {/*  onHide={hideSnackbar}*/}
-      {/*/>*/}
-
       <Tab.Navigator
         screenOptions={({route}) => ({
           tabBarIcon: ({color, size}) => {
@@ -118,7 +112,7 @@ const BottomTabNavigator = ({navigation}: any) => {
 
         <Tab.Screen
           name="Map"
-          component={MapScreen}
+          component={Platform.OS === 'android' ? MapImageScreen : MapScreen} // ✅ 플랫폼에 따라 다르게 지정
           options={{title: '산책'}}
         />
         <Tab.Screen
