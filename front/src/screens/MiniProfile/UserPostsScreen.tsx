@@ -6,12 +6,17 @@ import {
   Image,
   StyleSheet,
   SafeAreaView,
-  TouchableOpacity, Platform,
+  TouchableOpacity,
+  Platform,
+  Dimensions,
 } from 'react-native';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import boardStore, {Board} from '../../context/boardStore';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import {createThumbnail} from 'react-native-create-thumbnail';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const IS_TABLET = SCREEN_WIDTH >= 768;
 
 // @ts-ignore
 const UserPostsScreen = () => {
@@ -43,7 +48,7 @@ const UserPostsScreen = () => {
           post.titleImage.toLowerCase().includes('video')
         ) {
           try {
-            const { path } = await createThumbnail({
+            const {path} = await createThumbnail({
               url: post.titleImage,
               timeStamp: 1000,
             });
@@ -74,7 +79,9 @@ const UserPostsScreen = () => {
           style={styles.backButton}>
           <Icon name="arrow-back-ios" size={20} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.username}>{userName || '해당 유저'}님의 게시글</Text>
+        <Text style={styles.username}>
+          {userName || '해당 유저'}님의 게시글
+        </Text>
         <View style={styles.placeholder} />
       </View>
 
@@ -84,21 +91,29 @@ const UserPostsScreen = () => {
       {/* 📝 게시글 리스트 */}
       <FlatList
         data={posts}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => {
-          const isVideo = item.titleImage?.toLowerCase().endsWith('.mp4') || item.titleImage?.toLowerCase().includes('video');
+        keyExtractor={item => item.id.toString()}
+        renderItem={({item}) => {
+          const isVideo =
+            item.titleImage?.toLowerCase().endsWith('.mp4') ||
+            item.titleImage?.toLowerCase().includes('video');
           const imageSource = isVideo
-            ? { uri: thumbnailMap[item.id] }
-            : { uri: item.titleImage };
+            ? {uri: thumbnailMap[item.id]}
+            : {uri: item.titleImage};
 
           return (
-            <TouchableOpacity style={styles.postCard} onPress={() => handlePostPress(item.id)}>
+            <TouchableOpacity
+              style={styles.postCard}
+              onPress={() => handlePostPress(item.id)}>
               <View style={styles.postContent}>
                 <Text style={styles.postTitle}>{item.title}</Text>
-                <Text style={styles.postDescription} numberOfLines={2}>{item.titleContent}</Text>
+                <Text style={styles.postDescription} numberOfLines={2}>
+                  {item.titleContent}
+                </Text>
                 <View style={styles.metaInfo}>
                   <Text style={styles.metaText}>{item.author.nickname}</Text>
-                  <Text style={styles.metaText}>좋아요 {item.favoriteCount} ・ 댓글 {item.commentCount}</Text>
+                  <Text style={styles.metaText}>
+                    좋아요 {item.favoriteCount} ・ 댓글 {item.commentCount}
+                  </Text>
                 </View>
               </View>
               {item.titleImage && (
@@ -157,15 +172,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    marginHorizontal: 12,
     marginVertical: 6,
     padding: 14,
     borderRadius: 10,
+    width: '94%',
+    maxWidth: IS_TABLET ? 650 : '95%',
+    alignSelf: 'center',
 
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
+        shadowOffset: {width: 0, height: 1},
         shadowOpacity: 0.05,
         shadowRadius: 2,
       },
@@ -212,4 +229,3 @@ const styles = StyleSheet.create({
 });
 
 export default UserPostsScreen;
-
