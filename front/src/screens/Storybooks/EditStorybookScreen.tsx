@@ -24,7 +24,7 @@ import {RouteProp} from '@react-navigation/native';
 import {RootStackParamList} from '../../navigation/AppNavigator';
 import TagInputModal from '../../components/TagInputModal';
 import {createThumbnail} from 'react-native-create-thumbnail';
-import {detectDogBreed, predictDogBreed} from '../../services/dogBreedService';
+import {predictPetBreed} from '../../services/breedService';
 import {useDiaryStore} from '../../context/diaryStore'; // ✅ 추가: 다이어리 스토어
 
 /**
@@ -224,7 +224,7 @@ const EditStorybookScreen = ({
     try {
       setIsPredicting(true); // 🔄 시작
       const finalImageUri = await generateThumbnailIfNeeded(imageUri);
-      const result = await predictDogBreed(finalImageUri);
+      const result = await predictPetBreed(finalImageUri);
       console.log('✅ 예측된 품종:', result);
 
       // 이미 존재하지 않는 경우에만 태그로 추가

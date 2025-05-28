@@ -9,7 +9,6 @@ import {
   Alert,
   SafeAreaView,
   ActivityIndicator,
-  Switch,
   ScrollView,
   KeyboardAvoidingView,
   Keyboard,
@@ -23,7 +22,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import boardStore from '../../context/boardStore';
 import TagInputModal from '../../components/TagInputModal';
 import {createThumbnail} from 'react-native-create-thumbnail';
-import {detectDogBreed, predictDogBreed} from '../../services/dogBreedService';
+import {predictPetBreed} from '../../services/breedService';
 import {useDiaryStore} from '../../context/diaryStore'; // ✅ Zustand store 사용으로 변경
 
 // 🧩 콘텐츠 블록 타입 정의
@@ -51,7 +50,7 @@ const StorybookScreen = ({navigation, route}: any) => {
   const scrollRef = useRef<ScrollView>(null);
   const inputRefs = useRef<Array<TextInput | null>>([]);
   const createNewBoard = boardStore(state => state.createNewBoard); // Zustand에서 게시글 생성 함수 가져오기
-  const {createDiary, diaries} = useDiaryStore(); // ✅ 상태에서 일기 생성 메서드 가져오기
+  const {createDiary} = useDiaryStore(); // ✅ 상태에서 일기 생성 메서드 가져오기
 
   const bottomBarAnim = useRef(new Animated.Value(0)).current;
 
@@ -194,7 +193,7 @@ const StorybookScreen = ({navigation, route}: any) => {
       setIsPredicting(true); // 🔄 시작
       const finalImageUri = await generateThumbnailIfNeeded(imageUri);
       console.log('🔍 이미지 URI:', finalImageUri);
-      const result = await predictDogBreed(finalImageUri);
+      const result = await predictPetBreed(finalImageUri);
       console.log('✅ 예측된 품종:', result);
 
       // 이미 존재하지 않는 경우에만 태그로 추가
@@ -204,7 +203,10 @@ const StorybookScreen = ({navigation, route}: any) => {
 
       Alert.alert('🐶 AI 태그 생성 완료', `생성된 태그: ${result.breed}`);
     } catch (err) {
-      Alert.alert('❌ AI 태그 생성 실패', '이미지 분석 중 오류가 발생했습니다.');
+      Alert.alert(
+        '❌ AI 태그 생성 실패',
+        '이미지 분석 중 오류가 발생했습니다.',
+      );
     } finally {
       setIsPredicting(false); // 🔁 종료
     }
