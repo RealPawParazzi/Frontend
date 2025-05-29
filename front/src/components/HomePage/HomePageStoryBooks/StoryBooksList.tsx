@@ -13,6 +13,10 @@ import userStore from '../../../context/userStore';
 import followStore from '../../../context/userFollowStore';
 import StoryBookCard from './StoryBookCard';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import {Dimensions, Platform} from 'react-native';
+
+const screenWidth = Dimensions.get('window').width;
+const isPad = Platform.OS === 'ios' && Platform.isPad;
 
 const PAGE_SIZE = 10;
 
@@ -118,10 +122,19 @@ const StoryBooksList = () => {
       {/* ✅ 게시글 리스트 출력 */}
       {filteredSortedBoards.length > 0 ? (
         <FlatList
-          contentContainerStyle={{paddingHorizontal: 0}}
+          numColumns={isPad ? 2 : 1}
+          columnWrapperStyle={isPad ? { gap: 10, paddingHorizontal: 10 } : undefined}
+          contentContainerStyle={{
+            paddingBottom: 30,
+            ...(isPad && { paddingHorizontal: 10 }),
+          }}
           data={filteredSortedBoards.slice(0, visibleCount)}
           keyExtractor={item => item.id.toString()}
-          renderItem={({item}) => <StoryBookCard story={item} />}
+          renderItem={({item}) => (
+            <View style={isPad ? {flex: 1} : undefined}>
+              <StoryBookCard story={item} />
+            </View>
+          )}
           showsVerticalScrollIndicator={false}
           nestedScrollEnabled
           ListFooterComponent={() =>

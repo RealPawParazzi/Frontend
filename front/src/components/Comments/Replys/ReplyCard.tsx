@@ -204,9 +204,11 @@ const ReplyCard = ({ reply, commentId }: ReplyCardProps) => {
                 </View>
 
                 {/* 옵션 메뉴 (햄버거 아이콘) */}
+              {userData.id === reply.replyMember.memberId.toString() && (
                 <TouchableOpacity onPress={openActionSheet} style={styles.moreIcon}>
                     <MaterialIcons name="more-vert" size={20} color="#555" />
                 </TouchableOpacity>
+              )}
             </View>
 
             {/* ✅ 수정 UI */}

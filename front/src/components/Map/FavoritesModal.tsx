@@ -6,7 +6,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  FlatList,
+  FlatList, Dimensions,
 } from 'react-native';
 import {Place} from '../../context/placeStore';
 
@@ -16,6 +16,9 @@ interface Props {
   places: Place[];
   onSelectPlace: (place: Place) => void;
 }
+
+const screenWidth = Dimensions.get('window').width;
+const isTablet = screenWidth >= 768;
 
 const FavoritesModal: React.FC<Props> = ({isVisible, onClose, places, onSelectPlace}) => {
 
@@ -65,6 +68,9 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
+
+    width: isTablet ? 500 : '100%',
+    alignSelf: isTablet ? 'center' : 'flex-start',
   },
   title: {
     fontSize: 18,

@@ -10,6 +10,7 @@ import {
   RefreshControl,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native'; // 🔹 네비게이션 훅
 import {Calendar} from 'react-native-calendars';
@@ -17,6 +18,9 @@ import userStore from '../context/userStore';
 import walkStore from '../context/walkStore';
 import boardStore from '../context/boardStore';
 import Footer from '../components/Footer';
+
+const screenWidth = Dimensions.get('window').width;
+const isTablet = screenWidth >= 768; // iPad 기준
 
 const CalendarScreen = () => {
   const navigation = useNavigation(); // 🔹 화면 이동용 네비게이션 객체
@@ -130,92 +134,113 @@ const CalendarScreen = () => {
           />
         }
         keyboardShouldPersistTaps="handled">
-        <Calendar
-          style={{padding: 20}}
-          onDayPress={(day: {dateString: string}) =>
-            setSelectedDate(day.dateString)
-          }
-          markedDates={markedDates}
-          theme={{
-            selectedDayBackgroundColor: '#4D7CFE',
-            todayTextColor: '#4D7CFE',
-            arrowColor: '#4D7CFE',
-          }}
-        />
+        <View style={{flex: 1, alignItems: 'center'}}>
+          <View style={{width: isTablet ? 600 : '100%'}}>
+            <Calendar
+              style={{padding: 20}}
+              onDayPress={(day: {dateString: string}) =>
+                setSelectedDate(day.dateString)
+              }
+              markedDates={markedDates}
+              theme={{
+                selectedDayBackgroundColor: '#4D7CFE',
+                todayTextColor: '#4D7CFE',
+                arrowColor: '#4D7CFE',
+              }}
+            />
 
-        {/* 🔍 검색창 */}
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="검색 반려동물"
-            onChangeText={setSearchText}
-            value={searchText}
-          />
-          <TouchableOpacity
-            style={styles.searchButton}
-            onPress={() => setSearchText('')}>
-            <Text style={styles.searchButtonText}>초기화</Text>
-          </TouchableOpacity>
-        </View>
-
-        <ScrollView style={{flex: 1, paddingHorizontal: 20, paddingBottom: 250}}>
-          {/* 📍 산책 기록 출력 */}
-          {filteredWalks.length > 0 && (
-            <>
-              <Text style={styles.sectionTitle}>📍 산책 기록</Text>
-              {filteredWalks.map(walk => (
-                <TouchableOpacity
-                  key={walk.id}
-                  style={styles.cardWalk}
-                  onPress={() =>
-                    //@ts-ignore
-                    navigation.navigate('Map', {walkId: walk.id}) // ✅ 맵 화면으로 이동
-                  }>
-                  <Text style={styles.cardTitle}>[산책] {walk.distance}km</Text>
-                  <Text style={styles.cardSub}>
-                    {new Date(walk.startTime).toLocaleTimeString()} • 평균 {walk.averageSpeed}km/h
-                  </Text>
-                  {walk.pet && (
-                    <Text style={styles.cardSub}>
-                      🐾 {walk.pet.name} ({walk.pet.type === 'DOG' ? '강아지' : '고양이'})
-                    </Text>
-                  )}
-                </TouchableOpacity>
-              ))}
-            </>
-          )}
-
-          {/* 📝 게시물 출력 */}
-          {filteredPosts.length > 0 && (
-            <>
-              <Text style={styles.sectionTitle}>📝 게시물</Text>
-              {filteredPosts.map(post => (
-                <TouchableOpacity
-                  key={post.id}
-                  style={styles.cardPost}
-                  onPress={() =>
-                    //@ts-ignore
-                    navigation.navigate('StorybookDetailScreen', {boardId: post.id}) // ✅ 상세 게시글로 이동
-                  }>
-                  <Text style={styles.cardTitle}>[게시물] {post.title}</Text>
-                  <Text style={styles.cardContent}>{post.titleContent}</Text>
-                  <Text style={styles.cardSub}>
-                    작성자: {post.author?.nickname}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </>
-          )}
-
-          {/* ❗활동이 없는 경우 */}
-          {filteredWalks.length === 0 && filteredPosts.length === 0 && (
-            <View style={styles.emptyBox}>
-              <Text style={styles.emptyEmoji}>🐾</Text>
-              <Text style={styles.emptyTitle}>이 날은 조용한 하루였어요!</Text>
-              <Text style={styles.emptySubtitle}>산책이나 게시물이 없네요 💤</Text>
+            {/* 🔍 검색창 */}
+            <View style={styles.searchContainer}>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="검색 반려동물"
+                onChangeText={setSearchText}
+                value={searchText}
+              />
+              <TouchableOpacity
+                style={styles.searchButton}
+                onPress={() => setSearchText('')}>
+                <Text style={styles.searchButtonText}>초기화</Text>
+              </TouchableOpacity>
             </View>
-          )}
-        </ScrollView>
+
+            <ScrollView
+              style={{flex: 1, paddingHorizontal: 20, paddingBottom: 250}}>
+              {/* 📍 산책 기록 출력 */}
+              {filteredWalks.length > 0 && (
+                <>
+                  <Text style={styles.sectionTitle}>📍 산책 기록</Text>
+                  {filteredWalks.map(walk => (
+                    <TouchableOpacity
+                      key={walk.id}
+                      style={styles.cardWalk}
+                      onPress={
+                        () =>
+                          //@ts-ignore
+                          navigation.navigate('Map', {walkId: walk.id}) // ✅ 맵 화면으로 이동
+                      }>
+                      <Text style={styles.cardTitle}>
+                        [산책] {walk.distance}km
+                      </Text>
+                      <Text style={styles.cardSub}>
+                        {new Date(walk.startTime).toLocaleTimeString()} • 평균{' '}
+                        {walk.averageSpeed}km/h
+                      </Text>
+                      {walk.pet && (
+                        <Text style={styles.cardSub}>
+                          🐾 {walk.pet.name} (
+                          {walk.pet.type === 'DOG' ? '강아지' : '고양이'})
+                        </Text>
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </>
+              )}
+
+              {/* 📝 게시물 출력 */}
+              {filteredPosts.length > 0 && (
+                <>
+                  <Text style={styles.sectionTitle}>📝 게시물</Text>
+                  {filteredPosts.map(post => (
+                    <TouchableOpacity
+                      key={post.id}
+                      style={styles.cardPost}
+                      onPress={
+                        () =>
+                          //@ts-ignore
+                          navigation.navigate('StorybookDetailScreen', {
+                            boardId: post.id,
+                          }) // ✅ 상세 게시글로 이동
+                      }>
+                      <Text style={styles.cardTitle}>
+                        [게시물] {post.title}
+                      </Text>
+                      <Text style={styles.cardContent}>
+                        {post.titleContent}
+                      </Text>
+                      <Text style={styles.cardSub}>
+                        작성자: {post.author?.nickname}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </>
+              )}
+
+              {/* ❗활동이 없는 경우 */}
+              {filteredWalks.length === 0 && filteredPosts.length === 0 && (
+                <View style={styles.emptyBox}>
+                  <Text style={styles.emptyEmoji}>🐾</Text>
+                  <Text style={styles.emptyTitle}>
+                    이 날은 조용한 하루였어요!
+                  </Text>
+                  <Text style={styles.emptySubtitle}>
+                    산책이나 게시물이 없네요 💤
+                  </Text>
+                </View>
+              )}
+            </ScrollView>
+          </View>
+        </View>
         <Footer />
       </ScrollView>
     </KeyboardAvoidingView>
@@ -260,7 +285,8 @@ const styles = StyleSheet.create({
   },
   postTitle: {fontWeight: 'bold', color: '#4D7CFE'},
   postContent: {marginTop: 4, fontSize: 14},
-  postAuthor: {marginTop: 4, fontSize: 12, color: 'gray'},card: {
+  postAuthor: {marginTop: 4, fontSize: 12, color: 'gray'},
+  card: {
     backgroundColor: '#fff',
     borderRadius: 10,
     padding: 14,
@@ -268,7 +294,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     elevation: 2,
     borderWidth: 1,
     borderColor: '#E4ECFA',
@@ -284,7 +310,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     elevation: 2,
   },
 
@@ -298,7 +324,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     elevation: 2,
   },
 

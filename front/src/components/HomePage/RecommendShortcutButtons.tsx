@@ -3,6 +3,10 @@ import React, {useState} from 'react';
 import {View, Text, StyleSheet, Pressable} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import {useNavigation} from '@react-navigation/native'; // ✅ 유지
+import { Dimensions, Platform } from 'react-native';
+
+const screenWidth = Dimensions.get('window').width;
+const isPad = Platform.OS === 'ios' && Platform.isPad;
 
 const shortcuts = [
   {
@@ -67,7 +71,11 @@ const RecommendShortcutButtons = () => {
     }
   };
 
+  const iconSize = isPad ? 43 : 32;
+  const fontSize = isPad ? 13 : 10.5;
+
   return (
+
     <View style={styles.container}>
       {shortcuts.map(item => {
         // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -82,11 +90,12 @@ const RecommendShortcutButtons = () => {
             style={styles.button}>
             <Icon
               name={item.iconName}
-              size={32}
+              size={iconSize}
               color={isPressed ? '#555' : item.color}
-              style={[styles.icon, isPressed && {transform: [{scale: 1.1}]}]}
+              style={[styles.icon, isPressed && { transform: [{ scale: 1.1 }] }]}
             />
-            <Text style={[styles.label, isPressed && {color: '#555'}]}>
+
+            <Text style={[styles.label, { fontSize }, isPressed && { color: '#555' }]}>
               {item.label}
             </Text>
           </Pressable>
@@ -95,6 +104,8 @@ const RecommendShortcutButtons = () => {
     </View>
   );
 };
+
+
 
 const styles = StyleSheet.create({
   container: {

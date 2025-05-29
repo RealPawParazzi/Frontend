@@ -7,7 +7,7 @@ import {
   Image,
   Modal,
   TouchableOpacity,
-  StyleSheet,
+  StyleSheet, Dimensions,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import {useNavigation} from '@react-navigation/native';
@@ -28,6 +28,10 @@ interface Props {
   onConfirm: () => void;
   onClose: () => void;
 }
+
+
+const screenWidth = Dimensions.get('window').width;
+const isTablet = screenWidth >= 768;
 
 const PetSelectorModal: React.FC<Props> = ({
   isVisible,
@@ -126,9 +130,12 @@ const styles = StyleSheet.create({
   },
   content: {
     backgroundColor: 'white',
-    padding: 30,
+    paddingVertical: 30,
+    paddingHorizontal: isTablet ? 24 : 30, // 📏 아이패드에서 양 옆만 살짝 줄임
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
+    width: isTablet ? 480 : '100%', // ✅ 폭 제한
+    alignSelf: isTablet ? 'center' : 'flex-start', // ✅ 중앙 정렬
   },
   closeButton: {
     position: 'absolute',

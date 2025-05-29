@@ -24,7 +24,7 @@ export interface GeneratedVideo {
   createdAt: string;
   updatedAt: string;
   prompt: string;
-  imageUrl: string;
+  imageUrl: string[];
   resultUrl: string | null;
 }
 
@@ -150,13 +150,16 @@ export async function fetchAllGeneratedVideos(): Promise<GeneratedVideo[]> {
   return allVideos.filter((v: GeneratedVideo) => v.resultUrl !== null);
 }
 
-
-export async function fetchLatestBattleVideoByPet(petId: number): Promise<GeneratedVideo | null> {
+export async function fetchLatestBattleVideoByPet(
+  petId: number,
+): Promise<GeneratedVideo | null> {
   const token = await AsyncStorage.getItem('accessToken');
-  if (!token) {throw new Error('로그인이 필요합니다.');}
+  if (!token) {
+    throw new Error('로그인이 필요합니다.');
+  }
 
   const res = await fetch(`${API_BASE_URL}/${petId}`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: {Authorization: `Bearer ${token}`},
   });
 
   if (!res.ok) {
@@ -170,4 +173,34 @@ export async function fetchLatestBattleVideoByPet(petId: number): Promise<Genera
 
   const data = await res.json();
   return data.resultUrl || null;
+}
+
+
+/**
+ * DELETE /api/videos/{requestId}
+ * 생성한 비디오 삭제
+ */
+export async function deleteGeneratedVideo(requestId: number): Promise<void> {
+  const token = await AsyncStorage.getItem('accessToken');
+  if (!token) {
+    throw new Error('로그인이 필요합니다.');
+  }
+
+  const res = await fetch(`${API_BASE_URL}/${requestId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!res.ok) {
+    let errMessage = '영상 삭제 실패';
+    try {
+      const err = await res.json();
+      errMessage = err.message || errMessage;
+    } catch {
+      // JSON 파싱 실패 시 기본 메시지 유지
+    }
+    throw new Error(errMessage);
+  }
 }

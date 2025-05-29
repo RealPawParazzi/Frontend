@@ -218,16 +218,17 @@ const CommentCard = ({comment, boardId}: CommentCardProps) => {
         />
         <View style={styles.info}>
           <Text style={styles.nickname}>{comment.commentMember.nickname}</Text>
-          <Text style={styles.date}>{dayjs
-            .utc(comment.createdAt)
-            .tz('Asia/Seoul')
-            .fromNow()}{' '}</Text>
+          <Text style={styles.date}>
+            {dayjs.utc(comment.createdAt).tz('Asia/Seoul').fromNow()}{' '}
+          </Text>
         </View>
 
         {/* 옵션 메뉴 (햄버거 아이콘) */}
-        <TouchableOpacity onPress={openActionSheet} style={styles.moreIcon}>
-          <MaterialIcons name="more-vert" size={20} color="#555" />
-        </TouchableOpacity>
+        {userData.id === comment.commentMember.memberId.toString() && (
+          <TouchableOpacity onPress={openActionSheet} style={styles.moreIcon}>
+            <MaterialIcons name="more-vert" size={20} color="#555" />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* ✅ 댓글 수정 중일 때 입력 필드 표시 */}

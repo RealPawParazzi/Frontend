@@ -13,6 +13,8 @@ import {
   Alert,
   KeyboardAvoidingView,
   Animated,
+  Dimensions,
+  useWindowDimensions,
 } from 'react-native';
 import authStore from '../../context/authStore';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -32,6 +34,7 @@ interface Props {
 const LoginScreen: React.FC<Props> = ({navigation}) => {
   const {login, checkAuthStatus} = authStore(); // ✅ authStore에서 login 함수 가져오기
   const scrollRef = useRef<ScrollView>(null); // 🔵 스크롤뷰 참조
+  const {width: screenWidth} = useWindowDimensions(); // ✅ 기기 너비 측정
 
   // ✅ 이메일 상태 관리
   const [email, setEmail] = useState('');
@@ -53,13 +56,19 @@ const LoginScreen: React.FC<Props> = ({navigation}) => {
 
   /** ✅ 키보드 올라올 때 ScrollView 살짝 올리기 */
   useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
-      scrollRef.current?.scrollTo({ y: 100, animated: true }); // 🔥 약간 위로 스크롤
-    });
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => {
+        scrollRef.current?.scrollTo({y: 100, animated: true}); // 🔥 약간 위로 스크롤
+      },
+    );
 
-    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-      scrollRef.current?.scrollTo({ y: 0, animated: true }); // 🔄 복구
-    });
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        scrollRef.current?.scrollTo({y: 0, animated: true}); // 🔄 복구
+      },
+    );
 
     return () => {
       keyboardDidShowListener.remove();
@@ -95,11 +104,16 @@ const LoginScreen: React.FC<Props> = ({navigation}) => {
   };
 
   return (
-      <ScrollView
-        ref={scrollRef}
-        contentContainerStyle={styles.container}
-        keyboardShouldPersistTaps="handled">
-        {/* 앱 로고 */}
+    <ScrollView
+      ref={scrollRef}
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled">
+      <View
+        style={[
+          styles.contentWrapper,
+          screenWidth >= 768 && {maxWidth: 500, alignSelf: 'center'}, // ✅ iPad에서만 적용
+        ]}>
+        {/* 모든 내용 이 안으로 이동 */}
         <Text style={styles.logo}>PawParazzi</Text>
         <Text style={styles.welcome}>Hi! Welcome back, you've been missed</Text>
 
@@ -181,11 +195,15 @@ const LoginScreen: React.FC<Props> = ({navigation}) => {
             </Text>
           </Text>
         </View>
-      </ScrollView>
+      </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
+  contentWrapper: {
+    width: '100%',
+  },
   container: {
     flex: 1,
     padding: 20,
@@ -193,8 +211,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#FFF',
   },
-  logo: {fontSize: 32, color: '#4D7CFE', fontWeight: 'bold', marginBottom: 30},
-  welcome: {fontSize: 16, color: '#888', marginBottom: 50},
+  logo: {
+    fontSize: 32,
+    color: '#4D7CFE',
+    fontWeight: 'bold',
+    marginBottom: 30,
+    textAlign: 'center',
+  },
+  welcome: {fontSize: 16, color: '#888', marginBottom: 50, textAlign: 'center'},
 
   input: {
     width: '100%',
@@ -217,10 +241,10 @@ const styles = StyleSheet.create({
   passwordInput: {flex: 1},
 
   forgotPassword: {
-    alignSelf: 'flex-end',
     color: '#4D7CFE',
     marginTop: 10,
     marginBottom: 40,
+    textAlign:'center',
   },
 
   loginButton: {
@@ -233,12 +257,12 @@ const styles = StyleSheet.create({
   },
   loginButtonText: {color: '#FFF', fontSize: 16, fontWeight: 'bold'},
 
-  continueText: {color: '#888', marginTop: 10, marginBottom: 15},
+  continueText: {color: '#888', marginTop: 10, marginBottom: 15, textAlign: 'center'},
 
-  socialContainer: {flexDirection: 'row', gap: 20, marginBottom: 20},
+  socialContainer: {flexDirection: 'row', gap: 20, marginBottom: 20, justifyContent: 'center'},
   socialIcon: {width: 40, height: 40},
 
-  signupText: {color: '#888', marginTop: 2},
+  signupText: {color: '#888', marginTop: 2, textAlign: 'center'},
   signupLink: {color: '#4D7CFE', fontWeight: 'bold'},
 
   tutorialContainer: {
@@ -248,6 +272,7 @@ const styles = StyleSheet.create({
   tutorialText: {
     color: '#888',
     fontSize: 14,
+    textAlign: 'center',
   },
 
   tutorialLink: {

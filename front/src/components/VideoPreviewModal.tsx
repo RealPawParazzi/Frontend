@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,10 @@ import {
   Platform,
   Alert,
   PermissionsAndroid,
-  Image, ScrollView,
+  Image,
+  ScrollView,
+  Dimensions,
+  ActionSheetIOS,
 } from 'react-native';
 import Video from 'react-native-video';
 import RNFS from 'react-native-fs';
@@ -17,6 +20,9 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import {GeneratedVideo} from '../services/AIvideoService';
+import {useAIvideoStore} from '../context/AIvideoStore'; // 추가된 부분
+import {createThumbnail} from 'react-native-create-thumbnail';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -25,13 +31,36 @@ interface Props {
   visible: boolean;
   onClose: () => void;
   video: GeneratedVideo | null;
+  onRefresh?: () => void; // ✅ 새 props 추가
+
 }
 
-const VideoPreviewModal: React.FC<Props> = ({visible, onClose, video}) => {
-  if (!video) return null;
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const IS_TABLET = SCREEN_WIDTH >= 768;
+
+const VideoPreviewModal: React.FC<Props> = ({visible, onClose, video,onRefresh }) => {
+  const [thumbnailUri, setThumbnailUri] = useState<string | null>(null); // 썸네일 상태 추가
+  const {deleteVideoById, fetchAllVideos} = useAIvideoStore();
+
+  useEffect(() => {
+    // 썸네일이 필요한 조건: imageUrl이 없고 resultUrl이 있는 경우
+    if (video && !video.imageUrl && video.resultUrl) {
+      createThumbnail({url: video.resultUrl, timeStamp: 0})
+        .then(res => setThumbnailUri(res.path))
+        .catch(err => console.warn('썸네일 생성 실패:', err));
+    }
+
+    console.log('🚀 원본이미지 확인', video?.imageUrl);
+  }, [video]);
+
+  if (!video) {
+    return null;
+  }
 
   const requestAndroidPermission = async () => {
-    if (Platform.OS !== 'android') return true;
+    if (Platform.OS !== 'android') {
+      return true;
+    }
 
     try {
       const granted = await PermissionsAndroid.request(
@@ -80,53 +109,137 @@ const VideoPreviewModal: React.FC<Props> = ({visible, onClose, video}) => {
     }
   };
 
+  const handleDelete = async () => {
+    if (!video) {
+      return;
+    }
+
+    Alert.alert(
+      '영상 삭제',
+      '정말로 이 영상을 삭제하시겠습니까?',
+      [
+        {text: '취소', style: 'cancel'},
+        {
+          text: '삭제',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteVideoById(video.requestId);
+              onRefresh?.(); // ✅ 목록 새로고침
+              onClose(); // ✅ 모달 닫기
+            } catch (err) {
+              Alert.alert('삭제 실패', '영상을 삭제하는 데 실패했습니다.');
+            }
+          },
+        },
+      ],
+      {cancelable: true},
+    );
+  };
+
+  const showMenu = () => {
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['취소', '삭제'],
+          destructiveButtonIndex: 1,
+          cancelButtonIndex: 0,
+        },
+        buttonIndex => {
+          if (buttonIndex === 1) {
+            handleDelete();
+          }
+        },
+      );
+    } else {
+      Alert.alert(
+        '옵션',
+        '',
+        [
+          {text: '삭제', style: 'destructive', onPress: handleDelete},
+          {text: '취소', style: 'cancel'},
+        ],
+        {cancelable: true},
+      );
+    }
+  };
+
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.overlay}>
         <View style={styles.modalContent}>
-          <ScrollView contentContainerStyle={styles.scrollContent}>
-          {/* 📅 생성일자 */}
-          <Text style={styles.modalTitle}>
-            {dayjs(video.createdAt).tz('Asia/Seoul').format('YYYY년 MM월 DD일 HH:mm')}
-          </Text>
-
-          {/* ✏️ 프롬프트 텍스트 */}
-          <Text style={styles.promptText}>✏️ {video.prompt}</Text>
-
-          {/* 📸 원본 이미지 */}
-          {video.imageUrl && (
-            <>
-              <Text style={styles.sectionLabel}>📸 원본 이미지</Text>
-              <Image
-                source={{uri: video.imageUrl}}
-                style={styles.image}
-                resizeMode="cover"
-              />
-            </>
-          )}
-
-          {/* ⬇️ 화살표 */}
-          <Text style={styles.arrow}>⬇️</Text>
-
-          {/* 🎞️ 생성된 영상 */}
-          <Text style={styles.sectionLabel}>🎞️ 생성된 영상</Text>
-          <Video
-            source={{uri: video.resultUrl || ''}}
-            style={styles.video}
-            controls
-            resizeMode="contain"
-          />
-
-          {/* 공유/닫기 버튼 */}
-          <View style={styles.actionRow}>
-            <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
-              <Text style={styles.actionText}>📤 공유, 저장</Text>
+          <View style={{width: '100%', alignItems: 'flex-end'}}>
+            <TouchableOpacity onPress={showMenu}>
+              {' '}
+              {/* $$$ 햄버거 버튼 */}
+              <Icon name="more-vert" size={24} color="#333" />
             </TouchableOpacity>
           </View>
+          <ScrollView contentContainerStyle={styles.scrollContent}>
+            {/* 📅 생성일자 */}
+            <Text style={styles.modalTitle}>
+              {dayjs(video.createdAt)
+                .tz('Asia/Seoul')
+                .format('YYYY년 MM월 DD일')}
+            </Text>
 
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeText}>닫기</Text>
-          </TouchableOpacity>
+            {/* ✏️ 프롬프트 텍스트 */}
+            <Text style={styles.promptText}>✏️ {video.prompt}</Text>
+
+            {/* 📸 원본 이미지 또는 썸네일 */}
+            <>
+              <Text style={styles.sectionLabel}>📸 원본 이미지</Text>
+              {video.imageUrl ? (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.imageGallery}>
+                  {video.imageUrl.map((uri, index) => (
+                    <Image
+                      key={index}
+                      source={{uri}}
+                      style={styles.image}
+                      resizeMode="cover"
+                    />
+                  ))}
+                </ScrollView>
+              ) : thumbnailUri ? (
+                <Image
+                  source={{uri: thumbnailUri}}
+                  style={styles.image}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Text style={{color: '#888', marginBottom: 14}}>
+                  이미지가 없습니다.
+                </Text>
+              )}
+            </>
+
+            {/* ⬇️ 화살표 */}
+            <Text style={styles.arrow}>⬇️</Text>
+
+            {/* 🎞️ 생성된 영상 */}
+            <Text style={styles.sectionLabel}>🎞️ 생성된 영상</Text>
+            <Video
+              source={{uri: video.resultUrl || ''}}
+              style={styles.video}
+              controls
+              resizeMode="contain"
+            />
+
+            {/* 공유/닫기 버튼 */}
+            <View style={styles.actionRow}>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={handleShare}>
+                <Text style={styles.actionText}>📤 공유, 저장</Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+              <Text style={styles.closeText}>닫기</Text>
+            </TouchableOpacity>
           </ScrollView>
         </View>
       </View>
@@ -140,12 +253,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000AA',
     justifyContent: 'center',
     padding: 20,
+    paddingHorizontal: IS_TABLET ? 70 : 20,
   },
   modalContent: {
     backgroundColor: '#fff',
     borderRadius: 14,
     maxHeight: '85%',
     padding: 10,
+    width: IS_TABLET ? '90%' : '100%', // 💻 태블릿이면 살짝 여백 줌
+    alignSelf: 'center',
   },
   scrollContent: {
     alignItems: 'center',
@@ -169,22 +285,25 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 6,
-    alignSelf: 'flex-start',
+    alignSelf: 'center',
+  },
+  imageGallery: {
+    marginVertical: 12,
+    flexDirection: 'row',
   },
   image: {
-    width: 280,
-    height: 180,
-    borderRadius: 8,
-    marginBottom: 14,
-    backgroundColor: '#eee',
+    width: IS_TABLET ? 280 : 200, // 💻 태블릿이면 이미지도 큼직하게
+    height: IS_TABLET ? 280 : 200,
+    borderRadius: 12,
+    marginRight: 10,
   },
   arrow: {
     fontSize: 22,
     marginBottom: 14,
   },
   video: {
-    width: 280,
-    height: 180,
+    width: IS_TABLET ? 420 : 280, // 💻 태블릿이면 더 넓게
+    height: IS_TABLET ? 280 : 180,
     backgroundColor: '#000',
     marginBottom: 20,
     borderRadius: 8,

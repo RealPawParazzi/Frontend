@@ -252,7 +252,7 @@ const userStore = create<{
   loadBattleOpponents: async () => {
     try {
       const users = await fetchAllUsers();
-      const shuffled = users.sort(() => 0.5 - Math.random()).slice(0, 5);
+      const shuffled = users.sort(() => 0.5 - Math.random()).slice(0, 10);
 
       const battleList: BattleOpponent[] = shuffled.map(user => ({
         id: user.id,

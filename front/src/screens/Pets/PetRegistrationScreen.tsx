@@ -14,11 +14,15 @@ import {
   TouchableWithoutFeedback,
   Platform,
   Keyboard,
+  Dimensions,
 } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import {launchImageLibrary} from 'react-native-image-picker';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import petStore from '../../context/petStore';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const IS_TABLET = SCREEN_WIDTH >= 768;
 
 /**
  * 📌 반려동물 추가 화면
@@ -102,7 +106,9 @@ const PetRegistrationScreen = ({navigation}: {navigation: any}) => {
     <SafeAreaView style={styles.safeContainer}>
       <KeyboardAvoidingView
         style={{flex: 1}}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0} // ✅ 키보드 높이 보정
+      >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <ScrollView
             contentContainerStyle={styles.container}
@@ -152,27 +158,6 @@ const PetRegistrationScreen = ({navigation}: {navigation: any}) => {
               placeholder="이름을 입력하세요"
             />
 
-            {/*<Text style={styles.label}>성별</Text>*/}
-            {/*<View style={styles.buttonGroup}>*/}
-            {/*  {['암컷', '수컷'].map(gender => (*/}
-            {/*    <TouchableOpacity*/}
-            {/*      key={gender}*/}
-            {/*      style={[*/}
-            {/*        styles.typeButton,*/}
-            {/*        petGender === gender && styles.selectedTypeButton,*/}
-            {/*      ]}*/}
-            {/*      onPress={() => setPetGender(gender as '암컷' | '수컷')}>*/}
-            {/*      <Text*/}
-            {/*        style={[*/}
-            {/*          styles.typeButtonText,*/}
-            {/*          petGender === gender && styles.selectedTypeText,*/}
-            {/*        ]}>*/}
-            {/*        {gender}*/}
-            {/*      </Text>*/}
-            {/*    </TouchableOpacity>*/}
-            {/*  ))}*/}
-            {/*</View>*/}
-
             <Text style={styles.label}>생년월일</Text>
             <TouchableOpacity style={styles.input} onPress={showDatePicker}>
               <Text style={{color: petBirthDate ? 'black' : '#aaa'}}>
@@ -216,8 +201,12 @@ const styles = StyleSheet.create({
   },
   container: {
     padding: 30,
+    paddingBottom: 60,
     backgroundColor: 'white',
     flexGrow: 1, // ✅ 스크롤뷰 내부가 키보드 토글 시 꽉 차도록
+    paddingHorizontal: IS_TABLET ? 60 : 25, // $$$$$$$$ iPad padding 대응
+    alignSelf: 'center',                    // $$$$$$$$ 가운데 정렬
+    width: IS_TABLET ? 600 : '100%',        // $$$$$$$$ iPad 너비 제한
   },
   headerTitle: {
     fontSize: 24,

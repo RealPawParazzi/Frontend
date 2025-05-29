@@ -4,10 +4,13 @@ import {create} from 'zustand';
 import {
   createVideoRequest,
   fetchVideoStatus,
-  createBattleVideoRequest, GeneratedVideo, fetchAllGeneratedVideos, fetchLatestBattleVideoByPet,
+  createBattleVideoRequest,
+  GeneratedVideo,
+  fetchAllGeneratedVideos,
+  fetchLatestBattleVideoByPet,
+  deleteGeneratedVideo, // 추가된 부분
 } from '../services/AIvideoService';
-import { useSnackbarStore } from './snackbarStore';
-
+import {useSnackbarStore} from './snackbarStore';
 
 interface AIvideoState {
   jobId: string | null;
@@ -28,7 +31,10 @@ interface AIvideoState {
   reset: () => void;
 
   fetchAllVideos: () => Promise<GeneratedVideo[]>;
-  fetchLatestBattleVideoByPet: (petId: number) => Promise<GeneratedVideo | null>;
+  fetchLatestBattleVideoByPet: (
+    petId: number,
+  ) => Promise<GeneratedVideo | null>;
+  deleteVideoById: (requestId: number) => Promise<boolean>; // 삭제 메서드 타입 정의
 }
 
 export const useAIvideoStore = create<AIvideoState>((set, get) => ({
@@ -51,7 +57,13 @@ export const useAIvideoStore = create<AIvideoState>((set, get) => ({
       const {jobId} = await createVideoRequest(prompt, duration, imageFile);
       set({jobId, status: 'PENDING'});
       // ✅ 스낵바 알림 추가
-      useSnackbarStore.getState().showSnackbar('⏳ 동영상을 생성 중입니다...', `프롬프트: ${prompt}`, false);
+      useSnackbarStore
+        .getState()
+        .showSnackbar(
+          '⏳ 동영상을 생성 중입니다...',
+          `프롬프트: ${prompt}`,
+          false,
+        );
 
       // 바로 폴링 시작
       get().pollStatus();
@@ -100,7 +112,9 @@ export const useAIvideoStore = create<AIvideoState>((set, get) => ({
           });
 
           // ✅ 스낵바 알림 추가
-          useSnackbarStore.getState().showSnackbar('🎉 동영상이 완성되었습니다!');
+          useSnackbarStore
+            .getState()
+            .showSnackbar('🎉 동영상이 완성되었습니다!');
           return;
         }
 
@@ -112,7 +126,11 @@ export const useAIvideoStore = create<AIvideoState>((set, get) => ({
             pollInterval: null,
           });
           // ❌ 실패 스낵바 알림
-          useSnackbarStore.getState().showSnackbar('❌ 영상 생성 실패: ' + (data.errorMessage || '오류 발생'));
+          useSnackbarStore
+            .getState()
+            .showSnackbar(
+              '❌ 영상 생성 실패: ' + (data.errorMessage || '오류 발생'),
+            );
           return;
         }
 
@@ -159,7 +177,9 @@ export const useAIvideoStore = create<AIvideoState>((set, get) => ({
       const {jobId} = await createBattleVideoRequest(battleId);
       set({jobId, status: 'PENDING'});
       // ✅ 배틀 영상용 스낵바 알림
-      useSnackbarStore.getState().showSnackbar('⚔️ 배틀 영상 생성 중...', '잠시만 기다려주세요', true);
+      useSnackbarStore
+        .getState()
+        .showSnackbar('⚔️ 배틀 영상 생성 중...', '잠시만 기다려주세요', true);
 
       get().pollStatus(); // 폴링 시작
     } catch (e: any) {
@@ -184,6 +204,20 @@ export const useAIvideoStore = create<AIvideoState>((set, get) => ({
     } catch (e: any) {
       console.error('❌ 배틀 영상 불러오기 실패:', e);
       return null;
+    }
+  },
+  deleteVideoById: async (requestId: number) => {
+    try {
+      await deleteGeneratedVideo(requestId);
+      // ✅ 삭제 성공 후 스낵바 알림
+      useSnackbarStore.getState().showSnackbar('🗑️ 영상이 삭제되었습니다.');
+      return true;
+    } catch (e: any) {
+      // ❌ 삭제 실패 시 스낵바 알림
+      useSnackbarStore
+        .getState()
+        .showSnackbar('❌ 영상 삭제 실패: ' + (e.message || '오류 발생'));
+      return false;
     }
   },
 }));

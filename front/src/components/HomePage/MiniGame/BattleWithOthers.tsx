@@ -12,6 +12,7 @@ import {
   Platform,
   Alert,
   PermissionsAndroid,
+  Dimensions,
 } from 'react-native';
 import petStore from '../../../context/petStore';
 import useBattleStore from '../../../context/battleStore';
@@ -23,6 +24,9 @@ import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
 import {useNavigation} from '@react-navigation/native';
 
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const IS_TABLET = SCREEN_WIDTH >= 768;
+
 const BattleWithOthers: React.FC<{
   preSelectedOpponent?: {opponentUserId: string; petId: number};
 }> = ({preSelectedOpponent}) => {
@@ -31,13 +35,13 @@ const BattleWithOthers: React.FC<{
   const {pets} = petStore();
   const [myPetId, setMyPetId] = useState<number | null>(pets[0]?.petId || null);
   const {battleOpponents, loadBattleOpponents} = userStore();
-  const [selectedOpponentId, setSelectedOpponentId] = useState<string | null>(
+  const [selectedOpponentId, setSelectedOpponentId] = useState<number | null>(
     null,
   );
   const [targetPetId, setTargetPetId] = useState<number | null>(null);
 
   const selectedOpponent = battleOpponents.find(
-    o => o.id === selectedOpponentId,
+    o => o.id === selectedOpponentId?.toString(),
   );
 
   const {
@@ -45,7 +49,6 @@ const BattleWithOthers: React.FC<{
     loading,
     error,
     requestBattleAction,
-    fetchBattleDetailAction,
   } = useBattleStore();
 
   const {
@@ -56,16 +59,23 @@ const BattleWithOthers: React.FC<{
   } = useAIvideoStore();
 
   useEffect(() => {
-    loadBattleOpponents(); // 최초 1회만 호출
-    console.log('✅ 배틀 상대 리스트 불러오기', battleOpponents);
-  }, []); // ✅ 의존성 배열 비워야 한 번만 실행됨
+    const fetchAndSet = async () => {
+      await loadBattleOpponents(); // ✅ 상대 데이터 먼저 받아오고
+
+      if (preSelectedOpponent) {
+        console.log('🎯 초기 opponent 세팅:', preSelectedOpponent);
+        setSelectedOpponentId(Number(preSelectedOpponent.opponentUserId));
+        setTargetPetId(preSelectedOpponent.petId);
+      }
+    };
+
+    fetchAndSet();
+  }, []);
 
   useEffect(() => {
-    if (preSelectedOpponent && battleOpponents.length > 0) {
-      setSelectedOpponentId(preSelectedOpponent.opponentUserId);
-      setTargetPetId(preSelectedOpponent.petId);
-    }
-  }, [preSelectedOpponent, battleOpponents]);
+    console.log('🧠 preSelectedOpponent:', preSelectedOpponent);
+    console.log('🧠 battleOpponents:', battleOpponents);
+  }, [battleOpponents]);
 
   const handleStartBattle = async () => {
     if (!myPetId || !targetPetId) {
@@ -183,7 +193,7 @@ const BattleWithOthers: React.FC<{
             }))}
             selectedValue={selectedOpponentId}
             onSelect={val => {
-              setSelectedOpponentId(val as string);
+              setSelectedOpponentId(val as number);
               setTargetPetId(null);
             }}
             placeholder="상대 유저 선택"
@@ -240,7 +250,14 @@ const BattleWithOthers: React.FC<{
           </TouchableOpacity>
 
           {/* 🔄 로딩 */}
-          {loading && <ActivityIndicator size="large" color="#4D7CFE" />}
+          {loading && (
+            <View style={styles.videoLoading}>
+              <ActivityIndicator size="large" color="#4D7CFE" />
+              <Text style={{marginTop: 8, color: '#666'}}>
+                Generating Battle...
+              </Text>
+            </View>
+          )}
 
           {battleResult && (
             <View style={styles.resultBox}>
@@ -311,10 +328,23 @@ const BattleWithOthers: React.FC<{
 const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
+    alignItems: 'center',
+
     paddingBottom: 20,
   },
-  container: {padding: 20},
-  sectionTitle: {fontSize: 16, fontWeight: 'bold', marginVertical: 6},
+  container: {
+    paddingHorizontal: IS_TABLET ? 60 : 20,
+    paddingTop: 20,
+    paddingBottom: 40,
+    width: '100%',
+    maxWidth: IS_TABLET ? 600 : '100%',
+  },
+  sectionTitle: {
+    fontSize: IS_TABLET ? 20 : 16,
+    fontWeight: 'bold',
+    marginVertical: 6,
+    textAlign:'left',
+  },
   petCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -322,6 +352,9 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
     marginBottom: 12,
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: IS_TABLET ? 600 : '100%',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -350,7 +383,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   petName: {
-    fontSize: 16,
+    fontSize: IS_TABLET ? 18 : 16,
     fontWeight: 'bold',
   },
   petType: {
@@ -368,6 +401,9 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 10,
     marginTop: 12,
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: IS_TABLET ? 600 : '100%',
   },
   battleButtonText: {
     color: '#fff',
@@ -375,10 +411,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   resultBox: {
-    marginTop: 16,
-    borderRadius: 12,
-    overflow: 'hidden',
-    position: 'relative',
+    backgroundColor: '#F8F9FA',
+    marginTop: 20,
+    padding: 14,
+    borderRadius: 10,
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: IS_TABLET ? 600 : '100%',
   },
   resultImage: {
     width: '100%',
@@ -416,33 +455,39 @@ const styles = StyleSheet.create({
   },
   videoPlayer: {
     width: '100%',
-    height: 220,
+    height: IS_TABLET ? 280 : 220,
     borderRadius: 12,
     backgroundColor: '#000',
+    alignSelf: 'center',
+    maxWidth: IS_TABLET ? 600 : '100%',
   },
   errorText: {
     color: '#DC3545',
     marginTop: 12,
     fontWeight: '500',
+    textAlign: IS_TABLET ? 'center' : 'left',
   },
   actionRow: {
-    flexDirection: 'row',
+    flexDirection: IS_TABLET ? 'row' : 'column',
     justifyContent: 'space-between',
     marginTop: 16,
+    width: '100%',
+    maxWidth: IS_TABLET ? 600 : '100%',
+    alignSelf: 'center',
   },
   iconButton: {
     flex: 1,
     backgroundColor: '#F1F3F5',
     paddingVertical: 12,
     marginHorizontal: 4,
+    marginVertical: IS_TABLET ? 0 : 4,
     borderRadius: 8,
     alignItems: 'center',
   },
   iconText: {
-    fontSize: 14,
+    fontSize: IS_TABLET ? 16 : 14,
     color: '#2C3E50',
     fontWeight: '500',
   },
 });
-
 export default BattleWithOthers;

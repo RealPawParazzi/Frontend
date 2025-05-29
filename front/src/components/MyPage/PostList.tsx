@@ -1,5 +1,13 @@
 import React, {useEffect, useMemo, useState} from 'react';
-import {View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator} from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+  Dimensions,
+} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../navigation/AppNavigator'; // ✅ 스택 네비게이션 타입 가져오기
@@ -17,6 +25,13 @@ interface PostListProps {
   userId: number;
 }
 
+const screenWidth = Dimensions.get('window').width;
+const isTablet = screenWidth >= 768; // 기준: 768px 이상이면 iPad로 간주
+const CARD_MARGIN = 10;
+const CARD_WIDTH = isTablet
+  ? (screenWidth - CARD_MARGIN * 3) / 2 // 2열 출력용 너비 계산
+  : screenWidth - CARD_MARGIN * 2;
+
 /** ✅ PostList 컴포넌트 */
 const PostList = ({userId}: PostListProps) => {
   const navigation = useNavigation<NavigationProp>();
@@ -26,7 +41,6 @@ const PostList = ({userId}: PostListProps) => {
 
   const [displayCount, setDisplayCount] = useState(10); // ✅ 초기 10개만 표시
   const [loadingMore, setLoadingMore] = useState(false); // ✅ 더보기 로딩 상태
-
 
   const myBoards: Board[] = useMemo(
     () => userBoardsMap[userId] || [],
@@ -56,7 +70,9 @@ const PostList = ({userId}: PostListProps) => {
   // ✅ 최신순으로 정렬된 게시글 리스트
   const sortedBoards = useMemo(() => {
     return [...myBoards].sort(
-      (a, b) => new Date(b.writeDatetime).getTime() - new Date(a.writeDatetime).getTime(),
+      (a, b) =>
+        new Date(b.writeDatetime).getTime() -
+        new Date(a.writeDatetime).getTime(),
     );
   }, [myBoards]);
 
@@ -76,7 +92,12 @@ const PostList = ({userId}: PostListProps) => {
         <>
           <FlatList
             data={sortedBoards.slice(0, displayCount)}
-            renderItem={({item}) => <PostCard post={item} />}
+            numColumns={isTablet ? 2 : 1} // ✅ iPad일 땐 2줄 출력
+            renderItem={({item}) => (
+              <View style={{width: CARD_WIDTH, marginRight: CARD_MARGIN}}>
+                <PostCard post={item} />
+              </View>
+            )}
             keyExtractor={item => String(item.id)}
           />
           {displayCount < sortedBoards.length && (
@@ -84,7 +105,9 @@ const PostList = ({userId}: PostListProps) => {
               {loadingMore ? (
                 <ActivityIndicator size="small" color="#4D7CFE" />
               ) : (
-                <TouchableOpacity onPress={handleLoadMore} style={styles.loadMoreButton}>
+                <TouchableOpacity
+                  onPress={handleLoadMore}
+                  style={styles.loadMoreButton}>
                   <Text style={styles.loadMoreText}>게시글 더 보기</Text>
                 </TouchableOpacity>
               )}
@@ -99,6 +122,10 @@ const PostList = ({userId}: PostListProps) => {
 /** ✅ 스타일 */
 const styles = StyleSheet.create({
   container: {padding: 10},
+  listContainer: {
+    paddingHorizontal: CARD_MARGIN,
+    paddingBottom: 20,
+  },
   emptyContainer: {
     alignItems: 'center',
     padding: 20,

@@ -10,7 +10,9 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
-  ScrollView, PermissionsAndroid,
+  ScrollView,
+  PermissionsAndroid,
+  Dimensions,
 } from 'react-native';
 import {launchImageLibrary} from 'react-native-image-picker';
 import useBattleStore from '../../../context/battleStore';
@@ -21,6 +23,9 @@ import DateTimePicker from 'react-native-modal-datetime-picker';
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
 import {useNavigation} from '@react-navigation/native';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const IS_TABLET = SCREEN_WIDTH >= 768;
 
 const BattleWithTwoInstance = () => {
   const navigation = useNavigation();
@@ -97,7 +102,6 @@ const BattleWithTwoInstance = () => {
     console.log('🎬 [영상 생성 요청]', battleResult?.battleId);
     console.log('🎬 [영상 생성 상태]', status);
     startBattleVideoGeneration(battleResult.battleId);
-
   };
 
   const requestAndroidPermission = async () => {
@@ -158,190 +162,208 @@ const BattleWithTwoInstance = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView contentContainerStyle={styles.container}>
         {/* 🐶 펫 1 */}
-      <Text style={styles.subTitle}> 🐶 Instance Pet 1 </Text>
-      <TextInput
-        style={styles.input}
-        placeholder="이름"
-        value={pet1.name}
-        onChangeText={v => setPet1({...pet1, name: v})}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="특징"
-        value={pet1.petDetail}
-        onChangeText={v => setPet1({...pet1, petDetail: v})}
-      />
-      <CustomDropdown
-        options={[
-          {label: 'DOG', value: 'DOG'},
-          {label: 'CAT', value: 'CAT'},
-        ]}
-        selectedValue={pet1.type}
-        onSelect={v => setPet1({...pet1, type: v as 'DOG' | 'CAT'})}
-        placeholder="종류 선택"
-      />
-      <TouchableOpacity
-        style={styles.input}
-        onPress={() => setShowDatePicker1(true)}>
-        <Text>{pet1.birthDate ? `📅 ${pet1.birthDate}` : '생년월일 선택'}</Text>
-      </TouchableOpacity>
-      <DateTimePicker
-        isVisible={showDatePicker1}
-        mode="date"
-        onConfirm={d => {
-          setPet1({...pet1, birthDate: d.toISOString().split('T')[0]});
-          setShowDatePicker1(false);
-        }}
-        onCancel={() => setShowDatePicker1(false)}
-      />
-      <TouchableOpacity
-        style={styles.imageButton}
-        onPress={() => pickImage(setPet1Image)}>
-        <Text>{pet1Image ? '📸 이미지 선택 완료' : '🖼️ 이미지 선택'}</Text>
-      </TouchableOpacity>
-      {(pet1.name || pet1Image) && (
-        <View style={styles.petCard}>
-          {pet1Image && (
-            <Image source={{uri: pet1Image.uri}} style={styles.petImage} />
-          )}
-          <View>
-            <Text style={styles.petName}>{pet1.name}</Text>
-            <Text style={styles.petType}>{pet1.type}</Text>
-            <Text style={styles.petType}>{pet1.birthDate}</Text>
-            <Text style={styles.petType}>{pet1.petDetail}</Text>
-          </View>
-        </View>
-      )}
-
-      <Text style={styles.vsText}>VS</Text>
-
-      {/* 펫 2 */}
-      <Text style={styles.subTitle}> 🐱 Instance Pet 2</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="이름"
-        value={pet2.name}
-        onChangeText={v => setPet2({...pet2, name: v})}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="특징"
-        value={pet2.petDetail}
-        onChangeText={v => setPet2({...pet2, petDetail: v})}
-      />
-      <CustomDropdown
-        options={[
-          {label: 'DOG', value: 'DOG'},
-          {label: 'CAT', value: 'CAT'},
-        ]}
-        selectedValue={pet2.type}
-        onSelect={v => setPet2({...pet2, type: v as 'DOG' | 'CAT'})}
-        placeholder="종류 선택"
-      />
-      <TouchableOpacity
-        style={styles.input}
-        onPress={() => setShowDatePicker2(true)}>
-        <Text>{pet2.birthDate ? `📅 ${pet2.birthDate}` : '생년월일 선택'}</Text>
-      </TouchableOpacity>
-      <DateTimePicker
-        isVisible={showDatePicker2}
-        mode="date"
-        onConfirm={d => {
-          setPet2({...pet2, birthDate: d.toISOString().split('T')[0]});
-          setShowDatePicker2(false);
-        }}
-        onCancel={() => setShowDatePicker2(false)}
-      />
-      <TouchableOpacity
-        style={styles.imageButton}
-        onPress={() => pickImage(setPet2Image)}>
-        <Text>{pet2Image ? '📸 이미지 선택 완료' : '🖼️ 이미지 선택'}</Text>
-      </TouchableOpacity>
-      {(pet2.name || pet2Image) && (
-        <View style={styles.petCard}>
-          {pet2Image && (
-            <Image source={{uri: pet2Image.uri}} style={styles.petImage} />
-          )}
-          <View>
-            <Text style={styles.petName}>{pet2.name}</Text>
-            <Text style={styles.petType}>{pet2.type}</Text>
-            <Text style={styles.petType}>{pet2.birthDate}</Text>
-            <Text style={styles.petType}>{pet2.petDetail}</Text>
-          </View>
-        </View>
-      )}
-
-      <TouchableOpacity style={styles.battleButton} onPress={handleBattle}>
-        <Text style={styles.battleButtonText}>⚔️ 배틀 시작</Text>
-      </TouchableOpacity>
-
-      {loading && (
-        <ActivityIndicator
-          size="large"
-          color="#4D7CFE"
-          style={{marginTop: 10}}
+        <Text style={styles.subTitle}> 🐶 Instance Pet 1 </Text>
+        <TextInput
+          style={styles.input}
+          placeholder="이름"
+          value={pet1.name}
+          onChangeText={v => setPet1({...pet1, name: v})}
         />
-      )}
-
-      {battleResult && (
-        <View style={styles.resultBox}>
-          <Text style={styles.resultTitle}>🎉 배틀 결과</Text>
-          <Text style={styles.resultText}>{battleResult.result}</Text>
-          <Text style={styles.resultText}>🏆 승자: {battleResult.winner}</Text>
-          <TouchableOpacity
-            style={styles.generateButton}
-            onPress={handleGenerateVideo}>
-            <Text style={styles.generateButtonText}>🎬 배틀 영상 생성</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {status === 'PENDING' && (
-        <View style={styles.videoLoading}>
-          <ActivityIndicator size="large" color="#4D7CFE" />
-          <Text style={{marginTop: 8, color: '#666'}}>📽️ 영상 생성 중...</Text>
-        </View>
-      )}
-
-      {finalUrl && (
-        <View style={{marginTop: 20}}>
-          <Text style={{fontWeight: 'bold', marginBottom: 8}}>
-            📺 배틀 영상:
+        <TextInput
+          style={styles.input}
+          placeholder="특징"
+          value={pet1.petDetail}
+          onChangeText={v => setPet1({...pet1, petDetail: v})}
+        />
+        <CustomDropdown
+          options={[
+            {label: 'DOG', value: 'DOG'},
+            {label: 'CAT', value: 'CAT'},
+          ]}
+          selectedValue={pet1.type}
+          onSelect={v => setPet1({...pet1, type: v as 'DOG' | 'CAT'})}
+          placeholder="종류 선택"
+        />
+        <TouchableOpacity
+          style={styles.input}
+          onPress={() => setShowDatePicker1(true)}>
+          <Text>
+            {pet1.birthDate ? `📅 ${pet1.birthDate}` : '생년월일 선택'}
           </Text>
-          <Video
-            source={{uri: finalUrl}}
-            style={{
-              width: '100%',
-              height: 200,
-              borderRadius: 10,
-              backgroundColor: '#000',
-            }}
-            controls
-            resizeMode="contain"
-          />
-          <View style={styles.actionRow}>
-            <TouchableOpacity style={styles.iconButton} onPress={() => {
-              //@ts-ignore
-              navigation.navigate('StorybookScreen', {videoUri: finalUrl});
-            }}>
-              <Text style={styles.iconText}>✍️ 게시글 작성</Text>
-            </TouchableOpacity>
-            {/*<TouchableOpacity style={styles.iconButton} onPress={handleSave}>*/}
-            {/*  <Text style={styles.iconText}>💾 저장</Text>*/}
-            {/*</TouchableOpacity>*/}
-            <TouchableOpacity style={styles.iconButton} onPress={handleShare}>
-              <Text style={styles.iconText}>📤 공유, 저장</Text>
+        </TouchableOpacity>
+        <DateTimePicker
+          isVisible={showDatePicker1}
+          mode="date"
+          onConfirm={d => {
+            setPet1({...pet1, birthDate: d.toISOString().split('T')[0]});
+            setShowDatePicker1(false);
+          }}
+          onCancel={() => setShowDatePicker1(false)}
+        />
+        <TouchableOpacity
+          style={styles.imageButton}
+          onPress={() => pickImage(setPet1Image)}>
+          <Text>{pet1Image ? '📸 이미지 선택 완료' : '🖼️ 이미지 선택'}</Text>
+        </TouchableOpacity>
+        {(pet1.name || pet1Image) && (
+          <View style={styles.petCard}>
+            {pet1Image && (
+              <Image source={{uri: pet1Image.uri}} style={styles.petImage} />
+            )}
+            <View>
+              <Text style={styles.petName}>{pet1.name}</Text>
+              <Text style={styles.petType}>{pet1.type}</Text>
+              <Text style={styles.petType}>{pet1.birthDate}</Text>
+              <Text style={styles.petType}>{pet1.petDetail}</Text>
+            </View>
+          </View>
+        )}
+
+        <Text style={styles.vsText}>VS</Text>
+
+        {/* 펫 2 */}
+        <Text style={styles.subTitle}> 🐱 Instance Pet 2</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="이름"
+          value={pet2.name}
+          onChangeText={v => setPet2({...pet2, name: v})}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="특징"
+          value={pet2.petDetail}
+          onChangeText={v => setPet2({...pet2, petDetail: v})}
+        />
+        <CustomDropdown
+          options={[
+            {label: 'DOG', value: 'DOG'},
+            {label: 'CAT', value: 'CAT'},
+          ]}
+          selectedValue={pet2.type}
+          onSelect={v => setPet2({...pet2, type: v as 'DOG' | 'CAT'})}
+          placeholder="종류 선택"
+        />
+        <TouchableOpacity
+          style={styles.input}
+          onPress={() => setShowDatePicker2(true)}>
+          <Text>
+            {pet2.birthDate ? `📅 ${pet2.birthDate}` : '생년월일 선택'}
+          </Text>
+        </TouchableOpacity>
+        <DateTimePicker
+          isVisible={showDatePicker2}
+          mode="date"
+          onConfirm={d => {
+            setPet2({...pet2, birthDate: d.toISOString().split('T')[0]});
+            setShowDatePicker2(false);
+          }}
+          onCancel={() => setShowDatePicker2(false)}
+        />
+        <TouchableOpacity
+          style={styles.imageButton}
+          onPress={() => pickImage(setPet2Image)}>
+          <Text>{pet2Image ? '📸 이미지 선택 완료' : '🖼️ 이미지 선택'}</Text>
+        </TouchableOpacity>
+        {(pet2.name || pet2Image) && (
+          <View style={styles.petCard}>
+            {pet2Image && (
+              <Image source={{uri: pet2Image.uri}} style={styles.petImage} />
+            )}
+            <View>
+              <Text style={styles.petName}>{pet2.name}</Text>
+              <Text style={styles.petType}>{pet2.type}</Text>
+              <Text style={styles.petType}>{pet2.birthDate}</Text>
+              <Text style={styles.petType}>{pet2.petDetail}</Text>
+            </View>
+          </View>
+        )}
+
+        <TouchableOpacity style={styles.battleButton} onPress={handleBattle}>
+          <Text style={styles.battleButtonText}>⚔️ 배틀 시작</Text>
+        </TouchableOpacity>
+
+        {loading && (
+          <View style={styles.videoLoading}>
+            <ActivityIndicator size="large" color="#4D7CFE" />
+            <Text style={{marginTop: 8, color: '#666'}}>
+              Generating Battle...
+            </Text>
+          </View>
+        )}
+
+        {battleResult && (
+          <View style={styles.resultBox}>
+            <Text style={styles.resultTitle}>🎉 배틀 결과</Text>
+            <Text style={styles.resultText}>{battleResult.result}</Text>
+            <Text style={styles.resultText}>
+              🏆 승자: {battleResult.winner}
+            </Text>
+            <TouchableOpacity
+              style={styles.generateButton}
+              onPress={handleGenerateVideo}>
+              <Text style={styles.generateButtonText}>🎬 배틀 영상 생성</Text>
             </TouchableOpacity>
           </View>
-        </View>
-      )}
+        )}
+
+        {status === 'PENDING' && (
+          <View style={styles.videoLoading}>
+            <ActivityIndicator size="large" color="#4D7CFE" />
+            <Text style={{marginTop: 8, color: '#666'}}>
+              📽️ 영상 생성 중...
+            </Text>
+          </View>
+        )}
+
+        {finalUrl && (
+          <View style={{marginTop: 20}}>
+            <Text style={{fontWeight: 'bold', marginBottom: 8}}>
+              📺 배틀 영상:
+            </Text>
+            <Video
+              source={{uri: finalUrl}}
+              style={{
+                width: '100%',
+                height: 200,
+                borderRadius: 10,
+                backgroundColor: '#000',
+              }}
+              controls
+              resizeMode="contain"
+            />
+            <View style={styles.actionRow}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => {
+                  //@ts-ignore
+                  navigation.navigate('StorybookScreen', {videoUri: finalUrl});
+                }}>
+                <Text style={styles.iconText}>✍️ 게시글 작성</Text>
+              </TouchableOpacity>
+              {/*<TouchableOpacity style={styles.iconButton} onPress={handleSave}>*/}
+              {/*  <Text style={styles.iconText}>💾 저장</Text>*/}
+              {/*</TouchableOpacity>*/}
+              <TouchableOpacity style={styles.iconButton} onPress={handleShare}>
+                <Text style={styles.iconText}>📤 공유, 저장</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {padding: 20},
+  container: {
+    paddingHorizontal: IS_TABLET ? 60 : 20,
+    paddingTop: 20,
+    paddingBottom: 40,
+    width: '100%',
+    maxWidth: IS_TABLET ? 600 : '100%',
+    alignSelf: 'center',
+  },
   title: {fontSize: 18, fontWeight: 'bold', marginBottom: 16, color: '#4D7CFE'},
   subTitle: {fontSize: 16, fontWeight: '600', marginTop: 10, marginBottom: 6},
   vsText: {
@@ -431,6 +453,5 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 });
-
 
 export default BattleWithTwoInstance;
