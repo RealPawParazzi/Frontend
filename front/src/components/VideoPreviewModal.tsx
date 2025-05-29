@@ -9,7 +9,9 @@ import {
   Alert,
   PermissionsAndroid,
   Image,
-  ScrollView, Dimensions,
+  ScrollView,
+  Dimensions,
+  ActionSheetIOS,
 } from 'react-native';
 import Video from 'react-native-video';
 import RNFS from 'react-native-fs';
@@ -18,7 +20,9 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import {GeneratedVideo} from '../services/AIvideoService';
+import {useAIvideoStore} from '../context/AIvideoStore'; // 추가된 부분
 import {createThumbnail} from 'react-native-create-thumbnail';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -27,14 +31,16 @@ interface Props {
   visible: boolean;
   onClose: () => void;
   video: GeneratedVideo | null;
-}
+  onRefresh?: () => void; // ✅ 새 props 추가
 
+}
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const IS_TABLET = SCREEN_WIDTH >= 768;
 
-const VideoPreviewModal: React.FC<Props> = ({visible, onClose, video}) => {
+const VideoPreviewModal: React.FC<Props> = ({visible, onClose, video,onRefresh }) => {
   const [thumbnailUri, setThumbnailUri] = useState<string | null>(null); // 썸네일 상태 추가
+  const {deleteVideoById, fetchAllVideos} = useAIvideoStore();
 
   useEffect(() => {
     // 썸네일이 필요한 조건: imageUrl이 없고 resultUrl이 있는 경우
@@ -103,10 +109,72 @@ const VideoPreviewModal: React.FC<Props> = ({visible, onClose, video}) => {
     }
   };
 
+  const handleDelete = async () => {
+    if (!video) {
+      return;
+    }
+
+    Alert.alert(
+      '영상 삭제',
+      '정말로 이 영상을 삭제하시겠습니까?',
+      [
+        {text: '취소', style: 'cancel'},
+        {
+          text: '삭제',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteVideoById(video.requestId);
+              onRefresh?.(); // ✅ 목록 새로고침
+              onClose(); // ✅ 모달 닫기
+            } catch (err) {
+              Alert.alert('삭제 실패', '영상을 삭제하는 데 실패했습니다.');
+            }
+          },
+        },
+      ],
+      {cancelable: true},
+    );
+  };
+
+  const showMenu = () => {
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['취소', '삭제'],
+          destructiveButtonIndex: 1,
+          cancelButtonIndex: 0,
+        },
+        buttonIndex => {
+          if (buttonIndex === 1) {
+            handleDelete();
+          }
+        },
+      );
+    } else {
+      Alert.alert(
+        '옵션',
+        '',
+        [
+          {text: '삭제', style: 'destructive', onPress: handleDelete},
+          {text: '취소', style: 'cancel'},
+        ],
+        {cancelable: true},
+      );
+    }
+  };
+
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.overlay}>
         <View style={styles.modalContent}>
+          <View style={{width: '100%', alignItems: 'flex-end'}}>
+            <TouchableOpacity onPress={showMenu}>
+              {' '}
+              {/* $$$ 햄버거 버튼 */}
+              <Icon name="more-vert" size={24} color="#333" />
+            </TouchableOpacity>
+          </View>
           <ScrollView contentContainerStyle={styles.scrollContent}>
             {/* 📅 생성일자 */}
             <Text style={styles.modalTitle}>
@@ -122,11 +190,14 @@ const VideoPreviewModal: React.FC<Props> = ({visible, onClose, video}) => {
             <>
               <Text style={styles.sectionLabel}>📸 원본 이미지</Text>
               {video.imageUrl ? (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageGallery}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.imageGallery}>
                   {video.imageUrl.map((uri, index) => (
                     <Image
                       key={index}
-                      source={{ uri }}
+                      source={{uri}}
                       style={styles.image}
                       resizeMode="cover"
                     />
@@ -182,7 +253,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000AA',
     justifyContent: 'center',
     padding: 20,
-    paddingHorizontal:IS_TABLET ? 70 : 20,
+    paddingHorizontal: IS_TABLET ? 70 : 20,
   },
   modalContent: {
     backgroundColor: '#fff',

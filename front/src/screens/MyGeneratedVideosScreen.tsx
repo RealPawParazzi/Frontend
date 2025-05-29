@@ -47,7 +47,6 @@ const MyGeneratedVideosScreen = () => {
       );
 
       setVideos(sorted);
-      setVideos(data);
     })();
   }, [fetchAllVideos]);
 
@@ -74,6 +73,14 @@ const MyGeneratedVideosScreen = () => {
       generateThumbnails();
     }
   }, [videos]);
+
+  const refetchVideos = async () => {
+    const data = await fetchAllVideos();
+    const sorted = [...data].sort((a, b) =>
+      dayjs(b.createdAt).diff(dayjs(a.createdAt)),
+    );
+    setVideos(sorted);
+  };
 
   const visibleVideos = videos.slice(0, visibleCount);
 
@@ -136,6 +143,8 @@ const MyGeneratedVideosScreen = () => {
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         video={selectedVideo}
+        onRefresh={refetchVideos} // ✅ 리프레시 콜백 전달
+
       />
     </SafeAreaView>
   );
