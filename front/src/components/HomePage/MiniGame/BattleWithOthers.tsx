@@ -35,13 +35,13 @@ const BattleWithOthers: React.FC<{
   const {pets} = petStore();
   const [myPetId, setMyPetId] = useState<number | null>(pets[0]?.petId || null);
   const {battleOpponents, loadBattleOpponents} = userStore();
-  const [selectedOpponentId, setSelectedOpponentId] = useState<string | null>(
+  const [selectedOpponentId, setSelectedOpponentId] = useState<number | null>(
     null,
   );
   const [targetPetId, setTargetPetId] = useState<number | null>(null);
 
   const selectedOpponent = battleOpponents.find(
-    o => o.id === selectedOpponentId,
+    o => o.id === selectedOpponentId?.toString(),
   );
 
   const {
@@ -49,7 +49,6 @@ const BattleWithOthers: React.FC<{
     loading,
     error,
     requestBattleAction,
-    fetchBattleDetailAction,
   } = useBattleStore();
 
   const {
@@ -60,16 +59,23 @@ const BattleWithOthers: React.FC<{
   } = useAIvideoStore();
 
   useEffect(() => {
-    loadBattleOpponents(); // 최초 1회만 호출
-    console.log('✅ 배틀 상대 리스트 불러오기', battleOpponents);
-  }, []); // ✅ 의존성 배열 비워야 한 번만 실행됨
+    const fetchAndSet = async () => {
+      await loadBattleOpponents(); // ✅ 상대 데이터 먼저 받아오고
+
+      if (preSelectedOpponent) {
+        console.log('🎯 초기 opponent 세팅:', preSelectedOpponent);
+        setSelectedOpponentId(Number(preSelectedOpponent.opponentUserId));
+        setTargetPetId(preSelectedOpponent.petId);
+      }
+    };
+
+    fetchAndSet();
+  }, []);
 
   useEffect(() => {
-    if (preSelectedOpponent && battleOpponents.length > 0) {
-      setSelectedOpponentId(preSelectedOpponent.opponentUserId);
-      setTargetPetId(preSelectedOpponent.petId);
-    }
-  }, [preSelectedOpponent, battleOpponents]);
+    console.log('🧠 preSelectedOpponent:', preSelectedOpponent);
+    console.log('🧠 battleOpponents:', battleOpponents);
+  }, [battleOpponents]);
 
   const handleStartBattle = async () => {
     if (!myPetId || !targetPetId) {
@@ -187,7 +193,7 @@ const BattleWithOthers: React.FC<{
             }))}
             selectedValue={selectedOpponentId}
             onSelect={val => {
-              setSelectedOpponentId(val as string);
+              setSelectedOpponentId(val as number);
               setTargetPetId(null);
             }}
             placeholder="상대 유저 선택"
