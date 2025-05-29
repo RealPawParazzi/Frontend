@@ -48,9 +48,10 @@ const VideoEditorScreen: React.FC = () => {
   const [durationError, setDurationError] = useState('');
 
   const recommendedPrompts = [
-    '산책 중인 영상!',
+    '선글라스 낀 모습 생성해줘 !',
     '공놀이 하는 모습 만들어줘 !',
     '라면 먹고 있는 영상 생성해줘 !',
+    '묘기 부리는 영상 만들어줘 !',
   ];
 
   // ✅ 유효성 검사 - 5초 미만 또는 10초 초과일 경우 메시지 설정

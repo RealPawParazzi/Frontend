@@ -32,14 +32,21 @@ const MyGeneratedVideosScreen = () => {
   );
   const [modalVisible, setModalVisible] = useState(false);
   const [thumbnails, setThumbnails] = useState<{[key: number]: string}>({});
+  const [visibleCount, setVisibleCount] = useState(6);
 
-  const {width} = useWindowDimensions(); // $$$$$$
-  const isTablet = width >= 768; // $$$$$$
+  const {width} = useWindowDimensions();
+  const isTablet = width >= 768;
 
   // ✅ 영상 불러오기
   useEffect(() => {
     (async () => {
       const data = await fetchAllVideos();
+      // 생성일(createdAt) 기준으로 최신순 정렬
+      const sorted = [...data].sort((a, b) =>
+        dayjs(b.createdAt).diff(dayjs(a.createdAt)),
+      );
+
+      setVideos(sorted);
       setVideos(data);
     })();
   }, [fetchAllVideos]);
@@ -68,6 +75,9 @@ const MyGeneratedVideosScreen = () => {
     }
   }, [videos]);
 
+  const visibleVideos = videos.slice(0, visibleCount);
+
+
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: '#fff'}}>
       {/* 🔙 헤더 */}
@@ -80,7 +90,7 @@ const MyGeneratedVideosScreen = () => {
       </View>
 
       <FlatList
-        data={videos}
+        data={visibleVideos}
         keyExtractor={item => item.requestId.toString()}
         contentContainerStyle={styles.listContainer}
         numColumns={isTablet ? 2 : 1} // 아이패드는 2열, 아이폰은 1열
@@ -92,7 +102,7 @@ const MyGeneratedVideosScreen = () => {
             style={[
               styles.card,
               {
-                width: isTablet ? (width - 48) / 2 : '100%', // $$$$$$ 카드 너비 유동 조정
+                width: isTablet ? (width - 48) / 2 : '100%', // 카드 너비 유동 조정
               },
             ]}
             onPress={() => {
@@ -100,7 +110,9 @@ const MyGeneratedVideosScreen = () => {
               setModalVisible(true);
             }}>
             <Image
-              source={{uri: thumbnails[item.requestId] || item.imageUrl}}
+              source={{
+                uri: thumbnails[item.requestId] || (Array.isArray(item.imageUrl) ? item.imageUrl[0] : item.imageUrl),
+              }}
               style={styles.thumbnail}
               resizeMode="cover"
             />
@@ -110,6 +122,14 @@ const MyGeneratedVideosScreen = () => {
           </TouchableOpacity>
         )}
       />
+
+      {visibleCount < videos.length && (
+        <TouchableOpacity
+          onPress={() => setVisibleCount(prev => prev + 6)}
+          style={styles.loadMoreButton}>
+          <Text style={styles.loadMoreText}>더 불러오기</Text>
+        </TouchableOpacity>
+      )}
 
       {/* ✅ 모달 */}
       <VideoPreviewModal
@@ -192,6 +212,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#2C3E50',
     fontWeight: '500',
+  },
+  loadMoreButton: {
+    marginVertical: 16,
+    marginHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    backgroundColor: '#e1e5ea',
+    alignItems: 'center',
+  },
+  loadMoreText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#333',
   },
   closeButton: {
     marginTop: 20,
